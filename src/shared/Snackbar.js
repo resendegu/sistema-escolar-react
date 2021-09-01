@@ -9,6 +9,7 @@ export default function SimpleSnackbar(props) {
     const { isOpen, duration, message, closeButtonLabel } = props;
   const [open, setOpen] = React.useState(isOpen);
 
+  
   const handleClick = () => {
     setOpen(true);
   };

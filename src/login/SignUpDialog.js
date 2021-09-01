@@ -7,14 +7,17 @@ import {
     FormControlLabel,
     withStyles,
     CircularProgress,
+    IconButton,
   } from "@material-ui/core";
 import FormDialog from "../shared/FormDialog";
 import { isLong } from "long";
 
 import { useAuth } from "../hooks/useAuth";
 import SimpleSnackbar from "../shared/Snackbar";
+import DateTimePicker from "../shared/DateTimePicker";
+import { Close } from "@material-ui/icons";
 
-const LoginDialog = (props) => {
+const SignUpDialog = (props) => {
     const {
         history,
         classes,
@@ -26,10 +29,12 @@ const LoginDialog = (props) => {
     const [ status, setStatus ] = useState(null)
     const [ showSnack, setShowSnack ] = useState(false);
 
-    const { signInWithEmailAndPassword, passwordRecover } = useAuth();
+    const { passwordRecover, createUserWithEmailAndPassword, signOut } = useAuth();
 
+    const loginName = useRef();
     const loginEmail = useRef();
     const loginPassword = useRef();
+    const loginPasswordConfirm = useRef();
 
     const handlePasswordForgot = (async () => {
         if (loginEmail.current.value !== "") {
@@ -48,26 +53,39 @@ const LoginDialog = (props) => {
         
     })
 
-    const login = (async () => {
+    const handleClose = () => {
+        setOpen(false);
+    }
+
+    const signUp = (async () => {
         setIsLoading(true);
+        let name = loginName.current.value
         let email = loginEmail.current.value
         let password = loginPassword.current.value
-
-        try {
-            let user = await signInWithEmailAndPassword(email, password);
-            console.log(user)
-
-            if (user) {
-                setOpen(false)
-                setIsLoading(false)
-            } else {
+        let confirmPassword = loginPasswordConfirm.current.value
+        
+        if (password === confirmPassword) {
+            try {
+                let user = await createUserWithEmailAndPassword(email, password, name);
+                console.log(user)
+    
+                if (user) {
+                    setOpen(false)
+                    setIsLoading(false)
+                } else {
+                    setIsLoading(false)
+                }
+            } catch (error) {
+                console.log(error)
+                setStatus(error.code)
                 setIsLoading(false)
             }
-        } catch (error) {
-            console.log(error)
-            setStatus(error.code)
+        } else {
+            setStatus('passwordsDoNotMatch');
             setIsLoading(false)
         }
+
+        
         
         
     
@@ -93,13 +111,38 @@ const LoginDialog = (props) => {
                 open={open}
                 onClose={onClose}
                 loading={isLoading}
+                handleClose={handleClose}
+                closeButton={true}
                 onFormSubmit={(e) => {
                     e.preventDefault();
-                    login();
+                    signUp();
                 }}
-                headline="Entrar no Sistema"
+                headline="Criar conta"
                 content={
                     <Fragment>
+                        <TextField
+                            variant="outlined"
+                            margin="normal"
+                            error={status === "auth/user-not-found"}
+                            required
+                            fullWidth
+                            label="Nome e Sobrenome"
+                            inputRef={loginName}
+                            autoFocus
+                            autoComplete="off"
+                            type="text"
+                            onChange={() => {
+                              if (status === "auth/user-not-found") {
+                                setStatus(null);
+                              }
+                            }}
+                            helperText={
+                              status === "auth/user-not-found" &&
+                              "Verifique o endereço de e-mail."
+                            }
+                            FormHelperTextProps={{ error: true }}
+                        />
+
                         <TextField
                             variant="outlined"
                             margin="normal"
@@ -151,6 +194,41 @@ const LoginDialog = (props) => {
                         
                         />
 
+                        <TextField 
+                            variant="outlined"
+                            margin="normal"
+                            required
+                            fullWidth
+                            error={status === "passwordsDoNotMatch"}
+                            label="Confirme a Senha"
+                            type="password"
+                            inputRef={loginPasswordConfirm}
+                            autoComplete="off"
+                            onChange={() => {
+                            if (status === "passwordsDoNotMatch") {
+                                setStatus(null);
+                            }
+                            }}
+                            helperText={
+                            status === "passwordsDoNotMatch" ? (
+                                <span>
+                                
+                                <b>Senhas não conferem</b>
+                                </span>
+                            ) : (
+                                ""
+                            )
+                            }
+                        
+                        />
+
+                        <DateTimePicker 
+                            format="dd/MM/yyyy"
+                            type="date"
+                            label="Data de Nascimento"
+                            width="100%"
+                        />
+
                     </Fragment>
                 }
 
@@ -164,7 +242,7 @@ const LoginDialog = (props) => {
                         disabled={isLoading}
                         size="large"
                         >
-                        Login
+                        Criar conta
                         {isLoading && <CircularProgress />}
                         </Button>
                         <Typography
@@ -198,4 +276,4 @@ const LoginDialog = (props) => {
     );
 }
  
-export default LoginDialog;
+export default SignUpDialog;

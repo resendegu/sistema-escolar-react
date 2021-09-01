@@ -15,6 +15,7 @@ import Typography from '@material-ui/core/Typography';
 import HomeIcon from '@material-ui/icons/Home';
 import Box from '@material-ui/core/Box';
 import { Add, AddBox, Build, Email, GroupWork, Help, HighlightOff, Home, PeopleAlt, PersonAdd, PersonPin } from '@material-ui/icons';
+import AddStudent from './AddStudent';
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -97,7 +98,7 @@ export default function SecretariaTabs() {
         Item Three
       </TabPanel>
       <TabPanel value={value} index={3}>
-        Item Four
+        <AddStudent />
       </TabPanel>
       <TabPanel value={value} index={4}>
         Item Five

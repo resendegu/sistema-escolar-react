@@ -1,6 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { Dialog, DialogContent, Box, withStyles, DialogTitle } from "@material-ui/core";
+import { Dialog, DialogContent, Box, withStyles, DialogTitle, IconButton, Grid } from "@material-ui/core";
+import { Close } from "@material-ui/icons";
 
 
 const styles = theme => ({
@@ -37,7 +38,9 @@ function FormDialog(props) {
     onFormSubmit,
     content,
     actions,
-    hideBackdrop
+    hideBackdrop,
+    handleClose,
+    closeButton
   } = props;
   return (
     <Dialog
@@ -51,8 +54,18 @@ function FormDialog(props) {
       }}
       hideBackdrop={hideBackdrop ? hideBackdrop : false}
     >
-      <h2>{headline}</h2>
+      <div style={{width: '100%'}}>
+      <DialogTitle>{headline}
+      {closeButton && (
+        <IconButton edge="start" color="inherit" style={{float: 'right'}} onClick={handleClose} aria-label="close">
+          <Close />
+        </IconButton>)}
+      </DialogTitle>
+        
+      </div>
+      
       <DialogContent className={classes.dialogContent}>
+        
         <form onSubmit={onFormSubmit}>
           <div>{content}</div>
           <Box width="100%" className={classes.actions}>

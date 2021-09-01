@@ -11,6 +11,8 @@ import Menu from '@material-ui/core/Menu';
 import ResponsiveDrawer from './components/Drawer';
 import { Grid } from '@material-ui/core';
 import { useAuth } from '../hooks/useAuth';
+import LoginDialog from '../login/LoginDialog';
+import SignUpDialog from '../login/SignUpDialog';
 
 
 const useStyles = makeStyles((theme) => ({
@@ -57,6 +59,8 @@ export default function Navbar(props) {
   const [anchorEl, setAnchorEl] = useState(null);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isDrawerOpen, setDrawerOpen] = useState(false);
+  const [ showSignInDialog, setShowSignInDialog ] = useState(false);
+  const [ showSignUpDialog, setShowSignUpDialog ] = useState(false);
   
   const open = Boolean(anchorEl)
 
@@ -85,12 +89,37 @@ export default function Navbar(props) {
     setAnchorEl(null);
   };
 
+  const handleSignIn = () => {
+    setShowSignInDialog(true);
+    handleClose();
+  }
+
+  const handleSignUp = () => {
+    setShowSignUpDialog(true);
+    handleClose();
+  }
+
   const handleSignOut = () => {
     signOut();
+    handleClose();
+
+  }
+
+  const onClose = () => {
+    setShowSignUpDialog(false);
+    setShowSignInDialog(false);
+    console.log('closed')
   }
 
   return (
     <div className={classes.root}>
+      {showSignInDialog ? (
+        <LoginDialog onClose={onClose} />
+      ) : null}
+
+      {showSignUpDialog ? (
+          <SignUpDialog onClose={onClose} />
+      ) : null}
       <AppBar position="static">
         <Toolbar>
           <Grid
@@ -113,8 +142,42 @@ export default function Navbar(props) {
             </Grid>
 
             <Grid item>
-              {user && (
+              {user ? (
                 <>
+                  <IconButton
+                    aria-label="account of current user"
+                    aria-controls="menu-appbar"
+                    aria-haspopup="true"
+                    onClick={handleMenu}
+                    color="inherit"
+                    edge="end"
+                    
+                  >
+                    {user.avatar? (<img src={user.avatar} style={{width: "24px", borderRadius: '50%',}} alt=""/>) : <AccountCircle />}
+                  </IconButton>
+                  <Menu
+                    id="menu-appbar"
+                    anchorEl={anchorEl}
+                    anchorOrigin={{
+                      vertical: 'top',
+                      horizontal: 'right',
+                    }}
+                    keepMounted
+                    transformOrigin={{
+                      vertical: 'top',
+                      horizontal: 'right',
+                    }}
+                    open={open}
+                    onClose={handleClose}
+                  >
+                    <MenuItem onClick={handleClose}>Profile</MenuItem>
+                    <MenuItem onClick={handleClose}>My account</MenuItem>
+                    <MenuItem onClick={handleSignOut}>Sair</MenuItem>
+                  </Menu>
+                </>
+              ) : (
+              <>
+              <>
                   <IconButton
                     aria-label="account of current user"
                     aria-controls="menu-appbar"
@@ -141,11 +204,11 @@ export default function Navbar(props) {
                     open={open}
                     onClose={handleClose}
                   >
-                    <MenuItem onClick={handleClose}>Profile</MenuItem>
-                    <MenuItem onClick={handleClose}>My account</MenuItem>
-                    <MenuItem onClick={handleSignOut}>Sair</MenuItem>
+                    <MenuItem onClick={handleSignUp}>Criar conta</MenuItem>
+                    <MenuItem onClick={handleSignIn}>Login</MenuItem>
                   </Menu>
                 </>
+              </>
               )}
             </Grid>
 

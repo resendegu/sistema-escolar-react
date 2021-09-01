@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { useEffect } from "react";
 import { createContext, ReactNode } from "react";
-import ResponsiveDialog from "../login/components/FormDialog";
-import { firebase, auth } from "../services/firebase";
+import { auth } from "../services/firebase";
 
   
 export const AuthContext = createContext({});
@@ -55,16 +54,25 @@ export function AuthContextProvider(props) {
   }
 
   async function signOut() {
-    await auth.signOut()
+    await auth.signOut();
     setUser(undefined);
     return ;
     
   }
 
   async function passwordRecover(email) {
-    await auth.sendPasswordResetEmail(email)
+    await auth.sendPasswordResetEmail(email);
     return ;
       
+  }
+
+  async function createUserWithEmailAndPassword(email, password, name) {
+    let userCredential = await auth.createUserWithEmailAndPassword(email, password);
+    let user = userCredential.user
+    user.updateProfile({
+      displayName: name,
+    })
+    return userCredential;
   }
 
 
@@ -72,7 +80,13 @@ export function AuthContextProvider(props) {
     return (
         <>
             
-            <AuthContext.Provider value={{ user, signInWithEmailAndPassword, signOut, passwordRecover }}>
+            <AuthContext.Provider value={{ 
+              user, 
+              signInWithEmailAndPassword, 
+              signOut, 
+              passwordRecover,
+              createUserWithEmailAndPassword,
+              }}>
                 {props.children}
             </AuthContext.Provider>
         </>
