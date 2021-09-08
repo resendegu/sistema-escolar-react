@@ -12,11 +12,38 @@ import { DataGrid } from '@mui/x-data-grid';
 //   { field: 'col2', headerName: 'Column 2', width: 150 },
 // ];
 
+
+/**
+ * Returns a dtaa grid with columns and rows
+ * @param {rows, columns, rowHeight, onRowClick, disableColmunFilter, disableColumnMenu, disableColumnSelector, disableExtendRowFullWidth, disableSelectionOnClick,} props Props for the DataGrid
+ * @returns A data grid.
+ */
 export default function CrudTable(props) {
-    const { rows, columns, rowHeight, onRowClick } = props;
+    const { rows, 
+            columns, 
+            rowHeight, 
+            onRowClick, 
+            disableColmunFilter, 
+            disableColumnMenu, 
+            disableColumnSelector,
+            disableExtendRowFullWidth,
+            disableSelectionOnClick,
+            hideFooter, 
+        } = props;
     return (
         <div style={{ height: 300, width: '100%' }}>
-        <DataGrid rows={rows} columns={columns} rowHeight={rowHeight} onRowClick={onRowClick}/>
+        <DataGrid 
+            rows={rows} 
+            columns={columns} 
+            rowHeight={rowHeight} 
+            onRowClick={onRowClick} 
+            disableColumnFilter={disableColmunFilter}
+            disableColumnMenu={disableColumnMenu}
+            disableColumnSelector={disableColumnSelector}
+            disableExtendRowFullWidth={disableExtendRowFullWidth}
+            disableSelectionOnClick={disableSelectionOnClick}
+            hideFooter={hideFooter}
+        />
         </div>
     );
 }

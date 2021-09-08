@@ -1,8 +1,13 @@
-import { Button, FormControl, FormHelperText, Grid, makeStyles, TextField } from "@material-ui/core";
+import { Button, CircularProgress, Container, FormControl, FormHelperText, Grid, InputLabel, LinearProgress, makeStyles, Paper, Select, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField } from "@material-ui/core";
 import { Fragment, useState } from "react";
 import { DropzoneDialog } from 'material-ui-dropzone';
 import { calculateAge, checkCpf } from "./FunctionsUse";
 import CrudTable from "./DataGrid";
+import { useEffect } from "react";
+import { coursesRef } from "../services/databaseRefs";
+import * as $ from 'jquery';
+import ErrorDialog from '../shared/ErrorDialog'
+import { useSnackbar } from "notistack";
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -14,6 +19,12 @@ const useStyles = makeStyles((theme) => ({
       color: theme.palette.text.secondary,
       
     },
+      selectEmpty: {
+        marginTop: theme.spacing(2),
+      },
+    formControl: {
+        padding: theme.spacing(2),
+    }
   }));
 
 function BasicDataFields(props) {
@@ -31,6 +42,7 @@ function BasicDataFields(props) {
         let birthdate = date.target.valueAsDate
         if (birthdate != null && !isNaN(birthdate.getDay()) ) {
             try {
+                setAge('Calculando idade...')
                 let ageObj = await calculateAge(birthdate);
                 setAge(`Idade ${ageObj.years} anos, ${ageObj.months} meses e ${ageObj.days} dias`);
             } catch (error) {
@@ -50,8 +62,9 @@ function BasicDataFields(props) {
     }
 
     return (
+        <>
         <div className={classes.root}>
-            
+
               <Grid 
               justifyContent="center"   
               container
@@ -113,6 +126,429 @@ function BasicDataFields(props) {
 
         
           </div>
+          </>
+    );
+}
+
+
+function ContractConfigure(props) {
+    const { activeStep, onCloseDialog } = props;
+    const courseChosen = JSON.parse(sessionStorage.getItem(activeStep))
+
+    useEffect(() => {
+        handleGetData()
+    }, [])
+
+    useEffect(() => {
+        if (onCloseDialog) {
+            contractHandler(true)
+        }
+    }, [onCloseDialog])
+
+    const handleGetData = () => {
+        coursesRef.child(courseChosen.courseId).once('value').then(courseInfo => {
+            console.log(courseInfo.val())
+            handleMountContractScreen(courseInfo.val())
+        }).catch(error => {
+            console.log(error)
+        })
+    }
+
+    const [ shrink, setShrink ] = useState(false);
+
+    const [ plans, setPlans ] = useState([{value: '', label: '', key: ''}])
+    const [ plan, setPlan ] = useState([{id: ''}])
+
+    const [ openDialogError, setOpenDialogError ] = useState(false);
+
+    const handleMountContractScreen = (courseInfo) => {
+        console.log(courseInfo);
+        setData(courseInfo);
+
+        let plansInfo = courseInfo.planos;
+        let plansArray = [];
+        for (const key in plansInfo) {
+            if (Object.hasOwnProperty.call(plansInfo, key)) {
+                const plan = plansInfo[key];
+                plansArray.push({value: key, label: plan.nomePlano, key: key})
+            }
+        }
+        console.log(plansArray)
+        setPlans(plansArray);
+    }
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    const classes = useStyles();
+    const [ data, setData ] = useState(null);
+
+    const [state, setState] = useState({
+        planId: '',
+        name: '',
+    });
+
+    const columns = [
+        { field: 'col1', headerName: 'Parcela', width: 110 }, 
+        { field: 'col2', headerName: 'Valor Inicial', width: 147 },
+        { field: 'col3', headerName: 'Acréscimos', width: 142 },
+        { field: 'col4', headerName: 'Descontos', width: 135 },
+        { field: 'col5', headerName: 'Valor Final', width: 147 },
+    ]
+      
+    const [ rows, setRows ] = useState([{id: 1, col1: '1', col2: 0, col3: 0, col4: 0, col5: 0},]);
+
+    const contractHandler = (save = false) => {
+        
+        let form = document.querySelector('#contractForm');
+        let formData = new FormData(form);
+        let fieldsData = $('#contractForm').serializeArray();
+        console.log(fieldsData)
+
+        let internData = {};
+        fieldsData.forEach(field => {
+            let values = formData.getAll(field.name);
+            internData[field.name] = values.length === 1 ?  values[0] : values;
+        })
+        console.log(plan)
+        let internPlan = data.planos[plan.id]
+
+        internData.vencimentoEscolhido = internData.diasDeVencimento
+            if (Number(internData.numeroParcelas) > Number(internPlan.numeroMaximoParcelasPlano)) {
+                setOpenDialogError({
+                    title: 'Parcelamento não permitido', 
+                    message: 'Este plano permite apenas o parcelamento em até ' + internPlan.numeroMaximoParcelasPlano + ' parcelas. Para ter um parcelamento maior, tente usar outro plano compatível com sua necessidade, ou solicite ao setor Administrativo/Financeiro para possível mudança de parcelamento deste plano.'
+                })
+                internData.numeroParcelas = ''
+            } else if (internData.numeroParcelas < internPlan.quandoAplicar + 1) {
+                
+                setOpenDialogError({
+                    title: 'Parcelamento não permitido', 
+                    message: `O contrato deve possuir pelo menos ${Number(internPlan.quandoAplicar) + 1} parcelas. Para outros tipos de parcelamento ou pagamento á vista, tente usar outro plano compatível com sua necessidade, ou solicite ao setor Administrativo/Financeiro para possível mudança de parcelamento deste plano.`
+                })
+                internData.numeroParcelas = ''
+            } else {
+                try {
+                    internData.valorDesconto = (Number(internData.valorCurso) * (internData.descontoPlano/100)).toFixed(2)
+                    internData.valorAcrescimo = (Number(internData.valorCurso) * (internData.acrescimoPlano/100)).toFixed(2)
+                    internData.valorFinal = (Number(internData.valorCurso) + (internData.valorAcrescimo - internData.valorDesconto)).toFixed(2)
+                    setRows([])
+                    let saldo = internData.valorCurso
+                    let saldoAcrescimo = internData.valorAcrescimo
+                    let saldoDesconto = internData.valorDesconto
+                    let contadorParcelas = internData.numeroParcelas
+                    let somaParcelas = 0
+                    let valorParcelaGlobal = 0
+                    let internRows = []
+                    for (let parcela = 0; parcela < internData.numeroParcelas; parcela++) {
+                        let row = {}
+                        if (internPlan.distribuirAcrescimosEDescontos === 'on') {
+                            
+                            
+                            let acrescimoParcela 
+                            let descontoParcela 
+                            let valorParcela
+                            valorParcelaGlobal = parcela === 0 ? parseFloat(saldo / contadorParcelas).toFixed(2) : valorParcelaGlobal
+                            if (parcela >= internPlan.quandoAplicar) {
+                                // parcela == internData.quandoAplicar ? saldo = internData.valorFinal - somaParcelas : null
+                                valorParcelaGlobal = parcela === internPlan.quandoAplicar ?  parseFloat(saldo / contadorParcelas).toFixed(2) : valorParcelaGlobal
+                                valorParcela = valorParcelaGlobal
+                                acrescimoParcela = (saldoAcrescimo/contadorParcelas).toFixed(2)
+                                descontoParcela = (saldoDesconto/contadorParcelas).toFixed(2)
+                                // saldo = (Number(saldo) - valorParcela) - Number(acrescimoParcela - descontoParcela)
+                            } else {
+                                valorParcela = valorParcelaGlobal
+                                
+                                // saldo = saldo - valorParcela
+                                acrescimoParcela = 0
+                                descontoParcela = 0
+                            }
+                            
+                            saldoAcrescimo = saldoAcrescimo - acrescimoParcela
+                            saldoDesconto = saldoDesconto - descontoParcela
+                            
+                            row = internPlan.quandoAplicar !== undefined ? {id: parcela, col1: parcela + 1, col2: `R$${valorParcela}`, col3: ` ${acrescimoParcela !== 0 || acrescimoParcela !== '' ? '+ R$' + acrescimoParcela : ''}`, col4: ` ${descontoParcela !== 0 || descontoParcela !== '' ? '- R$' + descontoParcela : ''}`, col5: `R$${(Number(valorParcela) + (acrescimoParcela - descontoParcela)).toFixed(2)}`} : row 
+                            console.log(row)
+                            somaParcelas += (Number(valorParcela) + (acrescimoParcela - descontoParcela))
+                        } else {
+                            saldo = parcela === 0 ? internData.valorFinal : saldo
+                             row = {id: parcela, col1: `Parcela ${parcela + 1}`, col2: `R$${parseFloat(internData.valorFinal / internData.numeroParcelas).toFixed(2)}`, col3: '0', col4: '0', col5: `R$${parseFloat(internData.valorFinal / internData.numeroParcelas).toFixed(2)}`}
+                            // saldo = saldo - parseFloat(internData.valorFinal / internData.numeroMaximoParcelasPlano).toFixed(2)
+                            somaParcelas += Number(parseFloat(internData.valorFinal / internData.numeroParcelas))
+                        }
+                        saldo = (parcela >= internPlan.quandoAplicar ? internData.valorFinal : internData.valorCurso) - somaParcelas
+                        console.log(saldo)
+                        internRows.push(row)
+                        console.log(internRows)
+                        // addParcela(`Saldo: R$${saldo}`)
+                        contadorParcelas--
+                    }
+                    setRows(internRows)
+                    // addParcela(`Total: R$${somaParcelas.toFixed(2)}`)
+    
+                } catch (error) {
+                    console.log(error)
+                }
+            }
+            
+
+            for (const id in internData) {
+                if (Object.hasOwnProperty.call(internData, id)) {
+                    const value = internData[id];
+                    document.getElementById(id).value = value;
+                }
+            }
+
+            if (save) {
+                sessionStorage.setItem('contratoConfigurado', JSON.stringify(internData))
+                sessionStorage.setItem('planoOriginal', JSON.stringify(internPlan))
+                enqueueSnackbar('Dados do contrato foram salvos!', {variant: 'success'})
+            }
+    }
+    
+    const handleChange = (event) => {
+        const planId = event.target.value;
+        setPlan({id: planId});
+        let plan = data.planos[planId];
+        for (const name in plan) {
+            if (Object.hasOwnProperty.call(plan, name)) {
+                const value = plan[name];
+                if (name === 'diasDeVencimento') {
+                    document.getElementById(name).innerHTML = '<option selected hidden></option>'
+                    value.forEach(day => {
+                        
+                        let option = document.createElement('option')
+                        option.value = day
+                        option.innerText = day
+                        document.getElementById(name).appendChild(option)
+                    })
+                } else {
+                    try {
+                        document.getElementById(name).value = value
+                    } catch (error) {
+                        console.log(error)
+                    }
+                }
+                
+               
+            }
+        }
+        setShrink(true);
+      };
+
+      const [ day, setDay ] = useState(1)
+      const handleChangeDay = (event) => {
+        setDay(event.target.value)
+      }
+
+      const handleSubmit = (e) => {
+        e.preventDefault()
+        console.log(e)
+        let formData = new FormData(document.getElementById('contractForm'))
+  
+        let data = Object.fromEntries(formData.entries());
+        console.log(data)
+        //sessionStorage.setItem(activeStep, JSON.stringify(data))
+      }
+
+      const daysOptions = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28]
+
+      
+    return(
+        <Fragment>
+            {openDialogError && <ErrorDialog onClose={() => {setOpenDialogError(false)}} isOpen={true} title={openDialogError.title} message={openDialogError.message} /> }
+            {!data ? (
+                <div style={{width: '100%'}}>
+                    <LinearProgress />
+                </div>
+                
+            ) : (<>
+            <div style={{textAlign: 'center', width: '100%'}}><h3>Escolha um plano</h3></div>
+            <FormControl variant="filled">
+                <InputLabel htmlFor="filled-age-native-simple">Escolha um plano</InputLabel>
+                <Select
+                    native
+                    value={plan.id}
+                    onChange={handleChange}
+                    id="listaCursos"
+                    inputProps={{
+                        name: 'age',
+                        id: 'filled-age-native-simple',
+                    }}
+                >
+                    <option aria-label="None" value="" />
+                    {plans.map(plan => ( 
+                        <option value={plan.value} key={plan.value}>{plan.label}</option>
+                    )
+                    )}
+                </Select>
+            </FormControl>
+            <Container>
+                <form onSubmit={handleSubmit} onBlur={() => {contractHandler()}} id="contractForm" autoComplete="off">
+                    <h1>Dados do Curso:</h1>
+                    <Grid
+                        justifyContent="center"   
+                        container
+                        direction="row"
+                        spacing={2}
+                    >
+                        
+                        <Grid item>
+                            <FormControl className={classes.fields}> 
+                                <TextField variant="filled" InputLabelProps={{shrink: shrink,}} InputProps={{readOnly: true}} autoComplete="off" required label="Nome do curso" type="text" id="nomeCursoAdd" name="nomeCursoAdd" value={data.nomeCursoAdd} aria-describedby="my-helper-text" />
+                                <FormHelperText>Identificação que aparece nos boletins e nos demais documentos emitidos pelo sistema. </FormHelperText>
+                            </FormControl>
+                            
+                        </Grid>
+                        <Grid item>
+                            <FormControl className={classes.fields}> 
+                                <TextField variant="filled" autoComplete="off" InputProps={{readOnly: true}} InputLabelProps={{shrink: shrink,}} label="Código do curso" type="text" id="codigoCursoAdd" name="codigoCursoAdd" aria-describedby="my-helper-text" />
+                                <FormHelperText>Código utilizado para formar os códigos automáticos de turma.</FormHelperText>
+                            </FormControl>
+                        </Grid>
+                            
+                        
+                    </Grid>
+                    <hr />
+                    <h1>Dados do Plano:</h1>
+                    <h6>Todos os valores brutos estão em R$ (BRL - Brazilian Real / Real Brasileiro)</h6>
+                    <Grid
+                        justifyContent="center"   
+                        container
+                        direction="row"
+                        spacing={2}
+                    >
+                        
+                        <Grid item>
+                            <FormControl className={classes.fields}> 
+                                <TextField variant="filled" autoComplete="off" InputProps={{readOnly: true}} InputLabelProps={{shrink: shrink,}} required label="Nome do plano" type="text" id="nomePlano" name="nomePlano" aria-describedby="my-helper-text" />
+                                <FormHelperText>Este é o nome de identificação do plano para a secretaria. </FormHelperText>
+                            </FormControl>
+                            
+                        </Grid>
+                        <Grid item>
+                            <FormControl className={classes.fields}> 
+                                <TextField variant="filled" autoComplete="off" InputProps={{readOnly: true}} InputLabelProps={{shrink: shrink,}}  label="Valor Integral do Curso" type="text" id="valorCurso" name="valorCurso" aria-describedby="my-helper-text" />
+                                <FormHelperText>Valor integral do curso sem descontos.</FormHelperText>
+                            </FormControl>
+                        </Grid>
+                        <Grid item>
+                            <FormControl className={classes.fields}> 
+                                <TextField variant="filled" autoComplete="off" InputProps={{readOnly: true}} InputLabelProps={{shrink: shrink,}} label="Desconto (%)" type="text" id="descontoPlano" name="descontoPlano" aria-describedby="my-helper-text" />
+                                <FormHelperText>Desconto sobre o valor integral.</FormHelperText>
+                            </FormControl>
+                        </Grid>
+                        <Grid item>
+                            <FormControl className={classes.fields}> 
+                                <TextField variant="filled" autoComplete="off" InputProps={{readOnly: true}} InputLabelProps={{shrink: shrink,}} label="Valor do desconto" type="text" id="valorDesconto" name="valorDesconto" aria-describedby="my-helper-text" />
+                                
+                            </FormControl>
+                        </Grid>
+                        <Grid item>
+                            <FormControl className={classes.fields}> 
+                                <TextField variant="filled" autoComplete="off" InputProps={{readOnly: true}} InputLabelProps={{shrink: shrink,}} label="Acréscimo (%)" type="text" id="acrescimoPlano" name="acrescimoPlano" aria-describedby="my-helper-text" />
+                                <FormHelperText>Acréscimo sobre o valor integral.</FormHelperText>
+                            </FormControl>
+                        </Grid>
+                        <Grid item>
+                            <FormControl className={classes.fields}> 
+                                <TextField variant="filled" autoComplete="off" InputProps={{readOnly: true}} InputLabelProps={{shrink: shrink,}} label="Valor do acréscimo" type="text" id="valorAcrescimo" name="valorAcrescimo" aria-describedby="my-helper-text" />
+                                
+                            </FormControl>
+                        </Grid>
+                        <Grid item>
+                            <FormControl className={classes.fields}> 
+                                <TextField variant="filled" autoComplete="off" InputProps={{readOnly: true}} InputLabelProps={{shrink: shrink,}} label="Valor integral final" type="text" id="valorFinal" name="valorFinal" aria-describedby="my-helper-text" />
+                                
+                            </FormControl>
+                        </Grid>
+                        
+                    </Grid>
+                    <hr />
+                    <h2>Parcelas</h2>
+                    <Grid
+                        justifyContent="center"   
+                        container
+                        direction="row"
+                        spacing={2}
+                    >
+                        
+                        <Grid item>
+                            <FormControl className={classes.fields}> 
+                                <TextField variant="filled" autoComplete="off" InputLabelProps={{shrink: true,}} required label="Nº de parcelas" type="text" id="numeroParcelas" name="numeroParcelas" aria-describedby="my-helper-text" />
+                                <FormHelperText>O número máximo de parcelas é de {plan.id && data.planos[plan.id].numeroMaximoParcelasPlano} parcelas. </FormHelperText>
+                            </FormControl>
+                            
+                        </Grid>
+                        <Grid item>
+                            <FormControl className={classes.fields}>
+                                <CrudTable rows={rows} columns={columns} rowHeight={25} disableColumnMenu disableDensitySelector disableColumnSelector disableColumnFilter hideFooter />
+                                <FormHelperText>Esta tabela serve apenas para visualizar a simulação de parcelamento no contrato. Esta é a distribuição de parcelas para este plano. </FormHelperText>
+                            </FormControl>
+                            
+                        </Grid>
+                            
+                        
+                    </Grid>
+                    <hr />
+                    <h2>Vencimento</h2>
+                    <Grid
+                        justifyContent="center"   
+                        container
+                        direction="row"
+                        spacing={2}
+                        alignContent="center" 
+                        alignItems="center"
+                    >
+                        <Grid item >
+                        <FormControl variant="filled">
+                            <InputLabel htmlFor="filled-age-native-simple">Escolha um dia</InputLabel>
+                            <Select
+                                
+                                native
+                                value={state.value}
+                                onChange={handleChangeDay}
+                                inputProps={{
+                                    name: 'diasDeVencimento',
+                                    id: 'diasDeVencimento',
+                                }}
+                            >
+                                {!data.diasDeVencimento && (daysOptions.map(dayOpt => <option value={dayOpt}>{dayOpt}</option>))}
+                                
+                            </Select>
+                            <FormHelperText>Escolha o dia de vencimento do boleto/carnê. </FormHelperText>
+                        </FormControl>
+                        </Grid>
+                        <Grid item>
+                            <FormControl className={classes.fields}> 
+                                <TextField variant="filled" autoComplete="off" InputProps={{readOnly: true}} InputLabelProps={{shrink: true,}} required label="Dia Escolhido" value={day} type="text" id="vencimentoEscolhido" name="vencimentoEscolhido" aria-describedby="my-helper-text" />
+                                <FormHelperText> Dia escolhido para o vencimento. </FormHelperText>
+                            </FormControl>
+                            
+                        </Grid>
+                        <Grid item>
+                            <FormControl className={classes.fields}> 
+                                <TextField name="ano-mes" variant="filled"  InputLabelProps={{shrink: true,}}  id="ano-mes" required autoComplete="off"  type="month" label="Escolha quando começará o vencimento"/>
+                                <FormHelperText> Escolha o mês e o ano para iniciar a geração dos boletos. </FormHelperText>
+                            </FormControl >
+                        </Grid>
+
+                        <Grid item>
+                            <FormControl className={classes.fields}> 
+                                <TextField variant="filled" autoComplete="off" InputLabelProps={{shrink: shrink,}} required label="Informações e avisos" InputProps={{readOnly: true}} type="text" id="descricaoPlano" name="descricaoPlano" aria-describedby="my-helper-text" />
+                                <FormHelperText> Informações e avisos para serem gerados no boleto. </FormHelperText>
+                            </FormControl>
+                            
+                        </Grid>
+                        
+                            
+                        
+                    </Grid>
+                </form>
+            
+            
+            </Container>
+            </>)}
+        </Fragment>
     );
 }
 
@@ -123,10 +559,35 @@ function CourseDataFields(props) {
 
     const [ loading, setLoading ] = useState(false)
 
+    useEffect(() => {
+        let configuredContract = sessionStorage.getItem('contratoConfigurado')
+        console.log(configuredContract)
+    }, [])
+
     return (
         <>
-            {courseChosen.turmaAluno !== '' && <label>Turma escolhida: {courseChosen.turmaAluno}</label>}
-            <CrudTable rows={rows} columns={columns} rowHeight={rowHeight} onRowClick={onRowClick} />
+            <h3>Escolha uma turma</h3>
+            <Grid
+                justifyContent="center"   
+                container
+                direction="row"
+                spacing={2}
+            >
+                <Grid item xs={6}>
+                    <Paper style={{padding: '10px'}}>
+                        {courseChosen.turmaAluno !== '' && <label>Turma escolhida: {courseChosen.turmaAluno}</label>}
+                        <CrudTable rows={rows} columns={columns} rowHeight={rowHeight} onRowClick={onRowClick} />
+                    </Paper>
+                </Grid>
+                <Grid item xs={6}>
+                    <Paper style={{padding: '10px'}}>
+                        <Button>Visualizar Contrato</Button>
+                    </Paper>
+                </Grid>
+
+            </Grid>
+            
+            
         </>
     );
 }
@@ -175,4 +636,4 @@ function DocumentsSend(props) {
     );
 }
 
-export { BasicDataFields, DocumentsSend, CourseDataFields };
+export { BasicDataFields, DocumentsSend, CourseDataFields, ContractConfigure };

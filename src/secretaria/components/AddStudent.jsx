@@ -1,4 +1,5 @@
-import React, { Fragment } from 'react';
+
+import { useEffect, useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import Stepper from '@material-ui/core/Stepper';
 import Step from '@material-ui/core/Step';
@@ -8,13 +9,13 @@ import Typography from '@material-ui/core/Typography';
 import { Backdrop, CircularProgress } from '@material-ui/core';
 import DateTimePicker from '../../shared/DateTimePicker';
 import { calculateAge, checkCpf } from '../../shared/FunctionsUse';
-import { useState } from 'react';
-import { BasicDataFields, CourseDataFields, DocumentsSend } from '../../shared/StudentFields';
+import { BasicDataFields, ContractConfigure, CourseDataFields, DocumentsSend } from '../../shared/StudentFields';
 import * as $ from 'jquery';
-import { useEffect } from 'react';
 import { database } from '../../services/firebase';
 import { classesRef } from '../../services/databaseRefs';
 import ErrorDialog from '../../shared/ErrorDialog';
+import FullScreenDialog from '../../shared/FullscreenDialog';
+import { useSnackbar } from 'notistack';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -43,16 +44,17 @@ const useStyles = makeStyles((theme) => ({
 
 export default function AddStudent() {
   const classes = useStyles();
-  const [activeStep, setActiveStep] = React.useState(0);
-  const [completed, setCompleted] = React.useState(new Set());
-  const [skipped, setSkipped] = React.useState(new Set());
+  const [activeStep, setActiveStep] = useState(0);
+  const [completed, setCompleted] = useState(new Set());
+  const [skipped, setSkipped] = useState(new Set());
   const [ loader, setLoader ] = useState(false);
   const steps = getSteps();
   const [ shrink, setShrink ] = useState();
-  const [showError, setShowError] = useState(false);
+  
   const [errorMessage, setErrorMessage] = useState('Error')
   const [ courseTable, setCourseTable ] = useState({rows: [{ id: 1, col1: 'Hello', col2: 'World' }], columns: [{ field: 'col1', headerName: 'Column 1', width: 150 }, { field: 'col2', headerName: 'Column 2', width: 150 }]});
   const [ courseChosen, setCourseChosen ] = useState({turmaAluno: '', horaAluno: '', professor: {}})
+  const [ openDialog, setOpenDialog ] = useState(false);
 
   useEffect(() => {
     let index = activeStep;  
@@ -73,8 +75,7 @@ export default function AddStudent() {
 
 
   const handleOnCloseErrorDialog = () => {
-    setShowError(false);
-    setErrorMessage('Error')
+    setErrorMessage(null);
   }
 
   const handleAddStudent = () => {
@@ -82,13 +83,20 @@ export default function AddStudent() {
   }
 
   const handleRowClick = (data) => {
-    const coursesData = JSON.parse(sessionStorage.getItem('coursesData'))
-    setCourseChosen((coursesData.filter(course => course.turmaAluno === data.id))[0])
+    const coursesData = JSON.parse(sessionStorage.getItem('coursesData'));
+    setCourseChosen((coursesData.filter(course => course.turmaAluno === data.id))[0]);
 
+    setOpenDialog(true)
+    
+    sessionStorage.setItem(activeStep, JSON.stringify((coursesData.filter(course => course.turmaAluno === data.id))[0]));
+    
   }
+
+  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
   const handleGetCourseData = async () => {
     try {
+      setErrorMessage(null)
       const schoolClasses = (await (classesRef.once('value'))).val()
       let columns = [
         { field: 'col1', headerName: 'Turma', width: 150 }, 
@@ -102,7 +110,7 @@ export default function AddStudent() {
         if (Object.hasOwnProperty.call(schoolClasses, classKey)) {
           const classInfo = schoolClasses[classKey];
           rows.push({ id: classKey, col1: classKey, col2: classInfo.hora + 'h', col3: classInfo.professor[0].nome})
-          coursesData.push({turmaAluno: classKey, horaAluno: classInfo.hora + 'h', profAluno: classInfo.professor[0]})
+          coursesData.push({turmaAluno: classKey, horaAluno: classInfo.hora + 'h', profAluno: classInfo.professor[0], courseId: classInfo.curso})
         }
       }
       sessionStorage.setItem('coursesData', JSON.stringify(coursesData))
@@ -111,7 +119,6 @@ export default function AddStudent() {
 
     } catch (error) {
       setErrorMessage(error.message)
-      setShowError(true)
     }
     
 
@@ -252,9 +259,22 @@ export default function AddStudent() {
 
   }
 
+  const handleContractClose = () => {
+    setOpenDialog(false)
+  }
+
   return (
     <>
-    {showError && <ErrorDialog title="Erro" message={errorMessage} isOpen={true} onClose={handleOnCloseErrorDialog}/>}
+    <FullScreenDialog 
+      isOpen={openDialog}
+      onClose={handleContractClose}
+      title={"Configurar contrato"}
+      saveButton={"Salvar"}
+      
+    >
+      <ContractConfigure activeStep={activeStep} onCloseDialog={!openDialog} />
+    </FullScreenDialog>
+    {errorMessage && <ErrorDialog title="Erro" message={errorMessage} isOpen={true} onClose={handleOnCloseErrorDialog}/>}
     <div style={{position: 'absolute'}}>
       <Backdrop className={classes.backdrop} open={loader}>
         <CircularProgress color="inherit" />

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useHistory } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import AppBar from '@material-ui/core/AppBar';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import Divider from '@material-ui/core/Divider';
@@ -28,7 +28,6 @@ import MenuItem from '@material-ui/core/MenuItem';
 import Menu from '@material-ui/core/Menu';
 import { Box } from '@material-ui/core';
 import SimpleContainer from '../../Container';
-import { Link } from 'react-router-dom';
 
 
 const drawerWidth = 240;
@@ -77,7 +76,6 @@ function ResponsiveDrawer(props) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [auth, setAuth] = useState(true);
   const [anchorEl, setAnchorEl] = useState(null);
-  const history = useHistory();
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -99,7 +97,7 @@ function ResponsiveDrawer(props) {
         </div>
         <Divider />
         <List>
-            <Link onClick={() => { history.push('/') } } style={{textDecoration: 'none', color: 'black'}}>
+            <Link to="/" style={{textDecoration: 'none', color: 'black'}}>
                 <ListItem button key={'Home'}>
                     <ListItemIcon><Home /></ListItemIcon>
                     <ListItemText primary={'Home'} />
@@ -110,7 +108,7 @@ function ResponsiveDrawer(props) {
         <Divider />
         <List>
             {[{text: 'Secretaria', to: 'secretaria'}, {text: 'Professores', to: 'professores'}, {text: 'Administração', to: 'adm'}].map((elem, index) => (
-                <Link onClick={() => { history.push(elem.to) } } style={{textDecoration: 'none', color: 'black'}}>
+                <Link to={'/' + elem.to} style={{textDecoration: 'none', color: 'black'}}>
                     <ListItem button key={elem.text}>
                         <ListItemIcon>{firstIcons[index]}</ListItemIcon>
                         <ListItemText primary={elem.text} />
