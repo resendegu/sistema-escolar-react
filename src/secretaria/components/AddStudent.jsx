@@ -53,8 +53,8 @@ export default function AddStudent() {
   
   const [errorMessage, setErrorMessage] = useState('Error')
   const [ courseTable, setCourseTable ] = useState({rows: [{ id: 1, col1: 'Hello', col2: 'World' }], columns: [{ field: 'col1', headerName: 'Column 1', width: 150 }, { field: 'col2', headerName: 'Column 2', width: 150 }]});
-  const [ courseChosen, setCourseChosen ] = useState({turmaAluno: '', horaAluno: '', professor: {}})
-  const [ openDialog, setOpenDialog ] = useState(false);
+  
+  
 
   useEffect(() => {
     let index = activeStep;  
@@ -82,21 +82,14 @@ export default function AddStudent() {
     console.log(sessionStorage.getItem('0'))
   }
 
-  const handleRowClick = (data) => {
-    const coursesData = JSON.parse(sessionStorage.getItem('coursesData'));
-    setCourseChosen((coursesData.filter(course => course.turmaAluno === data.id))[0]);
-
-    setOpenDialog(true)
-    
-    sessionStorage.setItem(activeStep, JSON.stringify((coursesData.filter(course => course.turmaAluno === data.id))[0]));
-    
-  }
+  
 
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
   const handleGetCourseData = async () => {
     try {
       setErrorMessage(null)
+      setLoader(true)
       const schoolClasses = (await (classesRef.once('value'))).val()
       let columns = [
         { field: 'col1', headerName: 'Turma', width: 150 }, 
@@ -116,8 +109,10 @@ export default function AddStudent() {
       sessionStorage.setItem('coursesData', JSON.stringify(coursesData))
 
       setCourseTable({rows: rows, columns: columns})
+      setLoader(false)
 
     } catch (error) {
+      setLoader(false)
       setErrorMessage(error.message)
     }
     
@@ -135,7 +130,7 @@ export default function AddStudent() {
         
       return <BasicDataFields shrink={shrink}  />;
     case 1:
-      return <CourseDataFields shrink={shrink} rows={courseTable.rows} columns={courseTable.columns} rowHeight={25} onRowClick={handleRowClick} courseChosen={courseChosen} />;
+      return <CourseDataFields shrink={shrink} rows={courseTable.rows} columns={courseTable.columns} rowHeight={25} setLoader={setLoader} activeStep={activeStep} />;
     case 2:
       return 'Step 3: This is the bit I really care about!';
     default:
@@ -259,21 +254,11 @@ export default function AddStudent() {
 
   }
 
-  const handleContractClose = () => {
-    setOpenDialog(false)
-  }
+  
 
   return (
     <>
-    <FullScreenDialog 
-      isOpen={openDialog}
-      onClose={handleContractClose}
-      title={"Configurar contrato"}
-      saveButton={"Salvar"}
-      
-    >
-      <ContractConfigure activeStep={activeStep} onCloseDialog={!openDialog} />
-    </FullScreenDialog>
+    
     {errorMessage && <ErrorDialog title="Erro" message={errorMessage} isOpen={true} onClose={handleOnCloseErrorDialog}/>}
     <div style={{position: 'absolute'}}>
       <Backdrop className={classes.backdrop} open={loader}>

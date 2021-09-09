@@ -43,6 +43,7 @@ export default function CrudTable(props) {
             disableExtendRowFullWidth={disableExtendRowFullWidth}
             disableSelectionOnClick={disableSelectionOnClick}
             hideFooter={hideFooter}
+            
         />
         </div>
     );

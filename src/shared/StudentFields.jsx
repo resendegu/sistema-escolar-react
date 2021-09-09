@@ -1,13 +1,15 @@
-import { Button, CircularProgress, Container, FormControl, FormHelperText, Grid, InputLabel, LinearProgress, makeStyles, Paper, Select, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField } from "@material-ui/core";
+import { Box, Button, CircularProgress, Container, FormControl, FormHelperText, Grid, InputLabel, LinearProgress, makeStyles, Paper, Select, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField } from "@material-ui/core";
 import { Fragment, useState } from "react";
 import { DropzoneDialog } from 'material-ui-dropzone';
 import { calculateAge, checkCpf } from "./FunctionsUse";
 import CrudTable from "./DataGrid";
 import { useEffect } from "react";
-import { coursesRef } from "../services/databaseRefs";
+import { contractRef, coursesRef } from "../services/databaseRefs";
 import * as $ from 'jquery';
 import ErrorDialog from '../shared/ErrorDialog'
 import { useSnackbar } from "notistack";
+import { Visibility } from "@material-ui/icons";
+import FullScreenDialog from "./FullscreenDialog";
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -19,6 +21,10 @@ const useStyles = makeStyles((theme) => ({
       color: theme.palette.text.secondary,
       
     },
+    button: {
+        alignSelf: 'center',
+        
+      },
       selectEmpty: {
         marginTop: theme.spacing(2),
       },
@@ -132,26 +138,29 @@ function BasicDataFields(props) {
 
 
 function ContractConfigure(props) {
-    const { activeStep, onCloseDialog } = props;
+    const { activeStep, onCloseDialog, isOpen, setOpenDialog } = props;
     const courseChosen = JSON.parse(sessionStorage.getItem(activeStep))
 
-    useEffect(() => {
-        handleGetData()
-    }, [])
+    const [ saveDisabled, setSaveDisabled ] = useState(true);
 
     useEffect(() => {
-        if (onCloseDialog) {
-            contractHandler(true)
-        }
-    }, [onCloseDialog])
+        setSaveDisabled(true)
+        handleGetData()
+    }, [isOpen])
 
     const handleGetData = () => {
-        coursesRef.child(courseChosen.courseId).once('value').then(courseInfo => {
-            console.log(courseInfo.val())
-            handleMountContractScreen(courseInfo.val())
-        }).catch(error => {
-            console.log(error)
-        })
+        console.log(activeStep)
+        try {
+            coursesRef.child(courseChosen.dadosTurma.courseId).once('value').then(courseInfo => {
+                console.log(courseInfo.val())
+                handleMountContractScreen(courseInfo.val())
+            }).catch(error => {
+                console.log(error)
+            })
+        } catch (error) {
+            console.log(error);
+        }
+        
     }
 
     const [ shrink, setShrink ] = useState(false);
@@ -175,6 +184,7 @@ function ContractConfigure(props) {
         }
         console.log(plansArray)
         setPlans(plansArray);
+       
     }
 
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
@@ -197,7 +207,7 @@ function ContractConfigure(props) {
       
     const [ rows, setRows ] = useState([{id: 1, col1: '1', col2: 0, col3: 0, col4: 0, col5: 0},]);
 
-    const contractHandler = (save = false) => {
+    const contractHandler = async (save = false) => {
         
         let form = document.querySelector('#contractForm');
         let formData = new FormData(form);
@@ -299,9 +309,17 @@ function ContractConfigure(props) {
             }
 
             if (save) {
-                sessionStorage.setItem('contratoConfigurado', JSON.stringify(internData))
-                sessionStorage.setItem('planoOriginal', JSON.stringify(internPlan))
-                enqueueSnackbar('Dados do contrato foram salvos!', {variant: 'success'})
+                sessionStorage.setItem('contratoConfigurado', JSON.stringify(internData));
+                sessionStorage.setItem('planoOriginal', JSON.stringify(internPlan));
+                let contractCode = await contractRef.push().key;
+                sessionStorage.setItem('codContrato', contractCode);
+                if ((internData.vencimentoEscolhido && internData.numeroParcelas && internData['ano-mes']) !== '') {
+                    enqueueSnackbar('Dados salvos!', {variant: 'success'});
+                    setOpenDialog(false);
+                } else {
+                    enqueueSnackbar('Preencha todos os campos necessários do contrato.', {variant: 'error'});
+                }
+                
             }
     }
     
@@ -333,6 +351,10 @@ function ContractConfigure(props) {
             }
         }
         setShrink(true);
+        if (planId !== '')
+            setSaveDisabled(false)
+        else
+            setSaveDisabled(true)
       };
 
       const [ day, setDay ] = useState(1)
@@ -356,236 +378,285 @@ function ContractConfigure(props) {
     return(
         <Fragment>
             {openDialogError && <ErrorDialog onClose={() => {setOpenDialogError(false)}} isOpen={true} title={openDialogError.title} message={openDialogError.message} /> }
-            {!data ? (
+            <FullScreenDialog 
+                isOpen={isOpen}
+                onClose={() => {
+                    setOpenDialog(false);
+                }}
+                onSave={() => {
+                    contractHandler(true);
+                }}
+                title={"Configurar contrato"}
+                saveButton={"Salvar"}
+                saveButtonDisabled={saveDisabled}
+            >
+                {!data ? (
                 <div style={{width: '100%'}}>
                     <LinearProgress />
                 </div>
                 
-            ) : (<>
-            <div style={{textAlign: 'center', width: '100%'}}><h3>Escolha um plano</h3></div>
-            <FormControl variant="filled">
-                <InputLabel htmlFor="filled-age-native-simple">Escolha um plano</InputLabel>
-                <Select
-                    native
-                    value={plan.id}
-                    onChange={handleChange}
-                    id="listaCursos"
-                    inputProps={{
-                        name: 'age',
-                        id: 'filled-age-native-simple',
-                    }}
-                >
-                    <option aria-label="None" value="" />
-                    {plans.map(plan => ( 
-                        <option value={plan.value} key={plan.value}>{plan.label}</option>
-                    )
-                    )}
-                </Select>
-            </FormControl>
-            <Container>
-                <form onSubmit={handleSubmit} onBlur={() => {contractHandler()}} id="contractForm" autoComplete="off">
-                    <h1>Dados do Curso:</h1>
-                    <Grid
-                        justifyContent="center"   
-                        container
-                        direction="row"
-                        spacing={2}
+                ) : (<>
+                <div style={{textAlign: 'center', width: '100%'}}><h3>Escolha um plano</h3></div>
+                <FormControl variant="filled">
+                    <InputLabel htmlFor="filled-age-native-simple">Escolha um plano</InputLabel>
+                    <Select
+                        native
+                        value={plan.id}
+                        onChange={handleChange}
+                        id="listaPlanos"
+                        inputProps={{
+                            name: 'listaPlanos',
+                            id: 'listaPlanos',
+                        }}
                     >
-                        
-                        <Grid item>
-                            <FormControl className={classes.fields}> 
-                                <TextField variant="filled" InputLabelProps={{shrink: shrink,}} InputProps={{readOnly: true}} autoComplete="off" required label="Nome do curso" type="text" id="nomeCursoAdd" name="nomeCursoAdd" value={data.nomeCursoAdd} aria-describedby="my-helper-text" />
-                                <FormHelperText>Identificação que aparece nos boletins e nos demais documentos emitidos pelo sistema. </FormHelperText>
-                            </FormControl>
+                        <option aria-label="None" value="" />
+                        {plans.map(plan => ( 
+                            <option value={plan.value} key={plan.value}>{plan.label}</option>
+                        )
+                        )}
+                    </Select>
+                </FormControl>
+                <Container>
+                    <form onSubmit={handleSubmit} onBlur={() => {contractHandler()}} id="contractForm" autoComplete="off">
+                        <h1>Dados do Curso:</h1>
+                        <Grid
+                            justifyContent="center"   
+                            container
+                            direction="row"
+                            spacing={2}
+                        >
                             
-                        </Grid>
-                        <Grid item>
-                            <FormControl className={classes.fields}> 
-                                <TextField variant="filled" autoComplete="off" InputProps={{readOnly: true}} InputLabelProps={{shrink: shrink,}} label="Código do curso" type="text" id="codigoCursoAdd" name="codigoCursoAdd" aria-describedby="my-helper-text" />
-                                <FormHelperText>Código utilizado para formar os códigos automáticos de turma.</FormHelperText>
-                            </FormControl>
-                        </Grid>
-                            
-                        
-                    </Grid>
-                    <hr />
-                    <h1>Dados do Plano:</h1>
-                    <h6>Todos os valores brutos estão em R$ (BRL - Brazilian Real / Real Brasileiro)</h6>
-                    <Grid
-                        justifyContent="center"   
-                        container
-                        direction="row"
-                        spacing={2}
-                    >
-                        
-                        <Grid item>
-                            <FormControl className={classes.fields}> 
-                                <TextField variant="filled" autoComplete="off" InputProps={{readOnly: true}} InputLabelProps={{shrink: shrink,}} required label="Nome do plano" type="text" id="nomePlano" name="nomePlano" aria-describedby="my-helper-text" />
-                                <FormHelperText>Este é o nome de identificação do plano para a secretaria. </FormHelperText>
-                            </FormControl>
-                            
-                        </Grid>
-                        <Grid item>
-                            <FormControl className={classes.fields}> 
-                                <TextField variant="filled" autoComplete="off" InputProps={{readOnly: true}} InputLabelProps={{shrink: shrink,}}  label="Valor Integral do Curso" type="text" id="valorCurso" name="valorCurso" aria-describedby="my-helper-text" />
-                                <FormHelperText>Valor integral do curso sem descontos.</FormHelperText>
-                            </FormControl>
-                        </Grid>
-                        <Grid item>
-                            <FormControl className={classes.fields}> 
-                                <TextField variant="filled" autoComplete="off" InputProps={{readOnly: true}} InputLabelProps={{shrink: shrink,}} label="Desconto (%)" type="text" id="descontoPlano" name="descontoPlano" aria-describedby="my-helper-text" />
-                                <FormHelperText>Desconto sobre o valor integral.</FormHelperText>
-                            </FormControl>
-                        </Grid>
-                        <Grid item>
-                            <FormControl className={classes.fields}> 
-                                <TextField variant="filled" autoComplete="off" InputProps={{readOnly: true}} InputLabelProps={{shrink: shrink,}} label="Valor do desconto" type="text" id="valorDesconto" name="valorDesconto" aria-describedby="my-helper-text" />
+                            <Grid item>
+                                <FormControl className={classes.fields}> 
+                                    <TextField variant="filled" InputLabelProps={{shrink: shrink,}} InputProps={{readOnly: true}} autoComplete="off" required label="Nome do curso" type="text" id="nomeCursoAdd" name="nomeCursoAdd" value={data.nomeCursoAdd} aria-describedby="my-helper-text" />
+                                    <FormHelperText>Identificação que aparece nos boletins e nos demais documentos emitidos pelo sistema. </FormHelperText>
+                                </FormControl>
                                 
-                            </FormControl>
-                        </Grid>
-                        <Grid item>
-                            <FormControl className={classes.fields}> 
-                                <TextField variant="filled" autoComplete="off" InputProps={{readOnly: true}} InputLabelProps={{shrink: shrink,}} label="Acréscimo (%)" type="text" id="acrescimoPlano" name="acrescimoPlano" aria-describedby="my-helper-text" />
-                                <FormHelperText>Acréscimo sobre o valor integral.</FormHelperText>
-                            </FormControl>
-                        </Grid>
-                        <Grid item>
-                            <FormControl className={classes.fields}> 
-                                <TextField variant="filled" autoComplete="off" InputProps={{readOnly: true}} InputLabelProps={{shrink: shrink,}} label="Valor do acréscimo" type="text" id="valorAcrescimo" name="valorAcrescimo" aria-describedby="my-helper-text" />
+                            </Grid>
+                            <Grid item>
+                                <FormControl className={classes.fields}> 
+                                    <TextField variant="filled" autoComplete="off" InputProps={{readOnly: true}} InputLabelProps={{shrink: shrink,}} label="Código do curso" type="text" id="codigoCursoAdd" name="codigoCursoAdd" aria-describedby="my-helper-text" />
+                                    <FormHelperText>Código utilizado para formar os códigos automáticos de turma.</FormHelperText>
+                                </FormControl>
+                            </Grid>
                                 
-                            </FormControl>
-                        </Grid>
-                        <Grid item>
-                            <FormControl className={classes.fields}> 
-                                <TextField variant="filled" autoComplete="off" InputProps={{readOnly: true}} InputLabelProps={{shrink: shrink,}} label="Valor integral final" type="text" id="valorFinal" name="valorFinal" aria-describedby="my-helper-text" />
-                                
-                            </FormControl>
-                        </Grid>
-                        
-                    </Grid>
-                    <hr />
-                    <h2>Parcelas</h2>
-                    <Grid
-                        justifyContent="center"   
-                        container
-                        direction="row"
-                        spacing={2}
-                    >
-                        
-                        <Grid item>
-                            <FormControl className={classes.fields}> 
-                                <TextField variant="filled" autoComplete="off" InputLabelProps={{shrink: true,}} required label="Nº de parcelas" type="text" id="numeroParcelas" name="numeroParcelas" aria-describedby="my-helper-text" />
-                                <FormHelperText>O número máximo de parcelas é de {plan.id && data.planos[plan.id].numeroMaximoParcelasPlano} parcelas. </FormHelperText>
-                            </FormControl>
                             
                         </Grid>
-                        <Grid item>
-                            <FormControl className={classes.fields}>
-                                <CrudTable rows={rows} columns={columns} rowHeight={25} disableColumnMenu disableDensitySelector disableColumnSelector disableColumnFilter hideFooter />
-                                <FormHelperText>Esta tabela serve apenas para visualizar a simulação de parcelamento no contrato. Esta é a distribuição de parcelas para este plano. </FormHelperText>
-                            </FormControl>
+                        <hr />
+                        <h1>Dados do Plano:</h1>
+                        <h6>Todos os valores brutos estão em R$ (BRL - Brazilian Real / Real Brasileiro)</h6>
+                        <Grid
+                            justifyContent="center"   
+                            container
+                            direction="row"
+                            spacing={2}
+                        >
                             
-                        </Grid>
-                            
-                        
-                    </Grid>
-                    <hr />
-                    <h2>Vencimento</h2>
-                    <Grid
-                        justifyContent="center"   
-                        container
-                        direction="row"
-                        spacing={2}
-                        alignContent="center" 
-                        alignItems="center"
-                    >
-                        <Grid item >
-                        <FormControl variant="filled">
-                            <InputLabel htmlFor="filled-age-native-simple">Escolha um dia</InputLabel>
-                            <Select
+                            <Grid item>
+                                <FormControl className={classes.fields}> 
+                                    <TextField variant="filled" autoComplete="off" InputProps={{readOnly: true}} InputLabelProps={{shrink: shrink,}} required label="Nome do plano" type="text" id="nomePlano" name="nomePlano" aria-describedby="my-helper-text" />
+                                    <FormHelperText>Este é o nome de identificação do plano para a secretaria. </FormHelperText>
+                                </FormControl>
                                 
-                                native
-                                value={state.value}
-                                onChange={handleChangeDay}
-                                inputProps={{
-                                    name: 'diasDeVencimento',
-                                    id: 'diasDeVencimento',
-                                }}
-                            >
-                                {!data.diasDeVencimento && (daysOptions.map(dayOpt => <option value={dayOpt}>{dayOpt}</option>))}
-                                
-                            </Select>
-                            <FormHelperText>Escolha o dia de vencimento do boleto/carnê. </FormHelperText>
-                        </FormControl>
-                        </Grid>
-                        <Grid item>
-                            <FormControl className={classes.fields}> 
-                                <TextField variant="filled" autoComplete="off" InputProps={{readOnly: true}} InputLabelProps={{shrink: true,}} required label="Dia Escolhido" value={day} type="text" id="vencimentoEscolhido" name="vencimentoEscolhido" aria-describedby="my-helper-text" />
-                                <FormHelperText> Dia escolhido para o vencimento. </FormHelperText>
-                            </FormControl>
+                            </Grid>
+                            <Grid item>
+                                <FormControl className={classes.fields}> 
+                                    <TextField variant="filled" autoComplete="off" InputProps={{readOnly: true}} InputLabelProps={{shrink: shrink,}}  label="Valor Integral do Curso" type="text" id="valorCurso" name="valorCurso" aria-describedby="my-helper-text" />
+                                    <FormHelperText>Valor integral do curso sem descontos.</FormHelperText>
+                                </FormControl>
+                            </Grid>
+                            <Grid item>
+                                <FormControl className={classes.fields}> 
+                                    <TextField variant="filled" autoComplete="off" InputProps={{readOnly: true}} InputLabelProps={{shrink: shrink,}} label="Desconto (%)" type="text" id="descontoPlano" name="descontoPlano" aria-describedby="my-helper-text" />
+                                    <FormHelperText>Desconto sobre o valor integral.</FormHelperText>
+                                </FormControl>
+                            </Grid>
+                            <Grid item>
+                                <FormControl className={classes.fields}> 
+                                    <TextField variant="filled" autoComplete="off" InputProps={{readOnly: true}} InputLabelProps={{shrink: shrink,}} label="Valor do desconto" type="text" id="valorDesconto" name="valorDesconto" aria-describedby="my-helper-text" />
+                                    
+                                </FormControl>
+                            </Grid>
+                            <Grid item>
+                                <FormControl className={classes.fields}> 
+                                    <TextField variant="filled" autoComplete="off" InputProps={{readOnly: true}} InputLabelProps={{shrink: shrink,}} label="Acréscimo (%)" type="text" id="acrescimoPlano" name="acrescimoPlano" aria-describedby="my-helper-text" />
+                                    <FormHelperText>Acréscimo sobre o valor integral.</FormHelperText>
+                                </FormControl>
+                            </Grid>
+                            <Grid item>
+                                <FormControl className={classes.fields}> 
+                                    <TextField variant="filled" autoComplete="off" InputProps={{readOnly: true}} InputLabelProps={{shrink: shrink,}} label="Valor do acréscimo" type="text" id="valorAcrescimo" name="valorAcrescimo" aria-describedby="my-helper-text" />
+                                    
+                                </FormControl>
+                            </Grid>
+                            <Grid item>
+                                <FormControl className={classes.fields}> 
+                                    <TextField variant="filled" autoComplete="off" InputProps={{readOnly: true}} InputLabelProps={{shrink: shrink,}} label="Valor integral final" type="text" id="valorFinal" name="valorFinal" aria-describedby="my-helper-text" />
+                                    
+                                </FormControl>
+                            </Grid>
                             
                         </Grid>
-                        <Grid item>
-                            <FormControl className={classes.fields}> 
-                                <TextField name="ano-mes" variant="filled"  InputLabelProps={{shrink: true,}}  id="ano-mes" required autoComplete="off"  type="month" label="Escolha quando começará o vencimento"/>
-                                <FormHelperText> Escolha o mês e o ano para iniciar a geração dos boletos. </FormHelperText>
-                            </FormControl >
+                        <hr />
+                        <h2>Parcelas</h2>
+                        <Grid
+                            justifyContent="center"   
+                            container
+                            direction="row"
+                            spacing={2}
+                        >
+                            
+                            <Grid item>
+                                <FormControl className={classes.fields}> 
+                                    <TextField variant="filled" autoComplete="off" InputLabelProps={{shrink: true,}} required label="Nº de parcelas" type="text" id="numeroParcelas" name="numeroParcelas" aria-describedby="my-helper-text" />
+                                    <FormHelperText>O número máximo de parcelas é de {plan.id && data.planos[plan.id].numeroMaximoParcelasPlano} parcelas. </FormHelperText>
+                                </FormControl>
+                                
+                            </Grid>
+                            <Grid item>
+                                <FormControl className={classes.fields}>
+                                    <CrudTable rows={rows} columns={columns} rowHeight={25} disableColumnMenu disableDensitySelector disableColumnSelector disableColumnFilter hideFooter />
+                                    <FormHelperText>Esta tabela serve apenas para visualizar a simulação de parcelamento no contrato. Esta é a distribuição de parcelas para este plano. </FormHelperText>
+                                </FormControl>
+                                
+                            </Grid>
+                                
+                            
                         </Grid>
+                        <hr />
+                        <h2>Vencimento</h2>
+                        <Grid
+                            justifyContent="center"   
+                            container
+                            direction="row"
+                            spacing={2}
+                            alignContent="center" 
+                            alignItems="center"
+                        >
+                            <Grid item >
+                            <FormControl variant="filled">
+                                <InputLabel htmlFor="filled-age-native-simple">Escolha um dia</InputLabel>
+                                <Select
+                                    
+                                    native
+                                    value={state.value}
+                                    onChange={handleChangeDay}
+                                    inputProps={{
+                                        name: 'diasDeVencimento',
+                                        id: 'diasDeVencimento',
+                                    }}
+                                >
+                                    {!data.diasDeVencimento && (daysOptions.map(dayOpt => <option value={dayOpt}>{dayOpt}</option>))}
+                                    
+                                </Select>
+                                <FormHelperText>Escolha o dia de vencimento do boleto/carnê. </FormHelperText>
+                            </FormControl>
+                            </Grid>
+                            <Grid item>
+                                <FormControl className={classes.fields}> 
+                                    <TextField variant="filled" autoComplete="off" InputProps={{readOnly: true}} InputLabelProps={{shrink: true,}} required label="Dia Escolhido" value={day} type="text" id="vencimentoEscolhido" name="vencimentoEscolhido" aria-describedby="my-helper-text" />
+                                    <FormHelperText> Dia escolhido para o vencimento. </FormHelperText>
+                                </FormControl>
+                                
+                            </Grid>
+                            <Grid item>
+                                <FormControl className={classes.fields}> 
+                                    <TextField name="ano-mes" variant="filled"  InputLabelProps={{shrink: true,}}  id="ano-mes" required autoComplete="off"  type="month" label="Escolha quando começará o vencimento"/>
+                                    <FormHelperText> Escolha o mês e o ano para iniciar a geração dos boletos. </FormHelperText>
+                                </FormControl >
+                            </Grid>
 
-                        <Grid item>
-                            <FormControl className={classes.fields}> 
-                                <TextField variant="filled" autoComplete="off" InputLabelProps={{shrink: shrink,}} required label="Informações e avisos" InputProps={{readOnly: true}} type="text" id="descricaoPlano" name="descricaoPlano" aria-describedby="my-helper-text" />
-                                <FormHelperText> Informações e avisos para serem gerados no boleto. </FormHelperText>
-                            </FormControl>
+                            <Grid item>
+                                <FormControl className={classes.fields}> 
+                                    <TextField variant="filled" autoComplete="off" InputLabelProps={{shrink: shrink,}} required label="Informações e avisos" InputProps={{readOnly: true}} type="text" id="descricaoPlano" name="descricaoPlano" aria-describedby="my-helper-text" />
+                                    <FormHelperText> Informações e avisos para serem gerados no boleto. </FormHelperText>
+                                </FormControl>
+                                
+                            </Grid>
+                            
+                                
                             
                         </Grid>
-                        
-                            
-                        
-                    </Grid>
-                </form>
+                    </form>
+                
+                
+                </Container>
+                </>)}
+            </FullScreenDialog>
             
-            
-            </Container>
-            </>)}
         </Fragment>
     );
 }
 
 function CourseDataFields(props) {
-    const { shrink, rows, columns, rowHeight, onRowClick, courseChosen } = props;
+    const { shrink, rows, columns, rowHeight, activeStep, setLoader } = props;
 
     const classes = useStyles();
 
     const [ loading, setLoading ] = useState(false)
+    const [ contractState, setContractState ] = useState(false)
+    const [ courseChosen, setCourseChosen ] = useState({turmaAluno: '', horaAluno: '', professor: {}})
+    const [ openDialog, setOpenDialog ] = useState(false);
+
 
     useEffect(() => {
-        let configuredContract = sessionStorage.getItem('contratoConfigurado')
-        console.log(configuredContract)
-    }, [])
+        let contractCode = sessionStorage.getItem('codContrato');
+        let storedCourse = JSON.parse(sessionStorage.getItem(activeStep))
+        console.log(contractCode);
+        if (contractCode) {
+            setContractState(contractCode);
+            setCourseChosen(storedCourse.dadosTurma)
+        } else {
+            setContractState(null);
+            
+        }
+    }, [openDialog])
+
+    const handleRowClick = (data) => {
+        const coursesData = JSON.parse(sessionStorage.getItem('coursesData'));
+        setCourseChosen((coursesData.filter(course => course.turmaAluno === data.id))[0]);
+        sessionStorage.setItem(activeStep, JSON.stringify({dadosTurma: (coursesData.filter(course => course.turmaAluno === data.id))[0]}));
+        setOpenDialog(true)
+        
+    }
+      
 
     return (
         <>
-            <h3>Escolha uma turma</h3>
+            <ContractConfigure activeStep={activeStep} setLoader={setLoader} isOpen={openDialog} setOpenDialog={setOpenDialog}  />
+            
             <Grid
                 justifyContent="center"   
                 container
-                direction="row"
-                spacing={2}
+                
+                spacing={1}
             >
-                <Grid item xs={6}>
-                    <Paper style={{padding: '10px'}}>
-                        {courseChosen.turmaAluno !== '' && <label>Turma escolhida: {courseChosen.turmaAluno}</label>}
-                        <CrudTable rows={rows} columns={columns} rowHeight={rowHeight} onRowClick={onRowClick} />
+                <Grid item xs>
+                    <Paper style={{padding: '10px', minWidth: '250px'}} elevation={5}>
+                        <h4>Escolha uma turma</h4>
+                        
+                        <CrudTable rows={rows} columns={columns} rowHeight={rowHeight} onRowClick={handleRowClick} />
                     </Paper>
                 </Grid>
-                <Grid item xs={6}>
-                    <Paper style={{padding: '10px'}}>
-                        <Button>Visualizar Contrato</Button>
+                <Grid item xs sm={3}>
+                    <Paper style={{padding: '10px', alignItems: 'center'}} elevation={5}>
+                        <h4>{courseChosen.turmaAluno !== '' ? <label>Turma escolhida: {courseChosen.turmaAluno}</label> : <label>Turma não escolhida</label>}</h4>
+                        <hr />
+                    <h4>{contractState ? 'Contrato configurado' : 'Contrato não configurado'}</h4>
+                        {contractState && (
+                            <Box >
+                                <FormControl className={classes.fields}> 
+                                    <TextField variant="filled" autoComplete="off" InputLabelProps={{shrink: shrink,}} required label="Cód. do Contrato" InputProps={{readOnly: true}} type="text" value={contractState} id="contractCode" name="contractCode" aria-describedby="my-helper-text" />
+                                    <FormHelperText> Código gerado pelo sistema para o contrato. Não é necessário guardá-lo ou alterá-lo. </FormHelperText>
+                                </FormControl>
+                            </Box>
+                        )}
+                        {contractState && (<FormHelperText>O Contrato já está configurado. Caso queira alterar, basta clicar na turma novamente e refazer o contrato.</FormHelperText>)} 
                     </Paper>
                 </Grid>
 
             </Grid>
+            
             
             
         </>
