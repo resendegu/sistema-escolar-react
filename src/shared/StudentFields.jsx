@@ -1,7 +1,7 @@
 import { Box, Button, CircularProgress, Container, FormControl, FormHelperText, Grid, InputLabel, LinearProgress, makeStyles, Paper, Select, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField } from "@material-ui/core";
 import { Fragment, useState } from "react";
 import { DropzoneDialog } from 'material-ui-dropzone';
-import { calculateAge, checkCpf } from "./FunctionsUse";
+import { calculateAge, checkCpf, getAddress } from "./FunctionsUse";
 import CrudTable from "./DataGrid";
 import { useEffect } from "react";
 import { contractRef, coursesRef } from "../services/databaseRefs";
@@ -707,4 +707,126 @@ function DocumentsSend(props) {
     );
 }
 
-export { BasicDataFields, DocumentsSend, CourseDataFields, ContractConfigure };
+const AddressAndParentsFields = (props) => {
+    const { shrink } = props;
+
+    const classes = useStyles();
+
+    const [ cep, setCep ] = useState({message: 'Digite o CEP para buscar'});
+    const [ loading, setLoading ] = useState(false);
+    const [ validCpf, setValidCpf ] = useState(false);
+
+    const handleGetAddress = async (e) => {
+        console.log(e.target.value)
+        let cepNum = e.target.value
+        if (cepNum != null) {
+            try {
+                setCep({message: 'Buscando CEP...'})
+                let cepObj = await getAddress(cepNum);
+                cepObj.message = 'Endereço encontrado!'
+                if (cepObj.errors) {
+                    cepObj.message = 'Erro. Tente Novamente!'
+                }
+                console.log(cepObj)
+                setCep(cepObj);
+            } catch (error) {
+                console.log(error)
+                error.message === 'permission-denied' ? setCep(`Você não possui permissão.`) : setCep(error.message)
+                
+            }
+            
+        } 
+        
+        
+    }
+
+    const handleCheckCpf = (e) => {
+        let cpf = e.target.value
+
+        setValidCpf(!checkCpf(cpf))
+    }
+
+    return (
+        <>
+        <div className={classes.root}>
+            <h4>Endereço</h4>
+              <Grid 
+              justifyContent="center"   
+              container
+              direction="row"
+              spacing={2}
+              >
+                  
+                <Grid item>
+                    <FormControl className={classes.fields}> 
+                        <TextField required autoComplete="off" InputLabelProps={{shrink: shrink,}}  variant="filled" label="CEP" type="text" id="cepAluno" name="cepAluno" onBlur={handleGetAddress} aria-describedby="my-helper-text" />
+                        <FormHelperText> {cep.message} </FormHelperText>
+                    </FormControl>
+                </Grid>
+                <Grid item>
+                    <FormControl className={classes.fields}> 
+                        <TextField name="enderecoAluno" style={{width: '219px',}} variant="filled" InputLabelProps={{shrink: shrink,}}  id="enderecoAluno" required autoComplete="off"  type="text"  label="Endereço" value={cep.street}/>
+                        
+                    </FormControl >
+                </Grid>
+                <Grid item>
+                    <FormControl className={classes.fields}> 
+                        <TextField variant="filled" autoComplete="off" InputLabelProps={{shrink: shrink,}} label="Número" type="text" id="numeroAluno" name="numeroAluno" aria-describedby="my-helper-text" />
+                    </FormControl>
+                </Grid>
+                <Grid item>
+                    <FormControl className={classes.fields}> 
+                        <TextField variant="filled" autoComplete="off" InputLabelProps={{shrink: shrink,}} required label="Bairro" type="text" id="bairroAluno" name="bairroAluno" aria-describedby="my-helper-text" value={cep.neighborhood} />
+                        
+                    </FormControl>
+                    
+                </Grid>
+                <Grid item>
+                    <FormControl className={classes.fields}> 
+                        <TextField required autoComplete="off" InputLabelProps={{shrink: shrink,}} variant="filled" label="Cidade" type="text" id="cidadeAluno" name="cidadeAluno" aria-describedby="my-helper-text" value={cep.city} />
+                    </FormControl>
+                </Grid>
+                <Grid item>
+                    <FormControl className={classes.fields}> 
+                        <TextField required autoComplete="off" InputLabelProps={{shrink: shrink,}} variant="filled" label="UF" type="text" id="estadoAluno" name="estadoAluno" aria-describedby="my-helper-text" value={cep.state} />
+                        
+                    </FormControl>
+                </Grid>
+                
+                
+                
+              </Grid>
+              <h4>Dados dos Responsáveis</h4>
+            <Grid 
+            justifyContent="center"   
+            container
+            direction="row"
+            spacing={2}
+            >
+                  
+
+                  <Grid item>
+                    <FormControl className={classes.fields}> 
+                        <TextField required autoComplete="off" InputLabelProps={{shrink: shrink,}} variant="filled" label="CPF" error={validCpf} onChange={handleCheckCpf} onBlur={() => validCpf ? document.getElementById('cpfAluno').value = null : null} type="text" id="cpfAluno" name="cpfAluno" aria-describedby="my-helper-text" helperText={
+                              validCpf &&
+                              "Insira um CPF válido."
+                            }
+                            FormHelperTextProps={{ error: true }} />
+                    </FormControl>
+                </Grid>
+                <Grid item>
+                    <FormControl className={classes.fields}> 
+                        <TextField required autoComplete="off" InputLabelProps={{shrink: shrink,}} variant="filled" label="RG" type="text" id="rgAluno" name="rgAluno" aria-describedby="my-helper-text"
+                            FormHelperTextProps={{ error: true }} />
+                    </FormControl>
+                </Grid>
+            </Grid>
+
+        
+          </div>
+          </>
+    );
+}
+ 
+
+export { BasicDataFields, DocumentsSend, CourseDataFields, ContractConfigure, AddressAndParentsFields };

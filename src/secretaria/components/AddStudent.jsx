@@ -9,7 +9,7 @@ import Typography from '@material-ui/core/Typography';
 import { Backdrop, CircularProgress } from '@material-ui/core';
 import DateTimePicker from '../../shared/DateTimePicker';
 import { calculateAge, checkCpf } from '../../shared/FunctionsUse';
-import { BasicDataFields, ContractConfigure, CourseDataFields, DocumentsSend } from '../../shared/StudentFields';
+import { AddressAndParentsFields, BasicDataFields, ContractConfigure, CourseDataFields, DocumentsSend } from '../../shared/StudentFields';
 import * as $ from 'jquery';
 import { database } from '../../services/firebase';
 import { classesRef } from '../../services/databaseRefs';
@@ -120,7 +120,7 @@ export default function AddStudent() {
   }
 
   function getSteps() {
-    return ['Dados básicos', 'Dados para o Curso', 'Endereço e Responsáveis'];
+    return ['Dados básicos', 'Dados para o Curso', 'Endereço, Responsáveis e dados adicionais'];
   }
 
   function getStepContent(step) {
@@ -132,7 +132,7 @@ export default function AddStudent() {
     case 1:
       return <CourseDataFields shrink={shrink} rows={courseTable.rows} columns={courseTable.columns} rowHeight={25} setLoader={setLoader} activeStep={activeStep} />;
     case 2:
-      return 'Step 3: This is the bit I really care about!';
+      return <AddressAndParentsFields shrink={shrink} />;
     default:
       return 'Unknown step';
   }
@@ -248,7 +248,23 @@ export default function AddStudent() {
 
       let data = Object.fromEntries(formData.entries());
       console.log(data)
-      sessionStorage.setItem(activeStep, JSON.stringify(data))
+      
+      switch (activeStep) {
+        case 0:
+          sessionStorage.setItem(activeStep, JSON.stringify(data))
+        break;
+        case 1:
+          let configuredContract = JSON.parse(sessionStorage.getItem('contratoConfigurado'));
+          let originalPlan = JSON.parse(sessionStorage.getItem('planoOriginal'));
+          let contractCode = sessionStorage.getItem('codContrato');
+          let classStoredData = JSON.parse(sessionStorage.getItem(activeStep));
+          let stepStore = {dadosTurma: classStoredData.dadosTurma, dadosContrato: {codContrato: contractCode, planoOriginal: originalPlan, contratoConfigurado: configuredContract}}
+          sessionStorage.setItem(activeStep, JSON.stringify(stepStore));
+        break;
+      
+        default:
+          break;
+      }
 
       handleComplete()
 

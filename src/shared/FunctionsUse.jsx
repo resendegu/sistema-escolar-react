@@ -88,5 +88,16 @@ function checkCpf(cpf) {
 	return true;
 }
 
+async function getAddress(cep) {
+    try {
+        const resp = await fetch('https://brasilapi.com.br/api/cep/v1/' + cep)
+        const address = await resp.json();
+        return address;
+    } catch (error) {
+        console.log(error)
+        throw new Error(error);
+    }
+}
+
  
-export { calculateAge, checkCpf };
+export { calculateAge, checkCpf, getAddress };
