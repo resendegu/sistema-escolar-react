@@ -21,4 +21,8 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+*.cache
+*.cache
+.firebase/hosting.YnVpbGQ.cache
 .firebase/hosting.YnVpbGQ.cache

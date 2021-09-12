@@ -99,5 +99,20 @@ async function getAddress(cep) {
     }
 }
 
+
+const enrollStudent = async (studentData, classData, contractData, otherData) => {
+    let data = {dados: {...studentData, ...classData, ...otherData, }, contratoConfigurado: contractData.contratoConfigurado, planoOriginal: contractData.planoOriginal, codContrato: contractData.codContrato}
+    console.log(data)
+    
+    try {
+        let cadastraAluno = functions.httpsCallable('cadastraAluno');
+        let message = await cadastraAluno(data)
+        return message.data;
+    } catch (error) {
+        console.log(error)
+        throw new Error(error.message);
+    }
+    
+}
  
-export { calculateAge, checkCpf, getAddress };
+export { calculateAge, checkCpf, getAddress, enrollStudent };

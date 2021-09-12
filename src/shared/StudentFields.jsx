@@ -72,10 +72,10 @@ function BasicDataFields(props) {
         <div className={classes.root}>
 
               <Grid 
-              justifyContent="center"   
+              justifyContent="flex-start"   
               container
               direction="row"
-              spacing={2}
+              spacing={0}
               >
                 <Grid item>
                     <FormControl className={classes.fields}> 
@@ -219,7 +219,6 @@ function ContractConfigure(props) {
             let values = formData.getAll(field.name);
             internData[field.name] = values.length === 1 ?  values[0] : values;
         })
-        console.log(plan)
         let internPlan = data.planos[plan.id]
 
         internData.vencimentoEscolhido = internData.diasDeVencimento
@@ -420,7 +419,7 @@ function ContractConfigure(props) {
                     <form onSubmit={handleSubmit} onBlur={() => {contractHandler()}} id="contractForm" autoComplete="off">
                         <h1>Dados do Curso:</h1>
                         <Grid
-                            justifyContent="center"   
+                            justifyContent="flex-start"   
                             container
                             direction="row"
                             spacing={2}
@@ -446,7 +445,7 @@ function ContractConfigure(props) {
                         <h1>Dados do Plano:</h1>
                         <h6>Todos os valores brutos estão em R$ (BRL - Brazilian Real / Real Brasileiro)</h6>
                         <Grid
-                            justifyContent="center"   
+                            justifyContent="flex-start"   
                             container
                             direction="row"
                             spacing={2}
@@ -500,7 +499,7 @@ function ContractConfigure(props) {
                         <hr />
                         <h2>Parcelas</h2>
                         <Grid
-                            justifyContent="center"   
+                            justifyContent="flex-start"   
                             container
                             direction="row"
                             spacing={2}
@@ -526,7 +525,7 @@ function ContractConfigure(props) {
                         <hr />
                         <h2>Vencimento</h2>
                         <Grid
-                            justifyContent="center"   
+                            justifyContent="flex-start"   
                             container
                             direction="row"
                             spacing={2}
@@ -749,9 +748,9 @@ const AddressAndParentsFields = (props) => {
     return (
         <>
         <div className={classes.root}>
-            <h4>Endereço</h4>
+        <h4>Endereço</h4>
               <Grid 
-              justifyContent="center"   
+              justifyContent="flex-start"   
               container
               direction="row"
               spacing={2}
@@ -765,30 +764,30 @@ const AddressAndParentsFields = (props) => {
                 </Grid>
                 <Grid item>
                     <FormControl className={classes.fields}> 
-                        <TextField name="enderecoAluno" style={{width: '219px',}} variant="filled" InputLabelProps={{shrink: shrink,}}  id="enderecoAluno" required autoComplete="off"  type="text"  label="Endereço" value={cep.street}/>
+                        <TextField name="enderecoAluno" style={{width: '219px',}} variant="filled" InputLabelProps={{shrink: true,}}  id="enderecoAluno" required autoComplete="off"  type="text"  label="Endereço" value={cep.street}/>
                         
                     </FormControl >
                 </Grid>
                 <Grid item>
                     <FormControl className={classes.fields}> 
-                        <TextField variant="filled" autoComplete="off" InputLabelProps={{shrink: shrink,}} label="Número" type="text" id="numeroAluno" name="numeroAluno" aria-describedby="my-helper-text" />
+                        <TextField variant="filled" autoComplete="off" InputLabelProps={{shrink: true,}} label="Número" type="text" id="numeroAluno" required name="numeroAluno" aria-describedby="my-helper-text" />
                     </FormControl>
                 </Grid>
                 <Grid item>
                     <FormControl className={classes.fields}> 
-                        <TextField variant="filled" autoComplete="off" InputLabelProps={{shrink: shrink,}} required label="Bairro" type="text" id="bairroAluno" name="bairroAluno" aria-describedby="my-helper-text" value={cep.neighborhood} />
+                        <TextField variant="filled" autoComplete="off" InputLabelProps={{shrink: true,}} required label="Bairro" type="text" id="bairroAluno" name="bairroAluno" aria-describedby="my-helper-text" value={cep.neighborhood} />
                         
                     </FormControl>
                     
                 </Grid>
                 <Grid item>
                     <FormControl className={classes.fields}> 
-                        <TextField required autoComplete="off" InputLabelProps={{shrink: shrink,}} variant="filled" label="Cidade" type="text" id="cidadeAluno" name="cidadeAluno" aria-describedby="my-helper-text" value={cep.city} />
+                        <TextField required autoComplete="off" InputLabelProps={{shrink: true,}} variant="filled" label="Cidade" type="text" id="cidadeAluno" name="cidadeAluno" aria-describedby="my-helper-text" value={cep.city} />
                     </FormControl>
                 </Grid>
                 <Grid item>
                     <FormControl className={classes.fields}> 
-                        <TextField required autoComplete="off" InputLabelProps={{shrink: shrink,}} variant="filled" label="UF" type="text" id="estadoAluno" name="estadoAluno" aria-describedby="my-helper-text" value={cep.state} />
+                        <TextField required autoComplete="off" InputLabelProps={{shrink: true,}} variant="filled" label="UF" type="text" id="estadoAluno" name="estadoAluno" aria-describedby="my-helper-text" value={cep.state} />
                         
                     </FormControl>
                 </Grid>
@@ -796,18 +795,68 @@ const AddressAndParentsFields = (props) => {
                 
                 
               </Grid>
-              <h4>Dados dos Responsáveis</h4>
-            <Grid 
-            justifyContent="center"   
+
+            
+              <h4>Dados do 1º Responsável</h4>
+            <Grid
+            justifyContent="flex-start"   
             container
             direction="row"
             spacing={2}
             >
-                  
-
-                  <Grid item>
+                    <Grid item>
+                        <FormControl className={classes.fields}> 
+                            <TextField autoComplete="off" InputLabelProps={{shrink: shrink,}} variant="filled" label="Nome" type="text" id="nomeResponsavelAluno1" name="nomeResponsavelAluno1" aria-describedby="my-helper-text"
+                                FormHelperTextProps={{ error: true }} />
+                        </FormControl>
+                    </Grid>
+                    <Grid item >
+                        <FormControl variant="filled" >
+                            <InputLabel htmlFor="filled-age-native-simple" shrink={true}>Relação</InputLabel>
+                            <Select
+                                
+                                native
+                                // value={state.value}
+                                // onChange={handleChangeDay}
+                                inputProps={{
+                                    name: 'relacaoAluno1',
+                                    id: 'relacaoAluno1',
+                                }}
+                            >
+                                <option hidden selected>Escolha...</option>
+                                <option value="Mãe">Mãe</option>
+                                <option value="Pai">Pai</option>
+                                <option value="Tio">Tio</option>
+                                <option value="Tia">Tia</option>
+                                <option value="Avô">Avô</option>
+                                <option value="Avó">Avó</option>
+                                <option value="Responsável">Responsável</option>
+                                
+                            </Select>
+                            
+                        </FormControl>
+                    </Grid>
+                    <Grid item>
+                        <FormControl className={classes.fields}> 
+                            <TextField autoComplete="off" InputLabelProps={{shrink: shrink,}} variant="filled" label="Número Comercial" type="text" id="numeroComercialResponsavel1" name="numeroComercialResponsavel1" aria-describedby="my-helper-text"
+                                FormHelperTextProps={{ error: true }} />
+                        </FormControl>
+                    </Grid>
+                    <Grid item>
+                        <FormControl className={classes.fields}> 
+                            <TextField  autoComplete="off" InputLabelProps={{shrink: shrink,}} variant="filled" label="Número Celular" type="text" id="numeroCelularResponsavel1" name="numeroCelularResponsavel1" aria-describedby="my-helper-text"
+                                FormHelperTextProps={{ error: true }} />
+                        </FormControl>
+                    </Grid>
+                    <Grid item>
+                        <FormControl className={classes.fields}> 
+                            <TextField autoComplete="off" InputLabelProps={{shrink: shrink,}} variant="filled" label="E-mail" type="text" id="emailResponsavel1" name="emailResponsavel1" aria-describedby="my-helper-text"
+                                FormHelperTextProps={{ error: true }} />
+                        </FormControl>
+                    </Grid>
+                <Grid item>
                     <FormControl className={classes.fields}> 
-                        <TextField required autoComplete="off" InputLabelProps={{shrink: shrink,}} variant="filled" label="CPF" error={validCpf} onChange={handleCheckCpf} onBlur={() => validCpf ? document.getElementById('cpfAluno').value = null : null} type="text" id="cpfAluno" name="cpfAluno" aria-describedby="my-helper-text" helperText={
+                        <TextField autoComplete="off" InputLabelProps={{shrink: shrink,}} variant="filled" label="CPF" error={validCpf} onChange={handleCheckCpf} onBlur={() => validCpf ? document.getElementById('cpfResponsavel1').value = null : null} type="text" id="cpfResponsavel1" name="cpfResponsavel1" aria-describedby="my-helper-text" helperText={
                               validCpf &&
                               "Insira um CPF válido."
                             }
@@ -816,7 +865,81 @@ const AddressAndParentsFields = (props) => {
                 </Grid>
                 <Grid item>
                     <FormControl className={classes.fields}> 
-                        <TextField required autoComplete="off" InputLabelProps={{shrink: shrink,}} variant="filled" label="RG" type="text" id="rgAluno" name="rgAluno" aria-describedby="my-helper-text"
+                        <TextField autoComplete="off" InputLabelProps={{shrink: shrink,}} variant="filled" label="RG" type="text" id="rgResponsavel1" name="rgResponsavel1" aria-describedby="my-helper-text"
+                            FormHelperTextProps={{ error: true }} />
+                    </FormControl>
+                </Grid>
+            </Grid>
+
+            <h4>Dados do 2º Responsável</h4>
+            <Grid
+            justifyContent="flex-start"   
+            container
+            direction="row"
+            spacing={2}
+            >
+                    <Grid item>
+                        <FormControl className={classes.fields}> 
+                            <TextField  autoComplete="off" InputLabelProps={{shrink: shrink,}} variant="filled" label="Nome" type="text" id="nomeResponsavelAluno2" name="nomeResponsavelAluno2" aria-describedby="my-helper-text"
+                                FormHelperTextProps={{ error: true }} />
+                        </FormControl>
+                    </Grid>
+                    <Grid item >
+                        <FormControl variant="filled" >
+                            <InputLabel htmlFor="filled-age-native-simple" shrink={true}>Relação</InputLabel>
+                            <Select
+                                
+                                native
+                                // value={state.value}
+                                // onChange={handleChangeDay}
+                                inputProps={{
+                                    name: 'relacaoAluno2',
+                                    id: 'relacaoAluno2',
+                                }}
+                            >
+                                <option hidden selected>Escolha...</option>
+                                <option value="Mãe">Mãe</option>
+                                <option value="Pai">Pai</option>
+                                <option value="Tio">Tio</option>
+                                <option value="Tia">Tia</option>
+                                <option value="Avô">Avô</option>
+                                <option value="Avó">Avó</option>
+                                <option value="Responsável">Responsável</option>
+                                
+                            </Select>
+                            
+                        </FormControl>
+                    </Grid>
+                    <Grid item>
+                        <FormControl className={classes.fields}> 
+                            <TextField  autoComplete="off" InputLabelProps={{shrink: shrink,}} variant="filled" label="Número Comercial" type="text" id="numeroComercialResponsavel2" name="numeroComercialResponsavel2" aria-describedby="my-helper-text"
+                                FormHelperTextProps={{ error: true }} />
+                        </FormControl>
+                    </Grid>
+                    <Grid item>
+                        <FormControl className={classes.fields}> 
+                            <TextField autoComplete="off" InputLabelProps={{shrink: shrink,}} variant="filled" label="Número Celular" type="text" id="numeroCelularResponsavel2" name="numeroCelularResponsavel2" aria-describedby="my-helper-text"
+                                FormHelperTextProps={{ error: true }} />
+                        </FormControl>
+                    </Grid>
+                    <Grid item>
+                        <FormControl className={classes.fields}> 
+                            <TextField autoComplete="off" InputLabelProps={{shrink: shrink,}} variant="filled" label="E-mail" type="text" id="emailResponsavel2" name="emailResponsavel2" aria-describedby="my-helper-text"
+                                FormHelperTextProps={{ error: true }} />
+                        </FormControl>
+                    </Grid>
+                <Grid item>
+                    <FormControl className={classes.fields}> 
+                        <TextField autoComplete="off" InputLabelProps={{shrink: shrink,}} variant="filled" label="CPF" error={validCpf} onChange={handleCheckCpf} onBlur={() => validCpf ? document.getElementById('cpfResponsavel2').value = null : null} type="text" id="cpfResponsavel2" name="cpfResponsavel2" aria-describedby="my-helper-text" helperText={
+                              validCpf &&
+                              "Insira um CPF válido."
+                            }
+                            FormHelperTextProps={{ error: true }} />
+                    </FormControl>
+                </Grid>
+                <Grid item>
+                    <FormControl className={classes.fields}> 
+                        <TextField autoComplete="off" InputLabelProps={{shrink: shrink,}} variant="filled" label="RG" type="text" id="rgResponsavel2" name="rgResponsavel2" aria-describedby="my-helper-text"
                             FormHelperTextProps={{ error: true }} />
                     </FormControl>
                 </Grid>

@@ -1,14 +1,14 @@
 
 import { useEffect, useState } from 'react';
-import { makeStyles } from '@material-ui/core/styles';
+import { makeStyles, useTheme } from '@material-ui/core/styles';
 import Stepper from '@material-ui/core/Stepper';
 import Step from '@material-ui/core/Step';
 import StepButton from '@material-ui/core/StepButton';
 import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
-import { Backdrop, CircularProgress } from '@material-ui/core';
+import { Backdrop, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Paper, useMediaQuery } from '@material-ui/core';
 import DateTimePicker from '../../shared/DateTimePicker';
-import { calculateAge, checkCpf } from '../../shared/FunctionsUse';
+import { calculateAge, checkCpf, enrollStudent } from '../../shared/FunctionsUse';
 import { AddressAndParentsFields, BasicDataFields, ContractConfigure, CourseDataFields, DocumentsSend } from '../../shared/StudentFields';
 import * as $ from 'jquery';
 import { database } from '../../services/firebase';
@@ -16,6 +16,7 @@ import { classesRef } from '../../services/databaseRefs';
 import ErrorDialog from '../../shared/ErrorDialog';
 import FullScreenDialog from '../../shared/FullscreenDialog';
 import { useSnackbar } from 'notistack';
+
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -53,6 +54,7 @@ export default function AddStudent() {
   
   const [errorMessage, setErrorMessage] = useState('Error')
   const [ courseTable, setCourseTable ] = useState({rows: [{ id: 1, col1: 'Hello', col2: 'World' }], columns: [{ field: 'col1', headerName: 'Column 1', width: 150 }, { field: 'col2', headerName: 'Column 2', width: 150 }]});
+  const [ openFinalDialog, setOpenFinalDialog ] = useState(false);
   
   
 
@@ -230,6 +232,9 @@ export default function AddStudent() {
     for (let index = 0; index < steps.length; index++) {
         sessionStorage.removeItem(index)  
     }
+    sessionStorage.removeItem('planoOriginal')
+    sessionStorage.removeItem('codContrato')
+    sessionStorage.removeItem('contratoConfigurado')
   };
   
 
@@ -261,6 +266,9 @@ export default function AddStudent() {
           let stepStore = {dadosTurma: classStoredData.dadosTurma, dadosContrato: {codContrato: contractCode, planoOriginal: originalPlan, contratoConfigurado: configuredContract}}
           sessionStorage.setItem(activeStep, JSON.stringify(stepStore));
         break;
+        case 2:
+          sessionStorage.setItem(activeStep, JSON.stringify(data))
+        break;
       
         default:
           break;
@@ -268,12 +276,64 @@ export default function AddStudent() {
 
       handleComplete()
 
+      if (isLastStep()) {
+        setOpenFinalDialog(true);
+      }
+
   }
 
-  
+  const handleSendData = () => {
+    setLoader(true);
+    let storedData = []
+    for (let i = 0; i < totalSteps(); i++) {
+      storedData.push(JSON.parse(sessionStorage.getItem(i)))
+    }
+
+    enrollStudent(storedData[0], storedData[1].dadosTurma, storedData[1].dadosContrato, storedData[2]).then((message) => {
+        setOpenFinalDialog(false);
+        enqueueSnackbar(message.answer, {variant: 'success', });
+        for (let index = 0; index < steps.length; index++) {
+          sessionStorage.removeItem(index)  
+        }
+        sessionStorage.removeItem('planoOriginal')
+        sessionStorage.removeItem('codContrato')
+        sessionStorage.removeItem('contratoConfigurado')
+        setLoader(false);
+    }).catch(error => {
+      enqueueSnackbar(error.message, {variant: 'error'})
+      setLoader(false);
+    })
+  }
+
+
+  const theme = useTheme();
+  const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
 
   return (
     <>
+  
+      <Dialog
+      fullScreen={fullScreen}
+      open={openFinalDialog}
+      onClose={() => setOpenFinalDialog(false)}
+      aria-labelledby="responsive-dialog-title"
+      ba
+    >
+      <DialogTitle id="responsive-dialog-title">{"Você confirma o cadastro do aluno?"}</DialogTitle>
+      <DialogContent>
+        <DialogContentText>
+          Todos os dados digitados serão enviados aos servidores, e você será identificado como usuário que realizou este cadastro para futuras consultas.
+        </DialogContentText>
+      </DialogContent>
+      <DialogActions>
+        <Button autoFocus onClick={() => setOpenFinalDialog(false)} color="primary">
+          Cancelar
+        </Button>
+        <Button onClick={handleSendData} color="primary" autoFocus>
+          Cadastrar aluno
+        </Button>
+      </DialogActions>
+    </Dialog>
     
     {errorMessage && <ErrorDialog title="Erro" message={errorMessage} isOpen={true} onClose={handleOnCloseErrorDialog}/>}
     <div style={{position: 'absolute'}}>
@@ -284,7 +344,7 @@ export default function AddStudent() {
     <div className={classes.root}>
       
         <h2>Cadastro de Alunos</h2>
-      <Stepper alternativeLabel nonLinear activeStep={activeStep}>
+      <Stepper alternativeLabel activeStep={activeStep}>
         {steps.map((label, index) => {
           const stepProps = {};
           const buttonProps = {};
@@ -312,14 +372,18 @@ export default function AddStudent() {
         {allStepsCompleted() ? (
           <div>
             <Typography className={classes.instructions}>
-              All steps completed - you&apos;re finished
+              Você terminou.
             </Typography>
             <Button onClick={handleReset}>Resetar</Button>
           </div>
         ) : (
           <div>
               
-                <Typography className={classes.instructions}>{getStepContent(activeStep)}</Typography>
+                <Typography className={classes.instructions}>
+                  <Paper style={{padding: '10px', minWidth: '250px'}} elevation={2}>
+                    {getStepContent(activeStep)}
+                  </Paper>
+                </Typography>
                 
               
             
