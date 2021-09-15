@@ -101,7 +101,13 @@ async function getAddress(cep) {
 
 
 const enrollStudent = async (studentData, classData, contractData, otherData) => {
-    let data = {dados: {...studentData, ...classData, ...otherData, }, contratoConfigurado: contractData.contratoConfigurado, planoOriginal: contractData.planoOriginal, codContrato: contractData.codContrato}
+    let data
+    if (studentData.tipoMatricula === 'preMatricula') {
+        data = {dados: {...studentData, ...classData, ...otherData}}
+    } else {
+        data = {dados: {...studentData, ...classData, ...otherData, }, contratoConfigurado: contractData.contratoConfigurado, planoOriginal: contractData.planoOriginal, codContrato: contractData.codContrato}
+    }
+    
     console.log(data)
     
     try {

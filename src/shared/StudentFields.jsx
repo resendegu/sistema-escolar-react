@@ -1,4 +1,4 @@
-import { Box, Button, CircularProgress, Container, FormControl, FormHelperText, Grid, InputLabel, LinearProgress, makeStyles, Paper, Select, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField } from "@material-ui/core";
+import { Box, Button, CircularProgress, Container, createChainedFunction, FormControl, FormControlLabel, FormGroup, FormHelperText, FormLabel, Grid, InputLabel, LinearProgress, makeStyles, Paper, Select, Switch, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField } from "@material-ui/core";
 import { Fragment, useState } from "react";
 import { DropzoneDialog } from 'material-ui-dropzone';
 import { calculateAge, checkCpf, getAddress } from "./FunctionsUse";
@@ -34,7 +34,9 @@ const useStyles = makeStyles((theme) => ({
   }));
 
 function BasicDataFields(props) {
-    const { shrink } = props;
+    const { shrink, handleOptionalSteps, setParentsRequired } = props;
+
+
 
     const classes = useStyles();
 
@@ -42,6 +44,22 @@ function BasicDataFields(props) {
     const [ loading, setLoading ] = useState(false)
 
     const [ validCpf, setValidCpf ] = useState(false);
+    const [ enrollType, setEnrollType ] = useState({checked: false, value: 'matricula'});
+
+
+    useEffect(() => {
+        let basicData = JSON.parse(sessionStorage.getItem(0))
+        try {
+            if (basicData.tipoMatricula === 'preMatricula') {
+                setEnrollType({checked: true, value: 'preMatricula'})
+            } else {
+                setEnrollType({checked: false, value: 'matricula'})
+            }
+        } catch (error) {
+            console.log(error)
+        }
+        
+    }, [])
 
     const handleCalculateAge = async (date) => {
         console.log(date.target.valueAsDate)
@@ -51,6 +69,11 @@ function BasicDataFields(props) {
                 setAge('Calculando idade...')
                 let ageObj = await calculateAge(birthdate);
                 setAge(`Idade ${ageObj.years} anos, ${ageObj.months} meses e ${ageObj.days} dias`);
+                if (ageObj.years < 18) {
+                    setParentsRequired(true);
+                } else {
+                    setParentsRequired(false);
+                }
             } catch (error) {
                 error.message === 'permission-denied' ? setAge(`Você não possui permissão.`) : setAge(error.message)
                 document.getElementById('dataNascimentoAluno').value = ''
@@ -67,10 +90,30 @@ function BasicDataFields(props) {
         setValidCpf(!checkCpf(cpf))
     }
 
+    const handleChangeEnrollType = () => {
+        setEnrollType({checked: !enrollType.checked, value: !enrollType.checked ? 'preMatricula' : 'matricula'})
+        if (!enrollType.checked) {
+            handleOptionalSteps(1)
+        } else {
+            handleOptionalSteps(1, true)
+        }
+    }
+
+
     return (
         <>
         <div className={classes.root}>
-
+        <FormControl component="fieldset">
+            <FormLabel component="legend">Tipo de Matrícula</FormLabel>
+            <FormGroup>
+                <FormControlLabel
+                control={<Switch checked={enrollType.checked} onChange={handleChangeEnrollType} id="tipoMatricula" name="tipoMatricula" value="preMatricula" color="primary"/>}
+                label={'Pré-matrícula'}
+                />
+                
+            </FormGroup>
+            <FormHelperText>Escolha se será uma matrícula ou pré-matrícula.</FormHelperText>
+        </FormControl>
               <Grid 
               justifyContent="flex-start"   
               container
@@ -536,7 +579,7 @@ function ContractConfigure(props) {
                             <FormControl variant="filled">
                                 <InputLabel htmlFor="filled-age-native-simple">Escolha um dia</InputLabel>
                                 <Select
-                                    
+                                    required
                                     native
                                     value={state.value}
                                     onChange={handleChangeDay}
@@ -602,7 +645,7 @@ function CourseDataFields(props) {
         let contractCode = sessionStorage.getItem('codContrato');
         let storedCourse = JSON.parse(sessionStorage.getItem(activeStep))
         console.log(contractCode);
-        if (contractCode) {
+        if (contractCode || storedCourse) {
             setContractState(contractCode);
             setCourseChosen(storedCourse.dadosTurma)
         } else {
@@ -707,7 +750,7 @@ function DocumentsSend(props) {
 }
 
 const AddressAndParentsFields = (props) => {
-    const { shrink } = props;
+    const { shrink, parentsRequired } = props;
 
     const classes = useStyles();
 
@@ -796,80 +839,86 @@ const AddressAndParentsFields = (props) => {
                 
               </Grid>
 
-            
-              <h4>Dados do 1º Responsável</h4>
-            <Grid
-            justifyContent="flex-start"   
-            container
-            direction="row"
-            spacing={2}
-            >
-                    <Grid item>
-                        <FormControl className={classes.fields}> 
-                            <TextField autoComplete="off" InputLabelProps={{shrink: shrink,}} variant="filled" label="Nome" type="text" id="nomeResponsavelAluno1" name="nomeResponsavelAluno1" aria-describedby="my-helper-text"
-                                FormHelperTextProps={{ error: true }} />
-                        </FormControl>
-                    </Grid>
-                    <Grid item >
-                        <FormControl variant="filled" >
-                            <InputLabel htmlFor="filled-age-native-simple" shrink={true}>Relação</InputLabel>
-                            <Select
+            {parentsRequired && (
+                <>
+                    <h4>Dados do Responsavel</h4>
+                    <label>O aluno é menor de idade. É necessário inserir os dados de pelo menos um responsável.</label>
+                    <Grid
+                    justifyContent="flex-start"   
+                    container
+                    direction="row"
+                    spacing={2}
+                    >
+                        <Grid item>
+                            <FormControl className={classes.fields}> 
+                                <TextField autoComplete="off" required InputLabelProps={{shrink: shrink,}} variant="filled" label="Nome" type="text" id="nomeResponsavelAluno1" name="nomeResponsavelAluno1" aria-describedby="my-helper-text"
+                                    FormHelperTextProps={{ error: true }} />
+                            </FormControl>
+                        </Grid>
+                        <Grid item >
+                            <FormControl variant="filled" >
+                                <InputLabel htmlFor="filled-age-native-simple" required shrink={true}>Relação</InputLabel>
+                                <Select
+                                    
+                                    native
+                                    // value={state.value}
+                                    // onChange={handleChangeDay}
+                                    inputProps={{
+                                        name: 'relacaoAluno1',
+                                        id: 'relacaoAluno1',
+                                    }}
+                                >
+                                    <option hidden selected>Escolha...</option>
+                                    <option value="Mãe">Mãe</option>
+                                    <option value="Pai">Pai</option>
+                                    <option value="Tio">Tio</option>
+                                    <option value="Tia">Tia</option>
+                                    <option value="Avô">Avô</option>
+                                    <option value="Avó">Avó</option>
+                                    <option value="Responsável">Responsável</option>
+                                    
+                                </Select>
                                 
-                                native
-                                // value={state.value}
-                                // onChange={handleChangeDay}
-                                inputProps={{
-                                    name: 'relacaoAluno1',
-                                    id: 'relacaoAluno1',
-                                }}
-                            >
-                                <option hidden selected>Escolha...</option>
-                                <option value="Mãe">Mãe</option>
-                                <option value="Pai">Pai</option>
-                                <option value="Tio">Tio</option>
-                                <option value="Tia">Tia</option>
-                                <option value="Avô">Avô</option>
-                                <option value="Avó">Avó</option>
-                                <option value="Responsável">Responsável</option>
-                                
-                            </Select>
-                            
-                        </FormControl>
+                            </FormControl>
+                        </Grid>
+                        <Grid item>
+                            <FormControl className={classes.fields}> 
+                                <TextField autoComplete="off" required InputLabelProps={{shrink: shrink,}} variant="filled" label="Número Comercial" type="text" id="numeroComercialResponsavel1" name="numeroComercialResponsavel1" aria-describedby="my-helper-text"
+                                    FormHelperTextProps={{ error: true }} />
+                            </FormControl>
+                        </Grid>
+                        <Grid item>
+                            <FormControl className={classes.fields}> 
+                                <TextField  autoComplete="off" required InputLabelProps={{shrink: shrink,}} variant="filled" label="Número Celular" type="text" id="numeroCelularResponsavel1" name="numeroCelularResponsavel1" aria-describedby="my-helper-text"
+                                    FormHelperTextProps={{ error: true }} />
+                            </FormControl>
+                        </Grid>
+                        <Grid item>
+                            <FormControl className={classes.fields}> 
+                                <TextField autoComplete="off" required InputLabelProps={{shrink: shrink,}} variant="filled" label="E-mail" type="text" id="emailResponsavel1" name="emailResponsavel1" aria-describedby="my-helper-text"
+                                    FormHelperTextProps={{ error: true }} />
+                            </FormControl>
+                        </Grid>
+                        <Grid item>
+                            <FormControl className={classes.fields}> 
+                                <TextField autoComplete="off" required InputLabelProps={{shrink: shrink,}} variant="filled" label="CPF" error={validCpf} onChange={handleCheckCpf} onBlur={() => validCpf ? document.getElementById('cpfResponsavel1').value = null : null} type="text" id="cpfResponsavel1" name="cpfResponsavel1" aria-describedby="my-helper-text" helperText={
+                                        validCpf &&
+                                        "Insira um CPF válido."
+                                    }
+                                    FormHelperTextProps={{ error: true }} />
+                            </FormControl>
+                        </Grid>
+                        <Grid item>
+                            <FormControl className={classes.fields}> 
+                                <TextField autoComplete="off" required InputLabelProps={{shrink: shrink,}} variant="filled" label="RG" type="text" id="rgResponsavel1" name="rgResponsavel1" aria-describedby="my-helper-text"
+                                    FormHelperTextProps={{ error: true }} />
+                            </FormControl>
+                        </Grid>
                     </Grid>
-                    <Grid item>
-                        <FormControl className={classes.fields}> 
-                            <TextField autoComplete="off" InputLabelProps={{shrink: shrink,}} variant="filled" label="Número Comercial" type="text" id="numeroComercialResponsavel1" name="numeroComercialResponsavel1" aria-describedby="my-helper-text"
-                                FormHelperTextProps={{ error: true }} />
-                        </FormControl>
-                    </Grid>
-                    <Grid item>
-                        <FormControl className={classes.fields}> 
-                            <TextField  autoComplete="off" InputLabelProps={{shrink: shrink,}} variant="filled" label="Número Celular" type="text" id="numeroCelularResponsavel1" name="numeroCelularResponsavel1" aria-describedby="my-helper-text"
-                                FormHelperTextProps={{ error: true }} />
-                        </FormControl>
-                    </Grid>
-                    <Grid item>
-                        <FormControl className={classes.fields}> 
-                            <TextField autoComplete="off" InputLabelProps={{shrink: shrink,}} variant="filled" label="E-mail" type="text" id="emailResponsavel1" name="emailResponsavel1" aria-describedby="my-helper-text"
-                                FormHelperTextProps={{ error: true }} />
-                        </FormControl>
-                    </Grid>
-                <Grid item>
-                    <FormControl className={classes.fields}> 
-                        <TextField autoComplete="off" InputLabelProps={{shrink: shrink,}} variant="filled" label="CPF" error={validCpf} onChange={handleCheckCpf} onBlur={() => validCpf ? document.getElementById('cpfResponsavel1').value = null : null} type="text" id="cpfResponsavel1" name="cpfResponsavel1" aria-describedby="my-helper-text" helperText={
-                              validCpf &&
-                              "Insira um CPF válido."
-                            }
-                            FormHelperTextProps={{ error: true }} />
-                    </FormControl>
-                </Grid>
-                <Grid item>
-                    <FormControl className={classes.fields}> 
-                        <TextField autoComplete="off" InputLabelProps={{shrink: shrink,}} variant="filled" label="RG" type="text" id="rgResponsavel1" name="rgResponsavel1" aria-describedby="my-helper-text"
-                            FormHelperTextProps={{ error: true }} />
-                    </FormControl>
-                </Grid>
-            </Grid>
+                </>
+                
+            )}
+              
 
             <h4>Dados do 2º Responsável</h4>
             <Grid

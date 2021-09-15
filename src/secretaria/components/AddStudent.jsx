@@ -51,6 +51,8 @@ export default function AddStudent() {
   const [ loader, setLoader ] = useState(false);
   const steps = getSteps();
   const [ shrink, setShrink ] = useState();
+  const [ optionalSteps, setOptionalSteps ] = useState([]);
+  const [ parentsRequired, setParentsRequired ] = useState(undefined)
   
   const [errorMessage, setErrorMessage] = useState('Error')
   const [ courseTable, setCourseTable ] = useState({rows: [{ id: 1, col1: 'Hello', col2: 'World' }], columns: [{ field: 'col1', headerName: 'Column 1', width: 150 }, { field: 'col2', headerName: 'Column 2', width: 150 }]});
@@ -64,6 +66,8 @@ export default function AddStudent() {
       let item = JSON.parse(sessionStorage.getItem(index))
       for ( let key in item ) {
           form_data.append(key, item[key]);
+          
+
           $('#' + key).val(item[key]);
           setShrink(true)
       }
@@ -125,16 +129,27 @@ export default function AddStudent() {
     return ['Dados básicos', 'Dados para o Curso', 'Endereço, Responsáveis e dados adicionais'];
   }
 
+  const handleOptionalSteps = (step, remove=false) => {
+    let optionalArray = optionalSteps;
+    if (!remove) {
+      optionalArray.push(step);
+    } else {
+      let index = optionalArray.indexOf(step)
+      optionalArray.splice(index, 1);
+    }
+    setOptionalSteps(optionalArray)
+  }
+
   function getStepContent(step) {
     
   switch (step) {
     case 0:
         
-      return <BasicDataFields shrink={shrink}  />;
+      return <BasicDataFields shrink={shrink} handleOptionalSteps={handleOptionalSteps} activeStep={activeStep} setParentsRequired={setParentsRequired} />;
     case 1:
       return <CourseDataFields shrink={shrink} rows={courseTable.rows} columns={courseTable.columns} rowHeight={25} setLoader={setLoader} activeStep={activeStep} />;
     case 2:
-      return <AddressAndParentsFields shrink={shrink} />;
+      return <AddressAndParentsFields shrink={shrink} parentsRequired={parentsRequired}/>;
     default:
       return 'Unknown step';
   }
@@ -147,7 +162,12 @@ export default function AddStudent() {
   };
 
   const isStepOptional = (step) => {
-    return false;
+    if (optionalSteps.indexOf(step) === -1) {
+      return false;
+    } else {
+      return true;
+    }
+    
   };
 
   const handleSkip = () => {
@@ -249,36 +269,53 @@ export default function AddStudent() {
   const handleSubmit = (e) => {
     e.preventDefault()
       console.log(e)
-      let formData = new FormData(document.getElementById('formAddStudent'))
+      try {
+        let formData = new FormData(document.getElementById('formAddStudent'))
 
-      let data = Object.fromEntries(formData.entries());
-      console.log(data)
-      
-      switch (activeStep) {
-        case 0:
-          sessionStorage.setItem(activeStep, JSON.stringify(data))
-        break;
-        case 1:
-          let configuredContract = JSON.parse(sessionStorage.getItem('contratoConfigurado'));
-          let originalPlan = JSON.parse(sessionStorage.getItem('planoOriginal'));
-          let contractCode = sessionStorage.getItem('codContrato');
-          let classStoredData = JSON.parse(sessionStorage.getItem(activeStep));
-          let stepStore = {dadosTurma: classStoredData.dadosTurma, dadosContrato: {codContrato: contractCode, planoOriginal: originalPlan, contratoConfigurado: configuredContract}}
-          sessionStorage.setItem(activeStep, JSON.stringify(stepStore));
-        break;
-        case 2:
-          sessionStorage.setItem(activeStep, JSON.stringify(data))
-        break;
-      
-        default:
+        let data = Object.fromEntries(formData.entries());
+        console.log(data)
+        
+        switch (activeStep) {
+          case 0:
+              sessionStorage.setItem(activeStep, JSON.stringify(data))
           break;
-      }
+          case 1:
+          
+              let configuredContract = JSON.parse(sessionStorage.getItem('contratoConfigurado'));
+              let originalPlan = JSON.parse(sessionStorage.getItem('planoOriginal'));
+              let classStoredData = JSON.parse(sessionStorage.getItem(activeStep));
+              if (!classStoredData.dadosTurma) {
+                throw Error('Turma não escolhida.')
+              }
+              let contractCode = sessionStorage.getItem('codContrato');
+              if (!contractCode) {
+                throw Error('Contrato não configurado.')
+              }
+              
+              let stepStore = {dadosTurma: classStoredData.dadosTurma, dadosContrato: {codContrato: contractCode, planoOriginal: originalPlan, contratoConfigurado: configuredContract}}
+              sessionStorage.setItem(activeStep, JSON.stringify(stepStore));
+          break;
+          case 2:
+              sessionStorage.setItem(activeStep, JSON.stringify(data))
+          break;
+        
+          default:
+            break;
+        }
 
-      handleComplete()
+        handleComplete();
 
-      if (isLastStep()) {
-        setOpenFinalDialog(true);
+        if (isLastStep()) {
+          setOpenFinalDialog(true);
+        }
+
+        if (!allStepsCompleted()) {
+          handleNext();
+        }
+      } catch (error) {
+        enqueueSnackbar(error.message, {variant: 'error'})
       }
+      
 
   }
 
@@ -322,7 +359,7 @@ export default function AddStudent() {
       <DialogTitle id="responsive-dialog-title">{"Você confirma o cadastro do aluno?"}</DialogTitle>
       <DialogContent>
         <DialogContentText>
-          Todos os dados digitados serão enviados aos servidores, e você será identificado como usuário que realizou este cadastro para futuras consultas.
+          Todos os dados digitados serão enviados aos servidores, e você será identificado como usuário que realizou este cadastro paraconsultas futuras.
         </DialogContentText>
       </DialogContent>
       <DialogActions>
@@ -369,14 +406,6 @@ export default function AddStudent() {
       </Stepper>
       <div>
         <form onSubmit={handleSubmit} id="formAddStudent">
-        {allStepsCompleted() ? (
-          <div>
-            <Typography className={classes.instructions}>
-              Você terminou.
-            </Typography>
-            <Button onClick={handleReset}>Resetar</Button>
-          </div>
-        ) : (
           <div>
               
                 <Typography className={classes.instructions}>
@@ -388,14 +417,14 @@ export default function AddStudent() {
               
             
                 <div>
-                
+                {allStepsCompleted() && <Button onClick={handleReset}>Resetar</Button>}
                 <Button
                     variant="contained"
                     color="primary"
-                    onClick={handleNext}
+                    type="submit"
                     className={classes.button}
                 >
-                    Próximo
+                    {completedSteps() === totalSteps() - 1 ? 'Cadastrar Aluno' : 'Salvar e ir para o próximo'}
                 </Button>
                 {isStepOptional(activeStep) && !completed.has(activeStep) && (
                     <Button
@@ -409,20 +438,14 @@ export default function AddStudent() {
                 )}
 
                 {activeStep !== steps.length &&
-                    (completed.has(activeStep) ? (
+                    (completed.has(activeStep) && (
                     <Typography variant="caption" className={classes.completed}>
                         Passo {activeStep + 1} salvo
                     </Typography>
-                    ) : (
-                    <Button variant="contained" color="primary" type="submit">
-                        {completedSteps() === totalSteps() - 1 ? 'Cadastrar Aluno' : 'Salvar'}
-                    </Button>
                     ))}
                 </div>
             
           </div>
-         
-        )}
         </form>
       </div>
     </div>
