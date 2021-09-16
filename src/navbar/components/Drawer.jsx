@@ -26,7 +26,7 @@ import {
 } from '@material-ui/icons'
 import MenuItem from '@material-ui/core/MenuItem';
 import Menu from '@material-ui/core/Menu';
-import { Box } from '@material-ui/core';
+import { Box, SwipeableDrawer } from '@material-ui/core';
 import SimpleContainer from '../../Container';
 
 
@@ -201,16 +201,17 @@ function ResponsiveDrawer(props) {
           </Drawer>
         </Hidden>
         <Hidden xsDown implementation="css">
-          <Drawer
+          <SwipeableDrawer
             classes={{
               paper: classes.drawerPaper,
             }}
             variant="temporary"
             open={open}
             onClose={onClose}
+            disableSwipeToOpen={false}
           >
             {drawer}
-          </Drawer>
+          </SwipeableDrawer>
         </Hidden>
       </nav>
       

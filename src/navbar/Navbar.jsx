@@ -43,7 +43,6 @@ const useStyles = makeStyles((theme) => ({
   },
   title: {
     flexGrow: 1,
-    marginTop: '7px',
   },
   list: {
     width: 250,
@@ -126,7 +125,7 @@ export default function Navbar(props) {
             justify="space-between" // Add it here :)
             container 
             spacing={24}
-            
+            alignItems="center"
           >
             <Grid item>
               <IconButton edge="start" className={classes.menuButton} onClick={openDrawer} color="inherit" aria-label="menu">
@@ -151,9 +150,9 @@ export default function Navbar(props) {
                     onClick={handleMenu}
                     color="inherit"
                     edge="end"
-                    
+                    //style={{maxWidth: '34px'}}
                   >
-                    {user.avatar? (<img src={user.avatar} style={{width: "24px", borderRadius: '50%',}} alt=""/>) : <AccountCircle />}
+                    {user.avatar? (<img src={user.avatar} style={{width: "32px", borderRadius: '50%',}} alt=""/>) : <AccountCircle />}
                   </IconButton>
                   <Menu
                     id="menu-appbar"
