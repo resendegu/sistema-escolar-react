@@ -85,7 +85,6 @@ export default function SecretariaTabs() {
           <Tab label="Nova Turma" icon={<AddBox />} {...a11yProps(4)} />
           <Tab label="E-mails" icon={<Email />} {...a11yProps(5)} />
           <Tab label="Conf. da Escola" icon={<Build />} {...a11yProps(6)} />
-          <Tab label="Alunos Desativados" icon={<HighlightOff />} {...a11yProps(7)} />
         </Tabs>
       </AppBar>
       <TabPanel value={value} index={0}>
@@ -108,9 +107,6 @@ export default function SecretariaTabs() {
       </TabPanel>
       <TabPanel value={value} index={6}>
         Item Seven
-      </TabPanel>
-      <TabPanel value={value} index={7}>
-        Item Eight
       </TabPanel>
     </div>
   );

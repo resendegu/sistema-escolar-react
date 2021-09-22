@@ -145,7 +145,7 @@ export default function AddStudent() {
   switch (step) {
     case 0:
         
-      return <BasicDataFields shrink={shrink} handleOptionalSteps={handleOptionalSteps} activeStep={activeStep} setParentsRequired={setParentsRequired} />;
+      return <BasicDataFields shrink={shrink} handleOptionalSteps={handleOptionalSteps} activeStep={activeStep} setParentsRequired={setParentsRequired} setLoader={setLoader} />;
     case 1:
       return <CourseDataFields shrink={shrink} rows={courseTable.rows} columns={courseTable.columns} rowHeight={25} setLoader={setLoader} activeStep={activeStep} />;
     case 2:
@@ -208,8 +208,10 @@ export default function AddStudent() {
           // find the first step that has been completed
           steps.findIndex((step, i) => !completed.has(i))
         : activeStep + 1;
-
-    setActiveStep(newActiveStep);
+      if (!isLastStep()) {
+        setActiveStep(newActiveStep);
+      }
+    
 
     
   };
@@ -270,6 +272,7 @@ export default function AddStudent() {
     e.preventDefault()
       console.log(e)
       try {
+        
         let formData = new FormData(document.getElementById('formAddStudent'))
 
         let data = Object.fromEntries(formData.entries());
@@ -296,6 +299,11 @@ export default function AddStudent() {
               sessionStorage.setItem(activeStep, JSON.stringify(stepStore));
           break;
           case 2:
+              data.responsaveis = JSON.parse(sessionStorage.getItem('responsaveis')) || null;
+              console.log(parentsRequired, data.responsaveis)
+              if (parentsRequired && (data.responsaveis === null || data.responsaveis.length < 1)) {
+                throw new Error('O aluno é menor de idade. É necessário cadastrar pelo menos um responsável.')
+              }
               sessionStorage.setItem(activeStep, JSON.stringify(data))
           break;
         
@@ -309,10 +317,11 @@ export default function AddStudent() {
           setOpenFinalDialog(true);
         }
 
-        if (!allStepsCompleted()) {
-          handleNext();
-        }
+        
+        handleNext();
+        
       } catch (error) {
+        console.log(error)
         enqueueSnackbar(error.message, {variant: 'error'})
       }
       
@@ -320,26 +329,33 @@ export default function AddStudent() {
   }
 
   const handleSendData = () => {
+    setOpenFinalDialog(false);
     setLoader(true);
-    let storedData = []
+    let storedData = {}
     for (let i = 0; i < totalSteps(); i++) {
-      storedData.push(JSON.parse(sessionStorage.getItem(i)))
+      storedData[i] = (JSON.parse(sessionStorage.getItem(i)))
     }
-
-    enrollStudent(storedData[0], storedData[1].dadosTurma, storedData[1].dadosContrato, storedData[2]).then((message) => {
-        setOpenFinalDialog(false);
-        enqueueSnackbar(message.answer, {variant: 'success', });
-        for (let index = 0; index < steps.length; index++) {
-          sessionStorage.removeItem(index)  
-        }
-        sessionStorage.removeItem('planoOriginal')
-        sessionStorage.removeItem('codContrato')
-        sessionStorage.removeItem('contratoConfigurado')
+    console.log(storedData)
+    enrollStudent(storedData[0], 
+      storedData[1] === null ? '' : storedData[1].dadosTurma, 
+      storedData[1] === null ? '' : storedData[1].dadosContrato, 
+      storedData[2])
+        .then((message) => {
+          setOpenFinalDialog(false);
+          enqueueSnackbar(message.answer, {variant: 'success', });
+          for (let index = 0; index < steps.length; index++) {
+            sessionStorage.removeItem(index)  
+          }
+          sessionStorage.removeItem('planoOriginal')
+          sessionStorage.removeItem('codContrato')
+          sessionStorage.removeItem('contratoConfigurado')
+          sessionStorage.removeItem('responsaveis')
+          setLoader(false);
+          handleReset()
+      }).catch(error => {
+        enqueueSnackbar(error.message, {variant: 'error'})
         setLoader(false);
-    }).catch(error => {
-      enqueueSnackbar(error.message, {variant: 'error'})
-      setLoader(false);
-    })
+      })
   }
 
 
@@ -359,7 +375,7 @@ export default function AddStudent() {
       <DialogTitle id="responsive-dialog-title">{"Você confirma o cadastro do aluno?"}</DialogTitle>
       <DialogContent>
         <DialogContentText>
-          Todos os dados digitados serão enviados aos servidores, e você será identificado como usuário que realizou este cadastro paraconsultas futuras.
+          Todos os dados digitados serão enviados aos servidores, e você será identificado como usuário que realizou este cadastro para consultas futuras.
         </DialogContentText>
       </DialogContent>
       <DialogActions>
@@ -380,7 +396,7 @@ export default function AddStudent() {
     </div>
     <div className={classes.root}>
       
-        <h2>Cadastro de Alunos</h2>
+        <h2>Cadastro de Aluno</h2>
       <Stepper alternativeLabel activeStep={activeStep}>
         {steps.map((label, index) => {
           const stepProps = {};
@@ -405,7 +421,7 @@ export default function AddStudent() {
         })}
       </Stepper>
       <div>
-        <form onSubmit={handleSubmit} id="formAddStudent">
+        <form onSubmit={handleSubmit} id="formAddStudent" autoComplete="off">
           <div>
               
                 <Typography className={classes.instructions}>

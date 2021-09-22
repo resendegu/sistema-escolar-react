@@ -1,4 +1,4 @@
-import { Box, Button, CircularProgress, Container, createChainedFunction, FormControl, FormControlLabel, FormGroup, FormHelperText, FormLabel, Grid, InputLabel, LinearProgress, makeStyles, Paper, Select, Switch, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField } from "@material-ui/core";
+import { Box, Button, CircularProgress, Container, createChainedFunction, FormControl, FormControlLabel, FormGroup, FormHelperText, FormLabel, Grid, InputLabel, LinearProgress, makeStyles, Paper, Select, Switch, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Typography, Checkbox } from "@material-ui/core";
 import { Fragment, useState } from "react";
 import { DropzoneDialog } from 'material-ui-dropzone';
 import { calculateAge, checkCpf, getAddress } from "./FunctionsUse";
@@ -8,7 +8,7 @@ import { contractRef, coursesRef } from "../services/databaseRefs";
 import * as $ from 'jquery';
 import ErrorDialog from '../shared/ErrorDialog'
 import { useSnackbar } from "notistack";
-import { Visibility } from "@material-ui/icons";
+import { PlusOneOutlined, PlusOneRounded, Visibility } from "@material-ui/icons";
 import FullScreenDialog from "./FullscreenDialog";
 
 const useStyles = makeStyles((theme) => ({
@@ -34,14 +34,14 @@ const useStyles = makeStyles((theme) => ({
   }));
 
 function BasicDataFields(props) {
-    const { shrink, handleOptionalSteps, setParentsRequired } = props;
+    const { shrink, handleOptionalSteps, setParentsRequired, setLoader } = props;
 
 
 
     const classes = useStyles();
 
     const [ age, setAge ] = useState(null)
-    const [ loading, setLoading ] = useState(false)
+    
 
     const [ validCpf, setValidCpf ] = useState(false);
     const [ enrollType, setEnrollType ] = useState({checked: false, value: 'matricula'});
@@ -66,6 +66,7 @@ function BasicDataFields(props) {
         let birthdate = date.target.valueAsDate
         if (birthdate != null && !isNaN(birthdate.getDay()) ) {
             try {
+                setLoader(true)
                 setAge('Calculando idade...')
                 let ageObj = await calculateAge(birthdate);
                 setAge(`Idade ${ageObj.years} anos, ${ageObj.months} meses e ${ageObj.days} dias`);
@@ -74,7 +75,9 @@ function BasicDataFields(props) {
                 } else {
                     setParentsRequired(false);
                 }
+                setLoader(false)
             } catch (error) {
+                
                 error.message === 'permission-denied' ? setAge(`Você não possui permissão.`) : setAge(error.message)
                 document.getElementById('dataNascimentoAluno').value = ''
             }
@@ -145,7 +148,7 @@ function BasicDataFields(props) {
                 </Grid>
                 <Grid item>
                     <FormControl className={classes.fields}> 
-                        <TextField required autoComplete="off" InputLabelProps={{shrink: shrink,}} variant="filled" label="E-mail" type="email" id="emailAluno" name="emailAluno" aria-describedby="my-helper-text" />
+                        <TextField required autoComplete="no" InputLabelProps={{shrink: shrink,}} variant="filled" label="E-mail" type="email" id="emailAluno" name="emailAluno" aria-describedby="my-helper-text" />
                     </FormControl>
                 </Grid>
                 <Grid item>
@@ -750,13 +753,34 @@ function DocumentsSend(props) {
 }
 
 const AddressAndParentsFields = (props) => {
+    
+
     const { shrink, parentsRequired } = props;
 
     const classes = useStyles();
-
+    function parentField(nome, email, id, relacao, celular, cpf, rg) {
+        this.nome = nome;
+        this.email = email;
+        this.id = id;
+        this.relacao = relacao;
+        this.celular = celular;
+        this.cpf = cpf;
+        this.rg = rg;
+    }
+    const parentFieldTemplate = new parentField('', '', '', '', '', '', '', '');
     const [ cep, setCep ] = useState({message: 'Digite o CEP para buscar'});
     const [ loading, setLoading ] = useState(false);
     const [ validCpf, setValidCpf ] = useState(false);
+    const [ parentsFields, setParentsFields ] = useState([]);
+
+    const [ dialogOpen, setDialogOpen ] = useState(false);
+
+    useEffect(() => {
+        let parentsArray = JSON.parse(sessionStorage.getItem('responsaveis'))
+        if (parentsArray) {
+            setParentsFields(parentsArray)
+        }
+    }, [])
 
     const handleGetAddress = async (e) => {
         console.log(e.target.value)
@@ -788,8 +812,162 @@ const AddressAndParentsFields = (props) => {
         setValidCpf(!checkCpf(cpf))
     }
 
+    let parentsCounter = 0
+    const handleAddParentField = (edit=false, id=null) => {
+        if (edit) {
+            let fields = (parentsFields.filter(parent => parent.id === id))[0]
+            console.log(fields)
+            setDialogOpen(fields)
+            
+        } else {
+            setDialogOpen(true);
+        }
+        
+    }
+
+    const handleCloseDialog = () => {
+        setDialogOpen(false);
+    }
+
+    const handleSaveParentData = () => {
+        let valid = $('#formParentData')[0].checkValidity();
+        if (!valid) {
+            $('#formParentData')[0].reportValidity();
+        } else {
+            let fieldsData = $('#formParentData').serializeArray();
+            let form = document.querySelector('#formParentData');
+            let formData = new FormData(form);
+            console.log(fieldsData)
+
+            let parentObj = {};
+            fieldsData.forEach(field => {
+                let values = formData.getAll(field.name);
+                parentObj[field.name] = values.length === 1 ?  values[0] : values;
+                if (field.name === "pedagogico" || field.name === "financeiro") {
+                    parentObj[field.name] = values[0] === "true" ? true : false
+                }
+            })
+            parentObj.id = parentObj.cpf
+            let parentsArray = JSON.parse(JSON.stringify(parentsFields))
+            let newParentsArray = parentsArray.filter(parent => parent.id !== parentObj.id)
+            newParentsArray.push(parentObj)
+            console.log('Array antiga', parentsArray)
+            console.log('Nova array', newParentsArray)
+            setParentsFields(newParentsArray)
+            sessionStorage.setItem('responsaveis', JSON.stringify(newParentsArray))
+            setDialogOpen(false)
+        }
+        
+    }
+
+    
+
     return (
         <>
+        <FullScreenDialog isOpen={dialogOpen} onClose={handleCloseDialog} onSave={handleSaveParentData} title="Cadastrar responsável" saveButton="Salvar" saveButtonDisabled={false}>
+        <Typography style={{width: '99%', marginLeft: 'auto', marginRight: 'auto'}}>
+            <Paper>
+                <div style={{textAlign: 'center'}}>
+                    <h4>Digite os dados do responsável</h4>
+                </div>
+                <form id="formParentData">
+                    <Grid
+                    justifyContent="flex-start"   
+                    container
+                    direction="row"
+                    spacing={1}
+                    
+                    >
+                        <Grid item>
+                            <FormControl className={classes.fields}> 
+                                <TextField autoComplete="off" required InputLabelProps={{shrink: shrink,}} variant="filled" label="Nome" type="text" id="nome" name="nome" aria-describedby="my-helper-text" value={dialogOpen.nome} onChange={(e) => {setDialogOpen({ nome: e.target.value})}}
+                                    FormHelperTextProps={{ error: true }} />
+                            </FormControl>
+                        </Grid>
+                        <Grid item>
+                            <FormControl variant="filled" >
+                                <InputLabel htmlFor="relacao" style={{marginTop: '16px',}} required shrink={true}>Relação</InputLabel>
+                                <Select
+                                    style={{marginTop: '16px',}}
+                                    native
+                                    // value={state.value}
+                                    // onChange={handleChangeDay}
+                                    inputProps={{
+                                        name: 'relacao',
+                                        id: 'relacao',
+                                    }}
+                                    value={dialogOpen.relacao}
+                                    onChange={(e) => {setDialogOpen({ relacao: e.target.value})}}
+                                >
+                                    <option hidden>Escolha...</option>
+                                    <option value="Mãe">Mãe</option>
+                                    <option value="Pai">Pai</option>
+                                    <option value="Tio">Tio</option>
+                                    <option value="Tia">Tia</option>
+                                    <option value="Avô">Avô</option>
+                                    <option value="Avó">Avó</option>
+                                    <option value="Responsável">Responsável</option>
+                                    
+                                </Select>
+                                
+                            </FormControl>
+                        </Grid>
+                        
+                        <Grid item>
+                            <FormControl className={classes.fields}> 
+                                <TextField  autoComplete="off" required InputLabelProps={{shrink: shrink,}} variant="filled" label="Número Celular" type="text" id="celular" name="celular" aria-describedby="my-helper-text" value={dialogOpen.celular} onChange={(e) => {setDialogOpen({ celular: e.target.value})}}
+                                    FormHelperTextProps={{ error: true }} />
+                            </FormControl>
+                        </Grid>
+                        <Grid item>
+                            <FormControl className={classes.fields}> 
+                                <TextField autoComplete="off" required InputLabelProps={{shrink: shrink,}} variant="filled" label="E-mail" type="email" id="email" name="email" aria-describedby="my-helper-text" value={dialogOpen.email} onChange={(e) => {setDialogOpen({ email: e.target.value})}}
+                                    FormHelperTextProps={{ error: true }} />
+                            </FormControl>
+                        </Grid>
+                        <Grid item>
+                            <FormControl className={classes.fields}> 
+                                <TextField autoComplete="off" required InputLabelProps={{shrink: shrink,}} variant="filled" label="CPF" error={validCpf} onBlur={(e) => {e.target.value = validCpf ? '' : e.target.value}} onChange={(e) => {handleCheckCpf(e)
+                                 setDialogOpen({ cpf: e.target.value})}}  type="text" id="cpf" name="cpf" aria-describedby="my-helper-text" value={dialogOpen.cpf} helperText={
+                                        validCpf &&
+                                        "Insira um CPF válido."
+                                    }
+                                    FormHelperTextProps={{ error: true, }}  />
+                            </FormControl>
+                        </Grid>
+                        <Grid item>
+                            <FormControl className={classes.fields}> 
+                                <TextField autoComplete="off" required InputLabelProps={{shrink: shrink,}} variant="filled" label="RG" type="text" id="rg" name="rg" aria-describedby="my-helper-text" value={dialogOpen.rg} onChange={(e) => {setDialogOpen({ rg: e.target.value})}}
+                                    FormHelperTextProps={{ error: true }} />
+                            </FormControl>
+                        </Grid>
+                        <Grid item>
+                            <FormControl className={classes.fields}>
+                            <FormControlLabel
+                                value={dialogOpen.pedagogico}
+                                control={<Checkbox id="pedagogico" checked={dialogOpen.pedagogico} onChange={(e) => {setDialogOpen({pedagogico: e.target.checked, financeiro: dialogOpen.financeiro})}} name="pedagogico" color="primary" />}
+                                label="Responsável Pedagógico"
+                                labelPlacement="end"
+                            />
+                            </FormControl>
+                        </Grid>
+                        <Grid item>
+                            <FormControl className={classes.fields}>
+                            <FormControlLabel
+                                value={dialogOpen.financeiro}
+                                control={<Checkbox id="financeiro" checked={dialogOpen.financeiro} onChange={(e) => {setDialogOpen({financeiro: e.target.checked, pedagogico: dialogOpen.pedagogico})}} name="financeiro" color="primary" />}
+                                label="Responsável Financeiro"
+                                labelPlacement="end"
+                            />
+                            </FormControl>
+                        </Grid>
+                    </Grid>
+                </form>
+                
+            </Paper>
+            
+        </Typography>
+        </FullScreenDialog>
         <div className={classes.root}>
         <h4>Endereço</h4>
               <Grid 
@@ -838,8 +1016,10 @@ const AddressAndParentsFields = (props) => {
                 
                 
               </Grid>
+              <h4>Responsáveis</h4>
+              <Button variant="contained" color="primary" onClick={() => {handleAddParentField()}}><PlusOneRounded /> Cadastrar Responsável </Button>
 
-            {parentsRequired && (
+            {/* {parentsRequired && (
                 <>
                     <h4>Dados do Responsavel</h4>
                     <label>O aluno é menor de idade. É necessário inserir os dados de pelo menos um responsável.</label>
@@ -851,21 +1031,21 @@ const AddressAndParentsFields = (props) => {
                     >
                         <Grid item>
                             <FormControl className={classes.fields}> 
-                                <TextField autoComplete="off" required InputLabelProps={{shrink: shrink,}} variant="filled" label="Nome" type="text" id="nomeResponsavelAluno1" name="nomeResponsavelAluno1" aria-describedby="my-helper-text"
+                                <TextField autoComplete="off" required InputLabelProps={{shrink: shrink,}} variant="filled" label="Nome" type="text" id="nome" name="nome" aria-describedby="my-helper-text"
                                     FormHelperTextProps={{ error: true }} />
                             </FormControl>
                         </Grid>
-                        <Grid item >
+                        <Grid item>
                             <FormControl variant="filled" >
-                                <InputLabel htmlFor="filled-age-native-simple" required shrink={true}>Relação</InputLabel>
+                                <InputLabel htmlFor="relacao" style={{marginTop: '16px',}} required shrink={true}>Relação</InputLabel>
                                 <Select
-                                    
+                                    style={{marginTop: '16px',}}
                                     native
                                     // value={state.value}
                                     // onChange={handleChangeDay}
                                     inputProps={{
-                                        name: 'relacaoAluno1',
-                                        id: 'relacaoAluno1',
+                                        name: 'relacao',
+                                        id: 'relacao',
                                     }}
                                 >
                                     <option hidden selected>Escolha...</option>
@@ -881,27 +1061,22 @@ const AddressAndParentsFields = (props) => {
                                 
                             </FormControl>
                         </Grid>
+                        
                         <Grid item>
                             <FormControl className={classes.fields}> 
-                                <TextField autoComplete="off" required InputLabelProps={{shrink: shrink,}} variant="filled" label="Número Comercial" type="text" id="numeroComercialResponsavel1" name="numeroComercialResponsavel1" aria-describedby="my-helper-text"
+                                <TextField  autoComplete="off" required InputLabelProps={{shrink: shrink,}} variant="filled" label="Número Celular" type="text" id="celular" name="celular" aria-describedby="my-helper-text"
                                     FormHelperTextProps={{ error: true }} />
                             </FormControl>
                         </Grid>
                         <Grid item>
                             <FormControl className={classes.fields}> 
-                                <TextField  autoComplete="off" required InputLabelProps={{shrink: shrink,}} variant="filled" label="Número Celular" type="text" id="numeroCelularResponsavel1" name="numeroCelularResponsavel1" aria-describedby="my-helper-text"
+                                <TextField autoComplete="off" required InputLabelProps={{shrink: shrink,}} variant="filled" label="E-mail" type="text" id="email" name="email" aria-describedby="my-helper-text"
                                     FormHelperTextProps={{ error: true }} />
                             </FormControl>
                         </Grid>
                         <Grid item>
                             <FormControl className={classes.fields}> 
-                                <TextField autoComplete="off" required InputLabelProps={{shrink: shrink,}} variant="filled" label="E-mail" type="text" id="emailResponsavel1" name="emailResponsavel1" aria-describedby="my-helper-text"
-                                    FormHelperTextProps={{ error: true }} />
-                            </FormControl>
-                        </Grid>
-                        <Grid item>
-                            <FormControl className={classes.fields}> 
-                                <TextField autoComplete="off" required InputLabelProps={{shrink: shrink,}} variant="filled" label="CPF" error={validCpf} onChange={handleCheckCpf} onBlur={() => validCpf ? document.getElementById('cpfResponsavel1').value = null : null} type="text" id="cpfResponsavel1" name="cpfResponsavel1" aria-describedby="my-helper-text" helperText={
+                                <TextField autoComplete="off" required InputLabelProps={{shrink: shrink,}} variant="filled" label="CPF" error={validCpf} onChange={handleCheckCpf} onBlur={() => validCpf ? document.getElementById('cpf').value = null : null} type="text" id="cpf" name="cpf" aria-describedby="my-helper-text" helperText={
                                         validCpf &&
                                         "Insira um CPF válido."
                                     }
@@ -910,90 +1085,121 @@ const AddressAndParentsFields = (props) => {
                         </Grid>
                         <Grid item>
                             <FormControl className={classes.fields}> 
-                                <TextField autoComplete="off" required InputLabelProps={{shrink: shrink,}} variant="filled" label="RG" type="text" id="rgResponsavel1" name="rgResponsavel1" aria-describedby="my-helper-text"
+                                <TextField autoComplete="off" required InputLabelProps={{shrink: shrink,}} variant="filled" label="RG" type="text" id="rg" name="rg" aria-describedby="my-helper-text"
                                     FormHelperTextProps={{ error: true }} />
                             </FormControl>
                         </Grid>
                     </Grid>
                 </>
                 
-            )}
-              
-
-            <h4>Dados do 2º Responsável</h4>
-            <Grid
-            justifyContent="flex-start"   
-            container
-            direction="row"
-            spacing={2}
-            >
-                    <Grid item>
-                        <FormControl className={classes.fields}> 
-                            <TextField  autoComplete="off" InputLabelProps={{shrink: shrink,}} variant="filled" label="Nome" type="text" id="nomeResponsavelAluno2" name="nomeResponsavelAluno2" aria-describedby="my-helper-text"
-                                FormHelperTextProps={{ error: true }} />
-                        </FormControl>
-                    </Grid>
-                    <Grid item >
-                        <FormControl variant="filled" >
-                            <InputLabel htmlFor="filled-age-native-simple" shrink={true}>Relação</InputLabel>
-                            <Select
+            )} */}
+            <Fragment>
+            
+            {parentsFields.map((field) => (
+                <Typography key={field.id}>
+                    <hr />
+                    <Grid
+                    justifyContent="flex-start"   
+                    container
+                    direction="row"
+                    spacing={2}
+                    
+                    >
+                        <Grid item>
+                            <FormControl className={classes.fields}> 
+                                <TextField autoComplete="off" required disabled InputLabelProps={{shrink: shrink,}} variant="filled" label="Nome" type="text" aria-describedby="my-helper-text" value={field.nome}
+                                    FormHelperTextProps={{ error: true }} />
+                            </FormControl>
+                        </Grid>
+                        <Grid item>
+                            <FormControl variant="filled" >
+                                <InputLabel htmlFor="relacao" disabled style={{marginTop: '16px',}} required shrink={true}>Relação</InputLabel>
+                                <Select
+                                    style={{marginTop: '16px',}}
+                                    native
+                                    // value={state.value}
+                                    // onChange={handleChangeDay}
+                                    
+                                    value={field.relacao}
+                                >
+                                    <option hidden selected>Escolha...</option>
+                                    <option value="Mãe">Mãe</option>
+                                    <option value="Pai">Pai</option>
+                                    <option value="Tio">Tio</option>
+                                    <option value="Tia">Tia</option>
+                                    <option value="Avô">Avô</option>
+                                    <option value="Avó">Avó</option>
+                                    <option value="Responsável">Responsável</option>
+                                    
+                                </Select>
                                 
-                                native
-                                // value={state.value}
-                                // onChange={handleChangeDay}
-                                inputProps={{
-                                    name: 'relacaoAluno2',
-                                    id: 'relacaoAluno2',
-                                }}
-                            >
-                                <option hidden selected>Escolha...</option>
-                                <option value="Mãe">Mãe</option>
-                                <option value="Pai">Pai</option>
-                                <option value="Tio">Tio</option>
-                                <option value="Tia">Tia</option>
-                                <option value="Avô">Avô</option>
-                                <option value="Avó">Avó</option>
-                                <option value="Responsável">Responsável</option>
-                                
-                            </Select>
+                            </FormControl>
+                        </Grid>
+                        
+                        <Grid item>
+                            <FormControl className={classes.fields}> 
+                                <TextField  autoComplete="off" required disabled InputLabelProps={{shrink: shrink,}} variant="filled" label="Número Celular" type="text"  aria-describedby="my-helper-text" value={field.celular}
+                                    FormHelperTextProps={{ error: true }} />
+                            </FormControl>
+                        </Grid>
+                        <Grid item>
+                            <FormControl className={classes.fields}> 
+                                <TextField autoComplete="off" required disabled InputLabelProps={{shrink: shrink,}} variant="filled" label="E-mail" type="text" aria-describedby="my-helper-text" value={field.email}
+                                    FormHelperTextProps={{ error: true }} />
+                            </FormControl>
+                        </Grid>
+                        <Grid item>
+                            <FormControl className={classes.fields}> 
+                                <TextField autoComplete="off" required disabled InputLabelProps={{shrink: shrink,}} variant="filled" label="CPF" error={validCpf} onChange={handleCheckCpf} onBlur={() => validCpf ? document.getElementById('cpf').value = null : null} type="text"  aria-describedby="my-helper-text" value={field.cpf} helperText={
+                                        validCpf &&
+                                        "Insira um CPF válido."
+                                    }
+                                    FormHelperTextProps={{ error: true }} />
+                            </FormControl>
+                        </Grid>
+                        <Grid item>
+                            <FormControl className={classes.fields}> 
+                                <TextField autoComplete="off" required disabled InputLabelProps={{shrink: shrink,}} variant="filled" label="RG" type="text"  aria-describedby="my-helper-text" value={field.rg}
+                                    FormHelperTextProps={{ error: true }} />
+                            </FormControl>
+                        </Grid>
+                        <Grid item>
+                            <FormControl className={classes.fields}>
+                            <FormControlLabel
+                                value="pedagogico"
+                                control={<Checkbox id="pedagogico" disabled checked={field.pedagogico} name="pedagogico" color="primary" />}
+                                label="Responsável Pedagógico"
+                                labelPlacement="end"
+                            />
+                            </FormControl>
+                        </Grid>
+                        <Grid item>
+                            <FormControl className={classes.fields}>
+                            <FormControlLabel
+                                value="financeiro"
+                                control={<Checkbox id="financeiro" disabled checked={field.financeiro} name="financeiro" color="primary" />}
+                                label="Responsável Financeiro"
+                                labelPlacement="end"
+                            />
+                            </FormControl>
+                        </Grid>
+                        <Grid item>
+                            <FormControl className={classes.fields}>
+                                <Button variant="contained" onClick={() => {handleAddParentField(true, field.id)}}>Editar</Button>
+                            </FormControl>
                             
-                        </FormControl>
+                        </Grid>
                     </Grid>
-                    <Grid item>
-                        <FormControl className={classes.fields}> 
-                            <TextField  autoComplete="off" InputLabelProps={{shrink: shrink,}} variant="filled" label="Número Comercial" type="text" id="numeroComercialResponsavel2" name="numeroComercialResponsavel2" aria-describedby="my-helper-text"
-                                FormHelperTextProps={{ error: true }} />
-                        </FormControl>
-                    </Grid>
-                    <Grid item>
-                        <FormControl className={classes.fields}> 
-                            <TextField autoComplete="off" InputLabelProps={{shrink: shrink,}} variant="filled" label="Número Celular" type="text" id="numeroCelularResponsavel2" name="numeroCelularResponsavel2" aria-describedby="my-helper-text"
-                                FormHelperTextProps={{ error: true }} />
-                        </FormControl>
-                    </Grid>
-                    <Grid item>
-                        <FormControl className={classes.fields}> 
-                            <TextField autoComplete="off" InputLabelProps={{shrink: shrink,}} variant="filled" label="E-mail" type="text" id="emailResponsavel2" name="emailResponsavel2" aria-describedby="my-helper-text"
-                                FormHelperTextProps={{ error: true }} />
-                        </FormControl>
-                    </Grid>
-                <Grid item>
-                    <FormControl className={classes.fields}> 
-                        <TextField autoComplete="off" InputLabelProps={{shrink: shrink,}} variant="filled" label="CPF" error={validCpf} onChange={handleCheckCpf} onBlur={() => validCpf ? document.getElementById('cpfResponsavel2').value = null : null} type="text" id="cpfResponsavel2" name="cpfResponsavel2" aria-describedby="my-helper-text" helperText={
-                              validCpf &&
-                              "Insira um CPF válido."
-                            }
-                            FormHelperTextProps={{ error: true }} />
-                    </FormControl>
-                </Grid>
-                <Grid item>
-                    <FormControl className={classes.fields}> 
-                        <TextField autoComplete="off" InputLabelProps={{shrink: shrink,}} variant="filled" label="RG" type="text" id="rgResponsavel2" name="rgResponsavel2" aria-describedby="my-helper-text"
-                            FormHelperTextProps={{ error: true }} />
-                    </FormControl>
-                </Grid>
-            </Grid>
+                    
+                </Typography>
+                    
+                
+            ))}                    
+            </Fragment>
+            
 
+
+            
         
           </div>
           </>
