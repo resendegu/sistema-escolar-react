@@ -1,15 +1,11 @@
-import { useState, useCallback, Fragment, useRef } from "react";
+import { useState, Fragment, useRef } from "react";
 import {
     TextField,
     Button,
-    Checkbox,
     Typography,
-    FormControlLabel,
-    withStyles,
     CircularProgress,
   } from "@material-ui/core";
 import FormDialog from "../shared/FormDialog";
-import { isLong } from "long";
 
 import { useAuth } from "../hooks/useAuth";
 import SimpleSnackbar from "../shared/Snackbar";

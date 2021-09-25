@@ -1,6 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { Dialog, DialogContent, Box, withStyles, DialogTitle, IconButton, Grid } from "@material-ui/core";
+import { Dialog, DialogContent, Box, withStyles, DialogTitle, IconButton } from "@material-ui/core";
 import { Close } from "@material-ui/icons";
 
 

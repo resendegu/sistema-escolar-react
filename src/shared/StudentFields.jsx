@@ -1,14 +1,13 @@
-import { Box, Button, CircularProgress, Container, createChainedFunction, FormControl, FormControlLabel, FormGroup, FormHelperText, FormLabel, Grid, InputLabel, LinearProgress, makeStyles, Paper, Select, Switch, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Typography, Checkbox } from "@material-ui/core";
+import { Box, Button, Container, FormControl, FormControlLabel, FormGroup, FormHelperText, FormLabel, Grid, InputLabel, LinearProgress, makeStyles, Paper, Select, Switch, TextField, Typography, Checkbox } from "@material-ui/core";
 import { Fragment, useState } from "react";
-import { DropzoneDialog } from 'material-ui-dropzone';
 import { calculateAge, checkCpf, getAddress } from "./FunctionsUse";
 import CrudTable from "./DataGrid";
 import { useEffect } from "react";
-import { contractRef, coursesRef } from "../services/databaseRefs";
-import * as $ from 'jquery';
+import { additionalFieldsRef, contractRef, coursesRef } from "../services/databaseRefs";
+import $ from 'jquery';
 import ErrorDialog from '../shared/ErrorDialog'
 import { useSnackbar } from "notistack";
-import { PlusOneOutlined, PlusOneRounded, Visibility } from "@material-ui/icons";
+import { PlusOneRounded } from "@material-ui/icons";
 import FullScreenDialog from "./FullscreenDialog";
 
 const useStyles = makeStyles((theme) => ({
@@ -184,7 +183,7 @@ function BasicDataFields(props) {
 
 
 function ContractConfigure(props) {
-    const { activeStep, onCloseDialog, isOpen, setOpenDialog } = props;
+    const { activeStep, isOpen, setOpenDialog } = props;
     const courseChosen = JSON.parse(sessionStorage.getItem(activeStep))
 
     const [ saveDisabled, setSaveDisabled ] = useState(true);
@@ -443,7 +442,7 @@ function ContractConfigure(props) {
                 ) : (<>
                 <div style={{textAlign: 'center', width: '100%'}}><h3>Escolha um plano</h3></div>
                 <FormControl variant="filled">
-                    <InputLabel htmlFor="filled-age-native-simple">Escolha um plano</InputLabel>
+                    <InputLabel htmlFor="listaPlanos">Escolha um plano</InputLabel>
                     <Select
                         native
                         value={plan.id}
@@ -708,49 +707,6 @@ function CourseDataFields(props) {
     );
 }
 
-function DocumentsSend(props) {
-
-    const { onAdd } = props;
-
-    const [open, setOpen] = useState(false);
-    const [files, setFiles] = useState([])
-
-    const handleOpen = async () => {
-        console.log(files)
-        setOpen(true);
-    }
-
-    
-
-    
-    return (
-        <>
-            <Button variant="contained" color="primary" onClick={handleOpen}>
-                Enviar documentos (opcional)
-            </Button>
-            <DropzoneDialog
-                initialFiles = {files}
-                fileObjects = {files}
-                onChange={(files) => console.log('Files:', files)}
-                maxFileSize={7000000}
-                dropzoneText="Arraste e solte ou, clique para enviar um arquivo"
-                filesLimit={10}
-                previewText="Arquivos selecionados:"
-                cancelButtonText={"Cancelar"}
-                submitButtonText={"Salvar"}
-                open={open}
-                onClose={() => setOpen(false)}
-                onSave={(filesNow) => {
-                console.log('Files:', files);
-                setFiles(filesNow)
-                setOpen(false);
-                }}
-                showPreviews={true}
-                showFileNamesInPreview={true}
-            />
-        </>
-    );
-}
 
 const AddressAndParentsFields = (props) => {
     
@@ -758,28 +714,26 @@ const AddressAndParentsFields = (props) => {
     const { shrink, parentsRequired } = props;
 
     const classes = useStyles();
-    function parentField(nome, email, id, relacao, celular, cpf, rg) {
-        this.nome = nome;
-        this.email = email;
-        this.id = id;
-        this.relacao = relacao;
-        this.celular = celular;
-        this.cpf = cpf;
-        this.rg = rg;
-    }
-    const parentFieldTemplate = new parentField('', '', '', '', '', '', '', '');
+    
     const [ cep, setCep ] = useState({message: 'Digite o CEP para buscar'});
-    const [ loading, setLoading ] = useState(false);
     const [ validCpf, setValidCpf ] = useState(false);
     const [ parentsFields, setParentsFields ] = useState([]);
 
     const [ dialogOpen, setDialogOpen ] = useState(false);
+    const [ additionalFields, setAdditionalFields ] = useState(null);
 
     useEffect(() => {
         let parentsArray = JSON.parse(sessionStorage.getItem('responsaveis'))
         if (parentsArray) {
             setParentsFields(parentsArray)
         }
+        additionalFieldsRef.once('value').then((snapshot) => {
+            let fieldsData = snapshot.val();
+            setAdditionalFields(fieldsData);
+        }).catch(error => {
+            console.log(error)
+            throw new Error(error.message)
+        })
     }, [])
 
     const handleGetAddress = async (e) => {
@@ -812,7 +766,6 @@ const AddressAndParentsFields = (props) => {
         setValidCpf(!checkCpf(cpf))
     }
 
-    let parentsCounter = 0
     const handleAddParentField = (edit=false, id=null) => {
         if (edit) {
             let fields = (parentsFields.filter(parent => parent.id === id))[0]
@@ -1019,80 +972,7 @@ const AddressAndParentsFields = (props) => {
               <h4>Responsáveis</h4>
               <Button variant="contained" color="primary" onClick={() => {handleAddParentField()}}><PlusOneRounded /> Cadastrar Responsável </Button>
 
-            {/* {parentsRequired && (
-                <>
-                    <h4>Dados do Responsavel</h4>
-                    <label>O aluno é menor de idade. É necessário inserir os dados de pelo menos um responsável.</label>
-                    <Grid
-                    justifyContent="flex-start"   
-                    container
-                    direction="row"
-                    spacing={2}
-                    >
-                        <Grid item>
-                            <FormControl className={classes.fields}> 
-                                <TextField autoComplete="off" required InputLabelProps={{shrink: shrink,}} variant="filled" label="Nome" type="text" id="nome" name="nome" aria-describedby="my-helper-text"
-                                    FormHelperTextProps={{ error: true }} />
-                            </FormControl>
-                        </Grid>
-                        <Grid item>
-                            <FormControl variant="filled" >
-                                <InputLabel htmlFor="relacao" style={{marginTop: '16px',}} required shrink={true}>Relação</InputLabel>
-                                <Select
-                                    style={{marginTop: '16px',}}
-                                    native
-                                    // value={state.value}
-                                    // onChange={handleChangeDay}
-                                    inputProps={{
-                                        name: 'relacao',
-                                        id: 'relacao',
-                                    }}
-                                >
-                                    <option hidden selected>Escolha...</option>
-                                    <option value="Mãe">Mãe</option>
-                                    <option value="Pai">Pai</option>
-                                    <option value="Tio">Tio</option>
-                                    <option value="Tia">Tia</option>
-                                    <option value="Avô">Avô</option>
-                                    <option value="Avó">Avó</option>
-                                    <option value="Responsável">Responsável</option>
-                                    
-                                </Select>
-                                
-                            </FormControl>
-                        </Grid>
-                        
-                        <Grid item>
-                            <FormControl className={classes.fields}> 
-                                <TextField  autoComplete="off" required InputLabelProps={{shrink: shrink,}} variant="filled" label="Número Celular" type="text" id="celular" name="celular" aria-describedby="my-helper-text"
-                                    FormHelperTextProps={{ error: true }} />
-                            </FormControl>
-                        </Grid>
-                        <Grid item>
-                            <FormControl className={classes.fields}> 
-                                <TextField autoComplete="off" required InputLabelProps={{shrink: shrink,}} variant="filled" label="E-mail" type="text" id="email" name="email" aria-describedby="my-helper-text"
-                                    FormHelperTextProps={{ error: true }} />
-                            </FormControl>
-                        </Grid>
-                        <Grid item>
-                            <FormControl className={classes.fields}> 
-                                <TextField autoComplete="off" required InputLabelProps={{shrink: shrink,}} variant="filled" label="CPF" error={validCpf} onChange={handleCheckCpf} onBlur={() => validCpf ? document.getElementById('cpf').value = null : null} type="text" id="cpf" name="cpf" aria-describedby="my-helper-text" helperText={
-                                        validCpf &&
-                                        "Insira um CPF válido."
-                                    }
-                                    FormHelperTextProps={{ error: true }} />
-                            </FormControl>
-                        </Grid>
-                        <Grid item>
-                            <FormControl className={classes.fields}> 
-                                <TextField autoComplete="off" required InputLabelProps={{shrink: shrink,}} variant="filled" label="RG" type="text" id="rg" name="rg" aria-describedby="my-helper-text"
-                                    FormHelperTextProps={{ error: true }} />
-                            </FormControl>
-                        </Grid>
-                    </Grid>
-                </>
-                
-            )} */}
+        
             <Fragment>
             
             {parentsFields.map((field) => (
@@ -1196,15 +1076,21 @@ const AddressAndParentsFields = (props) => {
                 
             ))}                    
             </Fragment>
-            
 
-
-            
-        
+            <h4>Dados adicionais</h4>
+            {additionalFields && additionalFields.map(field => (
+                
+                    <FormControl className={classes.fields} style={{width: '100%'}}> 
+                        <TextField required={field.required}  placeholder={field.placeholder} autoComplete="off" InputLabelProps={{shrink: shrink,}} variant="filled" label={field.label} type="text" id={"additional" + field.id} name={"additional" + field.id} aria-describedby={field.placeholder} />
+                    </FormControl>
+                
+            ))}
+                
+       
           </div>
           </>
     );
 }
  
 
-export { BasicDataFields, DocumentsSend, CourseDataFields, ContractConfigure, AddressAndParentsFields };
+export { BasicDataFields, CourseDataFields, ContractConfigure, AddressAndParentsFields };

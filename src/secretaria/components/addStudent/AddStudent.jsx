@@ -7,14 +7,11 @@ import StepButton from '@material-ui/core/StepButton';
 import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
 import { Backdrop, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Paper, useMediaQuery } from '@material-ui/core';
-import DateTimePicker from '../../shared/DateTimePicker';
-import { calculateAge, checkCpf, enrollStudent } from '../../shared/FunctionsUse';
-import { AddressAndParentsFields, BasicDataFields, ContractConfigure, CourseDataFields, DocumentsSend } from '../../shared/StudentFields';
-import * as $ from 'jquery';
-import { database } from '../../services/firebase';
-import { classesRef } from '../../services/databaseRefs';
-import ErrorDialog from '../../shared/ErrorDialog';
-import FullScreenDialog from '../../shared/FullscreenDialog';
+import { enrollStudent } from '../../../shared/FunctionsUse';
+import { AddressAndParentsFields, BasicDataFields, CourseDataFields } from '../../../shared/StudentFields';
+import $ from 'jquery';
+import { classesRef } from '../../../services/databaseRefs';
+import ErrorDialog from '../../../shared/ErrorDialog';
 import { useSnackbar } from 'notistack';
 
 
@@ -440,7 +437,7 @@ export default function AddStudent() {
                     type="submit"
                     className={classes.button}
                 >
-                    {completedSteps() === totalSteps() - 1 ? 'Cadastrar Aluno' : 'Salvar e ir para o próximo'}
+                    {completedSteps() === totalSteps() - 1 ? 'Cadastrar Aluno' : 'Salvar e próximo passo'}
                 </Button>
                 {isStepOptional(activeStep) && !completed.has(activeStep) && (
                     <Button
