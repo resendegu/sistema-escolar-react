@@ -9,10 +9,11 @@ import AccountCircle from '@material-ui/icons/AccountCircle';
 import MenuItem from '@material-ui/core/MenuItem';
 import Menu from '@material-ui/core/Menu';
 import ResponsiveDrawer from './components/Drawer';
-import { Grid } from '@material-ui/core';
+import { Badge, Grid, ListItemIcon, MenuList } from '@material-ui/core';
 import { useAuth } from '../hooks/useAuth';
 import LoginDialog from '../login/LoginDialog';
 import SignUpDialog from '../login/SignUpDialog';
+import { Drafts, Notifications, PriorityHigh, Send } from '@material-ui/icons';
 
 
 const useStyles = makeStyles((theme) => ({
@@ -141,6 +142,58 @@ export default function Navbar(props) {
             </Grid>
 
             <Grid item>
+            <>
+                  <IconButton
+                    aria-label="account of current user"
+                    aria-controls="menu-notifications"
+                    aria-haspopup="true"
+                    onClick={handleMenu}
+                    color="inherit"
+                    edge="end"
+                    //style={{maxWidth: '34px'}}
+                  >
+                    <Badge badgeContent={4} color="secondary">
+                      <Notifications />
+                    </Badge>
+                    
+                  </IconButton>
+                  <Menu
+                    id="menu-notifications"
+                    anchorEl={anchorEl}
+                    anchorOrigin={{
+                      vertical: 'top',
+                      horizontal: 'right',
+                    }}
+                    keepMounted
+                    transformOrigin={{
+                      vertical: 'top',
+                      horizontal: 'right',
+                    }}
+                    open={open}
+                    onClose={handleClose}
+                  >
+                   <MenuItem>
+                      <ListItemIcon>
+                        <Send fontSize="small" />
+                      </ListItemIcon>
+                      <Typography variant="inherit">A short message</Typography>
+                    </MenuItem>
+                    <MenuItem>
+                      <ListItemIcon>
+                        <PriorityHigh fontSize="small" />
+                      </ListItemIcon>
+                      <Typography variant="inherit">A very long text that overflows</Typography>
+                    </MenuItem>
+                    <MenuItem>
+                      <ListItemIcon>
+                        <Drafts fontSize="small" />
+                      </ListItemIcon>
+                      <Typography variant="inherit" noWrap>
+                        A very long text that overflows
+                      </Typography>
+                    </MenuItem>
+                  </Menu>
+                </>
               {user ? (
                 <>
                   <IconButton

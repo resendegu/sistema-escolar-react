@@ -2,16 +2,16 @@ import { Button, Grid } from "@material-ui/core";
 import { PlusOneRounded } from "@material-ui/icons";
 import { DataGrid, GridToolbarContainer, GridToolbarExport } from "@mui/x-data-grid";
 import { Fragment, useEffect, useState } from "react";
-import { additionalFieldsRef } from "../../../../services/databaseRefs";
+import { booksRef } from "../../../../services/databaseRefs";
 
-const AdditionalFieldsSetting = () => {
+const SchoolBooks = () => {
 
     const [ loading, setLoading ] = useState(false);
 
     function CustomToolbar() {
         return (
           <GridToolbarContainer>
-            <GridToolbarExport csvOptions={{fileName: 'Tabela de campos adicionais'}} />
+            <GridToolbarExport csvOptions={{fileName: 'Tabela de livros cadastrados'}} />
           </GridToolbarContainer>
         );
       }
@@ -22,7 +22,7 @@ const AdditionalFieldsSetting = () => {
     useEffect(() => {
         async function getAdditionalFields() {
             setLoading(true)
-            let snapshot = await additionalFieldsRef.once('value');
+            let snapshot = await booksRef.once('value');
             setLoading(false)
             let additionalFields = snapshot.exists() ? snapshot.val() : []
             console.log(additionalFields)
@@ -34,7 +34,7 @@ const AdditionalFieldsSetting = () => {
     
     const handleAddRow = () => {
         let rowsArray = JSON.parse(JSON.stringify(rows))
-        rowsArray.push({id: rowsArray.length, label: 'Digite um nome...', placeholder: 'Digite...', required: false})
+        rowsArray.push({id: rowsArray.length, codSistema: rowsArray.length, codLivro: 'Digite um código...', nomeLivro: 'Digite...', idLivro: 'Identificação do Livro'})
         setRows(rowsArray)
         console.log(rowsArray)
     }
@@ -48,7 +48,7 @@ const AdditionalFieldsSetting = () => {
         setRows(rowsArray);
         console.log(rowsArray)
         try {
-            await additionalFieldsRef.set(rowsArray)
+            await booksRef.set(rowsArray)
             setLoading(false)
         } catch (error) {
             console.log(error)
@@ -70,7 +70,7 @@ const AdditionalFieldsSetting = () => {
         console.log(updatedRows);
         
         try {
-            await additionalFieldsRef.set(updatedRows);
+            await booksRef.set(updatedRows);
             setRows(updatedRows);
             setLoading(false);
         } catch (error) {
@@ -90,27 +90,20 @@ const AdditionalFieldsSetting = () => {
             spacing={2}
             >
                 <Grid item>
-                    <h3>Campos adicionais</h3>
+                    <h3>Livros cadastrados</h3>
                 </Grid>
                 
                 <Grid item xs={12}>
                     <div style={{ height: 300, width: '100%' }}>
                         <DataGrid 
-                        
+                            style={{width: '100%'}}
                             rows={rows} 
                             columns={
                                 [
-                                    {field: 'label', headerName: 'Nome', width: 250, editable: true},
-                                    {field: 'placeholder', headerName: 'Texto de ajuda', width: 180, editable: true},
-                                    {
-                                        field: 'required', 
-                                        headerName: 'Obrigatório',
-                                        type: 'boolean', 
-                                        width: 180, 
-                                        editable: true,
-                                        
-                                    },
-                            
+                                    {field: 'codSistema', headerName: 'ID', width: 92, editable: false},
+                                    {field: 'codLivro', headerName: 'Código', width: 130, editable: true},
+                                    {field: 'nomeLivro', headerName: 'Nome do Livro', width: 300, editable: true},
+                                    {field: 'idLivro', headerName: 'Ident. do Livro', width: 300, editable: true},
                                 ]
                             } 
                             disableSelectionOnClick 
@@ -122,7 +115,7 @@ const AdditionalFieldsSetting = () => {
                             onCellEditCommit={handleRowEdit}
                             loading={loading}
                             localeText={{
-                                noRowsLabel: 'Você não adicionou nenhum campo. Clique em NOVO CAMPO.',
+                                noRowsLabel: 'Você não adicionou nenhum livro. Clique em NOVO LIVRO.',
                                 errorOverlayDefaultLabel: 'Ocorreu um erro',
                                 toolbarExportCSV: 'Baixar como CSV',
                                 
@@ -133,16 +126,16 @@ const AdditionalFieldsSetting = () => {
                    
                 </Grid>
                 <Grid item>
-                    <Button variant="contained" color="primary" onClick={() => {handleAddRow()}}><PlusOneRounded />Novo campo</Button>
+                    <Button variant="contained" color="primary" onClick={() => {handleAddRow()}}><PlusOneRounded />Novo livro</Button>
                     
                 </Grid>
                 <Grid item>
-                    {selectedRows.length > 0 && (<Button variant="contained" color="secondary" onClick={() => {handleDeleteRows()}}>Excluir Campos</Button>)}
+                    {selectedRows.length > 0 && (<Button variant="contained" color="secondary" onClick={() => {handleDeleteRows()}}>Excluir cursos</Button>)}
                 </Grid>
             </Grid>
         </Fragment>
         
     );
 }
-
-export default AdditionalFieldsSetting;
+ 
+export default SchoolBooks;

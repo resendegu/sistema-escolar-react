@@ -112,7 +112,7 @@ const BasicSchoolData = () => {
     return (
         <Fragment>
             
-            <h3>Dados básicos</h3>
+            
             <form id="infoEscolaForm" onSubmit={handleSubmit}>
             <Grid
                 justifyContent="flex-start"   
@@ -121,6 +121,7 @@ const BasicSchoolData = () => {
                 spacing={1}
                 
             >
+
                 <Grid item>
                     <FormControl className={classes.fields} style={{width: '100%'}}> 
                         <TextField placeholder={"CNPJ da Escola"} autoComplete="off" InputLabelProps={{shrink: shrink,}} variant="filled" label={"CNPJ da Escola"} type="text" id={"cnpjEscola"} name={"cnpjEscola"} aria-describedby={"CNPJ da Escola"} />

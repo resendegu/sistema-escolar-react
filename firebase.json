@@ -8,7 +8,7 @@
   },
   "hosting": {
     "public": "build",
-    "site": "projetoxagencia",
+    "site": "escola-react",
     "ignore": [
       "firebase.json",
       "**/.*",

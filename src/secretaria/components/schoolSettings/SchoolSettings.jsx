@@ -3,6 +3,9 @@ import { ExpandMore } from "@material-ui/icons";
 import { Fragment, useState } from "react";
 import AdditionalFieldsSetting from "./components/AdditionalFieldsSettings";
 import BasicSchoolData from "./components/BasicSchoolData";
+import DaysCodeSet from "./components/DaysCodesSet";
+import SchoolBooks from "./components/SchoolBooks";
+import SchoolCourses from "./components/SchoolCourses";
 
 const useStyles = makeStyles((theme) => ({
     paper: {
@@ -47,9 +50,7 @@ const SchoolSettings = () => {
                         <Typography className={classes.secondaryHeading}>Dados básicos como o nome e contatos da escola</Typography>
                     </AccordionSummary>
                     <AccordionDetails>
-                        <Typography>
-                            <BasicSchoolData />
-                        </Typography>
+                        <BasicSchoolData />
                     </AccordionDetails>
                 </Accordion>
 
@@ -66,9 +67,7 @@ const SchoolSettings = () => {
                         </Typography>
                     </AccordionSummary>
                     <AccordionDetails>
-                        <Typography>
-                            <AdditionalFieldsSetting />
-                        </Typography>
+                        <AdditionalFieldsSetting />
                     </AccordionDetails>
                 </Accordion>
 
@@ -79,31 +78,45 @@ const SchoolSettings = () => {
                     aria-controls="panel3bh-content"
                     id="panel3bh-header"
                     >
-                        <Typography className={classes.heading}>Advanced settings</Typography>
+                        <Typography className={classes.heading}>Cursos Cadastrados</Typography>
                         <Typography className={classes.secondaryHeading}>
-                            Filtering has been entirely disabled for whole web server
+                            Cursos cadastrados no sistema que são oferecidos pela escola
                         </Typography>
                     </AccordionSummary>
                     <AccordionDetails>
-                        <Typography>
-                            Nunc vitae orci ultricies, auctor nunc in, volutpat nisl. Integer sit amet egestas eros,
-                            vitae egestas augue. Duis vel est augue.
-                        </Typography>
+                        <SchoolCourses />
                     </AccordionDetails>
                 </Accordion>
+
                 <Accordion expanded={expanded === 'panel4'} onChange={handleChange('panel4')}>
                     <AccordionSummary
                     expandIcon={<ExpandMore />}
                     aria-controls="panel4bh-content"
                     id="panel4bh-header"
                     >
-                    <Typography className={classes.heading}>Personal data</Typography>
+                    <Typography className={classes.heading}>Livros Cadastrados</Typography>
+                    <Typography className={classes.secondaryHeading}>
+                        Livros cadastrados no sistema que são utilizados pela escola.
+                    </Typography>
                     </AccordionSummary>
                     <AccordionDetails>
-                    <Typography>
-                        Nunc vitae orci ultricies, auctor nunc in, volutpat nisl. Integer sit amet egestas eros,
-                        vitae egestas augue. Duis vel est augue.
+                        <SchoolBooks />
+                    </AccordionDetails>
+                </Accordion>
+
+                <Accordion expanded={expanded === 'panel5'} onChange={handleChange('panel5')}>
+                    <AccordionSummary
+                    expandIcon={<ExpandMore />}
+                    aria-controls="panel5bh-content"
+                    id="panel5bh-header"
+                    >
+                    <Typography className={classes.heading}>Códigos dos dias da semana</Typography>
+                    <Typography className={classes.secondaryHeading}>
+                        Códigos dos dias da semana para gerar os códigos de turmas.
                     </Typography>
+                    </AccordionSummary>
+                    <AccordionDetails>
+                        <DaysCodeSet />
                     </AccordionDetails>
                 </Accordion>
             </div>
