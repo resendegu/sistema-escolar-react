@@ -1,5 +1,6 @@
 import React from 'react';
 import { DataGrid } from '@mui/x-data-grid';
+import { LocaleText } from './DataGridLocaleText';
 
 // const rows = [
 //   { id: 1, col1: 'Hello', col2: 'World' },
@@ -43,6 +44,7 @@ export default function CrudTable(props) {
             disableExtendRowFullWidth={disableExtendRowFullWidth}
             disableSelectionOnClick={disableSelectionOnClick}
             hideFooter={hideFooter}
+            localeText={LocaleText}
             
         />
         </div>

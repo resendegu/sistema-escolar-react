@@ -3,6 +3,7 @@ import { PlusOneRounded } from "@material-ui/icons";
 import { DataGrid, GridToolbarContainer, GridToolbarExport } from "@mui/x-data-grid";
 import { Fragment, useEffect, useState } from "react";
 import { booksRef } from "../../../../services/databaseRefs";
+import { LocaleText } from "../../../../shared/DataGridLocaleText";
 
 const SchoolBooks = () => {
 
@@ -114,12 +115,7 @@ const SchoolBooks = () => {
                             }}
                             onCellEditCommit={handleRowEdit}
                             loading={loading}
-                            localeText={{
-                                noRowsLabel: 'Você não adicionou nenhum livro. Clique em NOVO LIVRO.',
-                                errorOverlayDefaultLabel: 'Ocorreu um erro',
-                                toolbarExportCSV: 'Baixar como CSV',
-                                
-                            }}
+                            localeText={LocaleText}
                             onSelectionModelChange={handleRowSelection}
                         />
                     </div>

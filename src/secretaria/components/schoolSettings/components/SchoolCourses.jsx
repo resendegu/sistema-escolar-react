@@ -3,6 +3,7 @@ import { PlusOneRounded } from "@material-ui/icons";
 import { DataGrid, GridToolbarContainer, GridToolbarExport } from "@mui/x-data-grid";
 import { Fragment, useEffect, useState } from "react";
 import { coursesRef } from "../../../../services/databaseRefs";
+import { LocaleText } from "../../../../shared/DataGridLocaleText";
 
 const SchoolCourses = () => {
 
@@ -113,12 +114,7 @@ const SchoolCourses = () => {
                             }}
                             onCellEditCommit={handleRowEdit}
                             loading={loading}
-                            localeText={{
-                                noRowsLabel: 'Você não adicionou nenhum curso. Clique em NOVO CURSO.',
-                                errorOverlayDefaultLabel: 'Ocorreu um erro',
-                                toolbarExportCSV: 'Baixar como CSV',
-                                
-                            }}
+                            localeText={LocaleText}
                             onSelectionModelChange={handleRowSelection}
                         />
                     </div>

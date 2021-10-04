@@ -1,35 +1,42 @@
 import { Button, Grid } from "@material-ui/core";
 import { PlusOneRounded } from "@material-ui/icons";
-import { DataGrid, GridToolbarContainer, GridToolbarExport } from "@mui/x-data-grid";
+import { DataGrid, GridToolbar, GridToolbarContainer, GridToolbarExport } from "@mui/x-data-grid";
 import { Fragment, useEffect, useState } from "react";
-import { additionalFieldsRef } from "../../../../services/databaseRefs";
-import { LocaleText } from "../../../../shared/DataGridLocaleText";
+import { studentsRef } from "../../../services/databaseRefs";
+import { LocaleText } from "../../../shared/DataGridLocaleText";
 
-const AdditionalFieldsSetting = () => {
+const Students = () => {
+
 
     const [ loading, setLoading ] = useState(false);
 
-    function CustomToolbar() {
-        return (
-          <GridToolbarContainer>
-            <GridToolbarExport csvOptions={{fileName: 'Tabela de campos adicionais'}} />
-          </GridToolbarContainer>
-        );
-      }
+    const [filterModel, setFilterModel] = useState({
+        items: [],
+    });
 
+    const [ students, setStudents ] = useState({});  
     const [ rows, setRows ] = useState([]);
     const [ selectedRows, setSelectedRows ] = useState([]);
 
     useEffect(() => {
-        async function getAdditionalFields() {
+        async function getData() {
             setLoading(true)
-            let snapshot = await additionalFieldsRef.once('value');
-            setLoading(false)
-            let additionalFields = snapshot.exists() ? snapshot.val() : []
-            console.log(additionalFields)
-            setRows(additionalFields)
+            let snapshot = await studentsRef.once('value');
+            
+            let students = snapshot.exists() ? snapshot.val() : []
+            let studentsArray = []
+            for (const id in students) {
+                if (Object.hasOwnProperty.call(students, id)) {
+                    let student = students[id];
+                    student.id = id;
+                    studentsArray.push(student);
+                }
+            }
+            setStudents(students);
+            setRows(studentsArray);
+            setLoading(false);
         }
-        getAdditionalFields()
+        getData()
         
     }, [])
     
@@ -48,14 +55,14 @@ const AdditionalFieldsSetting = () => {
         rowsArray[rowIndex][editedRow.field] = editedRow.value;
         setRows(rowsArray);
         console.log(rowsArray)
-        try {
-            await additionalFieldsRef.set(rowsArray)
-            setLoading(false)
-        } catch (error) {
-            console.log(error)
-            setLoading(false);
-            throw new Error(error.message)
-        }
+        // try {
+        //     await additionalFieldsRef.set(rowsArray)
+        //     setLoading(false)
+        // } catch (error) {
+        //     console.log(error)
+        //     setLoading(false);
+        //     throw new Error(error.message)
+        // }
         
     }
 
@@ -70,15 +77,15 @@ const AdditionalFieldsSetting = () => {
         let updatedRows = rowsArray.filter(row => selectedRows.indexOf(row.id) === -1);
         console.log(updatedRows);
         
-        try {
-            await additionalFieldsRef.set(updatedRows);
-            setRows(updatedRows);
-            setLoading(false);
-        } catch (error) {
-            console.log(error);
-            setLoading(false);
-            throw new Error(error.message);
-        }
+        // try {
+        //     await additionalFieldsRef.set(updatedRows);
+        //     setRows(updatedRows);
+        //     setLoading(false);
+        // } catch (error) {
+        //     console.log(error);
+        //     setLoading(false);
+        //     throw new Error(error.message);
+        // }
     }
 
     return (
@@ -90,34 +97,29 @@ const AdditionalFieldsSetting = () => {
             direction="row"
             spacing={2}
             >
-                <Grid item>
-                    <h3>Campos adicionais</h3>
-                </Grid>
+                
                 
                 <Grid item xs={12}>
-                    <div style={{ height: 300, width: '100%' }}>
+                    <div style={{ height: 380, width: '100%' }}>
                         <DataGrid 
-                        
+                            filterModel={filterModel}
+                            onFilterModelChange={(model) => setFilterModel(model)}
                             rows={rows} 
                             columns={
                                 [
-                                    {field: 'label', headerName: 'Nome', width: 250, editable: true},
-                                    {field: 'placeholder', headerName: 'Texto de ajuda', width: 180, editable: true},
-                                    {
-                                        field: 'required', 
-                                        headerName: 'Obrigatório',
-                                        type: 'boolean', 
-                                        width: 180, 
-                                        editable: true,
-                                        
-                                    },
+                                    {field: 'nomeAluno', headerName: 'Nome', width: 300},
+                                    {field: 'matriculaAluno', headerName: 'Matrícula', width: 140},
+                                    {field: 'turmaAluno', headerName: 'Turma', width: 180},
+                                    {field: 'emailAluno', headerName: 'E-mail', width: 220},
+                                    {field: 'celularAluno', headerName: 'Celular', width: 180},
+                                    {field: 'turmaAluno', headerName: 'Turma', width: 180},
                             
                                 ]
                             } 
                             disableSelectionOnClick 
                             checkboxSelection
                             components={{
-                                Toolbar: CustomToolbar
+                                Toolbar: GridToolbar
 
                             }}
                             onCellEditCommit={handleRowEdit}
@@ -140,5 +142,5 @@ const AdditionalFieldsSetting = () => {
         
     );
 }
-
-export default AdditionalFieldsSetting;
+ 
+export default Students;
