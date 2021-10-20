@@ -55,7 +55,7 @@ const SchoolSettings = () => {
                 </Accordion>
 
 
-                <Accordion expanded={expanded === 'panel2'} onChange={handleChange('panel2')}>
+                <Accordion expanded={expanded === 'panel2'} onChange={handleChange('panel2')} TransitionProps={{ unmountOnExit: true }}>
                     <AccordionSummary
                     expandIcon={<ExpandMore />}
                     aria-controls="panel2bh-content"
@@ -72,7 +72,7 @@ const SchoolSettings = () => {
                 </Accordion>
 
 
-                <Accordion expanded={expanded === 'panel3'} onChange={handleChange('panel3')}>
+                <Accordion expanded={expanded === 'panel3'} onChange={handleChange('panel3')} TransitionProps={{ unmountOnExit: true }}>
                     <AccordionSummary
                     expandIcon={<ExpandMore />}
                     aria-controls="panel3bh-content"
@@ -88,7 +88,7 @@ const SchoolSettings = () => {
                     </AccordionDetails>
                 </Accordion>
 
-                <Accordion expanded={expanded === 'panel4'} onChange={handleChange('panel4')}>
+                <Accordion expanded={expanded === 'panel4'} onChange={handleChange('panel4')} TransitionProps={{ unmountOnExit: true }}>
                     <AccordionSummary
                     expandIcon={<ExpandMore />}
                     aria-controls="panel4bh-content"
@@ -104,7 +104,7 @@ const SchoolSettings = () => {
                     </AccordionDetails>
                 </Accordion>
 
-                <Accordion expanded={expanded === 'panel5'} onChange={handleChange('panel5')}>
+                <Accordion expanded={expanded === 'panel5'} onChange={handleChange('panel5')} TransitionProps={{ unmountOnExit: true }}>
                     <AccordionSummary
                     expandIcon={<ExpandMore />}
                     aria-controls="panel5bh-content"

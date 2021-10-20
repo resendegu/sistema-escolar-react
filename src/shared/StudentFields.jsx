@@ -33,7 +33,7 @@ const useStyles = makeStyles((theme) => ({
   }));
 
 function BasicDataFields(props) {
-    const { shrink, handleOptionalSteps, setParentsRequired, setLoader } = props;
+    const { shrink, handleOptionalSteps, setParentsRequired, setLoader,  } = props;
 
 
 

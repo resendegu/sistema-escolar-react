@@ -126,7 +126,7 @@ const SchoolBooks = () => {
                     
                 </Grid>
                 <Grid item>
-                    {selectedRows.length > 0 && (<Button variant="contained" color="secondary" onClick={() => {handleDeleteRows()}}>Excluir cursos</Button>)}
+                    {selectedRows.length > 0 && (<Button variant="contained" color="secondary" onClick={() => {handleDeleteRows()}}>Excluir livros</Button>)}
                 </Grid>
             </Grid>
         </Fragment>

@@ -157,7 +157,7 @@ export default function Navbar(props) {
                     </Badge>
                     
                   </IconButton>
-                  <Menu
+                  {/* <Menu
                     id="menu-notifications"
                     anchorEl={anchorEl}
                     anchorOrigin={{
@@ -192,7 +192,7 @@ export default function Navbar(props) {
                         A very long text that overflows
                       </Typography>
                     </MenuItem>
-                  </Menu>
+                  </Menu> */}
                 </>
               {user ? (
                 <>

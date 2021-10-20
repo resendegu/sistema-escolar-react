@@ -7,7 +7,7 @@ import { auth } from "../services/firebase";
 export const AuthContext = createContext({});
 
 export function AuthContextProvider(props) {
-    const [user, setUser] = useState();
+    const [user, setUser] = useState('Searching user...');
     
 
   useEffect(() => {
@@ -25,6 +25,8 @@ export function AuthContextProvider(props) {
           name: displayName,
           avatar: photoURL
         })
+      } else {
+        setUser(undefined)
       }
     })
 

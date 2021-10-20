@@ -392,8 +392,6 @@ export default function AddStudent() {
       </Backdrop>
     </div>
     <div className={classes.root}>
-      
-        <h2>Cadastro de Aluno</h2>
       <Stepper alternativeLabel activeStep={activeStep}>
         {steps.map((label, index) => {
           const stepProps = {};

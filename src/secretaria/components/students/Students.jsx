@@ -1,22 +1,26 @@
-import { Button, Grid } from "@material-ui/core";
+import { Button, Dialog, Grid } from "@material-ui/core";
 import { PlusOneRounded } from "@material-ui/icons";
 import { DataGrid, GridToolbar, GridToolbarContainer, GridToolbarExport } from "@mui/x-data-grid";
 import { Fragment, useEffect, useState } from "react";
 import { studentsRef } from "../../../services/databaseRefs";
 import { LocaleText } from "../../../shared/DataGridLocaleText";
+import FullScreenDialog from "../../../shared/FullscreenDialog";
+import StudentInfo from "../../../shared/ViewStudentInfo";
 
 const Students = () => {
 
 
     const [ loading, setLoading ] = useState(false);
+    const [ open, setOpen ] = useState(false)
 
     const [filterModel, setFilterModel] = useState({
         items: [],
     });
 
-    const [ students, setStudents ] = useState({});  
+    // const [ students, setStudents ] = useState({});  
     const [ rows, setRows ] = useState([]);
     const [ selectedRows, setSelectedRows ] = useState([]);
+    const [ studentData, setStudentData ] = useState({})
 
     useEffect(() => {
         async function getData() {
@@ -32,7 +36,7 @@ const Students = () => {
                     studentsArray.push(student);
                 }
             }
-            setStudents(students);
+            // setStudents(students);
             setRows(studentsArray);
             setLoading(false);
         }
@@ -88,9 +92,30 @@ const Students = () => {
         // }
     }
 
+    const handleRowClick = (e) => {
+        console.log(e)
+        setOpen(true);
+        setStudentData(e.row)
+
+    }
+
     return (
         <Fragment>
-            
+            <FullScreenDialog 
+                isOpen={open}
+                onClose={() => {
+                    setOpen(false);
+                }}
+                hideSaveButton
+                onSave={() => {
+                    alert('Save clicked')
+                }}
+                title={"Informações do aluno"}
+                saveButton={"Salvar"}
+                saveButtonDisabled={true}
+            > 
+                <StudentInfo studentData={studentData} />
+            </FullScreenDialog>
             <Grid
             justifyContent="flex-start"   
             container
@@ -100,7 +125,7 @@ const Students = () => {
                 
                 
                 <Grid item xs={12}>
-                    <div style={{ height: 380, width: '100%' }}>
+                    <div style={{ height: "59vh", width: '100%' }}>
                         <DataGrid 
                             filterModel={filterModel}
                             onFilterModelChange={(model) => setFilterModel(model)}
@@ -126,16 +151,17 @@ const Students = () => {
                             loading={loading}
                             localeText={LocaleText}
                             onSelectionModelChange={handleRowSelection}
+                            onRowClick={handleRowClick}
                         />
                     </div>
                    
                 </Grid>
                 <Grid item>
-                    <Button variant="contained" color="primary" onClick={() => {handleAddRow()}}><PlusOneRounded />Novo campo</Button>
+                    <Button variant="contained" color="primary" onClick={() => {handleAddRow()}}><PlusOneRounded />Botão</Button>
                     
                 </Grid>
                 <Grid item>
-                    {selectedRows.length > 0 && (<Button variant="contained" color="secondary" onClick={() => {handleDeleteRows()}}>Excluir Campos</Button>)}
+                    {selectedRows.length > 0 && (<Button variant="contained" color="secondary" onClick={() => {handleDeleteRows()}}>Botão de ações</Button>)}
                 </Grid>
             </Grid>
         </Fragment>

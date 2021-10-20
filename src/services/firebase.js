@@ -21,6 +21,7 @@ var app = firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const database = firebase.database();
 const functions = firebase.functions();
+const storage = firebase.storage();
 let messaging
 try {
   messaging = firebase.messaging();
@@ -58,4 +59,4 @@ const onMessageListener = () =>
     });
 });
 
-export { firebase, auth, database, functions, getToken, onMessageListener };
+export { firebase, auth, database, functions, storage, getToken, onMessageListener };

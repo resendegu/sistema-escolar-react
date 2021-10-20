@@ -30,7 +30,7 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 
 export default function FullScreenDialog(props) {
   const classes = useStyles();
-  const { isOpen, onClose, onSave, title, saveButton, saveButtonDisabled } = props;
+  const { isOpen, onClose, onSave, title, saveButton, saveButtonDisabled, hideSaveButton } = props;
 
   const handleClose = () => {
     onClose();
@@ -62,18 +62,24 @@ export default function FullScreenDialog(props) {
             <Typography variant="h6" className={classes.title}>
               {title}
             </Typography>
-            <Button autoFocus disabled={saveButtonDisabled} color="inherit" onClick={handleSave}>
-              {saveButton}
-            </Button>
+            {!hideSaveButton && (
+              <Button autoFocus disabled={saveButtonDisabled} color="inherit" onClick={handleSave}>
+                {saveButton}
+              </Button>
+            )}
+            
           </Toolbar>
         </AppBar>
         <>{props.children}</>
-        <div>
-          <Fab onClick={handleSave} style={fabStyle} disabled={saveButtonDisabled} variant="extended" color='primary'>
-            <Save className={classes.extendedIcon} />
-            {saveButton}
-          </Fab>
-        </div>
+        {!hideSaveButton && (
+          <div>
+            <Fab onClick={handleSave} style={fabStyle} disabled={saveButtonDisabled} variant="extended" color='primary'>
+              <Save className={classes.extendedIcon} />
+              {saveButton}
+            </Fab>
+          </div>
+        )}
+        
         
         
       </Dialog>
