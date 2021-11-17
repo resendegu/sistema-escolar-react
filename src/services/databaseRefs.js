@@ -12,13 +12,15 @@ const additionalFieldsPath = schoolInfoPath + 'camposAdicionais/'
 const basicDataPath = schoolInfoPath + 'dadosBasicos/'
 const daysCodesPath = schoolInfoPath + 'codDiasSemana/'
 
+
 // General paths
 const classesPath = 'turmas/';
 const studentsPath = 'alunos/';
 const disabledStudents = 'alunosDesativados/';
 const usersPath = 'usuarios/';
 const chatsPath = 'chats/';
-const notificationsPath = 'notifications/'
+const notificationsPath = 'notifications/';
+const teachersListPath = 'listaDeProfessores/';
 
 
 // Setting the root ref
@@ -34,6 +36,7 @@ const additionalFieldsRef = rootRef.child(additionalFieldsPath);
 const basicDataRef = rootRef.child(basicDataPath);
 const notificationsRef = database.ref(notificationsPath);
 const studentsRef = rootRef.child(studentsPath);
+const teachersListRef = rootRef.child(teachersListPath);
 
 // Export the refs created
-export { classesRef, booksRef, coursesRef, contractRef, daysCodesRef, additionalFieldsRef, basicDataRef, notificationsRef, studentsRef };
+export { classesRef, booksRef, coursesRef, contractRef, daysCodesRef, additionalFieldsRef, basicDataRef, notificationsRef, studentsRef, teachersListRef };

@@ -64,7 +64,7 @@ const StudentInfo = (props) => {
     const classCode = studentData.turmaAluno
 
 
-    const [academicData, setAcademicData] = useState();
+    const [academicData, setAcademicData] = useState({});
     const [currentGrade, setCurrentGrade] = useState('Notas não lançadas');
 
     useEffect(() => {
@@ -72,8 +72,11 @@ const StudentInfo = (props) => {
         try {
           let data = await classesRef.child(classCode).child('alunos').child(studentData.matriculaAluno).once('value');
           console.log(data.val());
-          data.val().notas && setAcademicData(data.val());
-          data.val().notas && calculateGrade(data.val().notas)
+          if (data.exists()) {
+            setAcademicData(data.val());
+            calculateGrade(data.val().notas);
+          }
+          console.log(data.val())
         } catch (error) {
           console.log(error)
         }
@@ -81,7 +84,7 @@ const StudentInfo = (props) => {
       }
       getData();
       
-    })
+    }, [classCode, studentData])
 
     const calculateGrade = (grades) => {
       let finalGrade = 0;
@@ -262,7 +265,7 @@ const StudentInfo = (props) => {
                         <Typography variant="h6" component="h6">
                             Notas de Desempenho
                         </Typography>
-                        {academicData ? Object.keys(academicData.desempenho).map((name, i) => (
+                        {academicData.hasOwnProperty('desempenho') ? Object.keys(academicData.desempenho).map((name, i) => (
                           <Typography className={classes.grades} color="textSecondary">
                             {name}: {academicData.desempenho[name]}
                           </Typography>
@@ -276,7 +279,7 @@ const StudentInfo = (props) => {
                         <Typography variant="h6" component="h6">
                             Faltas Registradas
                         </Typography>
-                        {academicData ? Object.keys(academicData.frequencia).map((name, i) => {
+                        {academicData.hasOwnProperty('frequencia')  ? Object.keys(academicData.frequencia).map((name, i) => {
                           let date = new Date(name)
                           let dateConverted = date.toISOString().substring(0, 10).split('-').reverse().join('/')
                           return (
@@ -301,7 +304,7 @@ const StudentInfo = (props) => {
                         spacing={1}
                       >
                         <Grid item>
-                          <Avatar className={classes.orange} className={classes.avatar}>
+                          <Avatar className={classes.avatar}>
                             <AttachFile />
                           </Avatar>
                         </Grid>

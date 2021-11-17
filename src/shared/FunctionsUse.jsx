@@ -1,3 +1,4 @@
+import { booksRef, coursesRef, daysCodesRef } from "../services/databaseRefs"
 import { functions } from "../services/firebase"
 
 async function calculateAge(birthdate) { 
@@ -112,13 +113,26 @@ const enrollStudent = async (studentData, classData, contractData, otherData) =>
     
     try {
         let cadastraAluno = functions.httpsCallable('cadastraAluno');
-        let message = await cadastraAluno(data)
+        const message = await cadastraAluno(data)
         return message.data;
     } catch (error) {
         console.log(error)
         throw new Error(error.message);
     }
     
+}
+
+const handleSendClassData = async (data) => {
+    data.hora = data.hora.split(':').join('_')
+    data.id = data.codigoSala
+    try {
+        let cadastraTurma = functions.httpsCallable('cadastraTurma');
+        const message = await cadastraTurma(data);
+        return  message.data;
+    } catch (error) {
+        console.log(error)
+        throw new Error(error.message);
+    }
 }
 
 function formatBytes(bytes, decimals = 2) {
@@ -132,5 +146,55 @@ function formatBytes(bytes, decimals = 2) {
 
     return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 }
+
+const generateClassCode = async (classData) => {
+    let course
+    let books
+    let days
+
+    try {
+        course = await (await (coursesRef.child(classData.curso).child('codCurso').once('value'))).val()
+        books = await (await (booksRef.once('value'))).val()
+        days = await (await daysCodesRef.once('value')).val()
+    } catch (error) {
+        console.log(error)
+    }
+    let classCode = ''
+    if (course !== undefined) {
+        classCode += course
+    }
+    try {
+        for (const i in classData.livros) {
+            if (Object.hasOwnProperty.call(classData.livros, i)) {
+                const idBook = classData.livros[i];
+                const bookCode = books[idBook].codLivro
+                classCode += bookCode
+            }
+        }
+    } catch (error) {
+        console.log(error)
+    }
+    
+    classCode += '-'
+    for (const i in classData.diasDaSemana) {
+        if (Object.hasOwnProperty.call(classData.diasDaSemana, i)) {
+            const day = classData.diasDaSemana[i];
+            classCode += days[day]
+        }
+    }
+    let time
+
+    if (classData.hora.split(':')[1] === '00') {
+        time = classData.hora.split(':')[0]
+    } else {
+        time = classData.hora.split(':').join('_')
+    }
+
+    if (time !== undefined) {
+        classCode += time
+    }
+
+    return classCode;
+}
  
-export { calculateAge, checkCpf, getAddress, enrollStudent, formatBytes };
+export { calculateAge, checkCpf, getAddress, enrollStudent, handleSendClassData, formatBytes, generateClassCode };

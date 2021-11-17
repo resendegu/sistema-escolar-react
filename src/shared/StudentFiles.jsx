@@ -48,7 +48,7 @@ export default function StudentFiles(props) {
   const { studentId } = props;
   const [dense, setDense] = useState(false);
   const [secondary, setSecondary] = useState(true);
-  const [studentFiles, setStudentFiles] = useState();
+  const [studentFiles, setStudentFiles] = useState([]);
   const [ filesList, setFilesList ] = useState()
   const [ openFile, setOpenFile ] = useState(false)
   const [ url, setUrl ] = useState()

@@ -12,6 +12,7 @@ import { AddBox, Build, Email, GroupWork, Home, PeopleAlt, PersonAdd } from '@ma
 import AddStudent from './addStudent/AddStudent';
 import SchoolSettings from './schoolSettings/SchoolSettings';
 import Students from './students/Students';
+import AddClass from './addClass/AddClass';
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -96,7 +97,7 @@ export default function SecretariaTabs() {
         <AddStudent />
       </TabPanel>
       <TabPanel value={value} index={4}>
-        Item Five
+        <AddClass />
       </TabPanel>
       <TabPanel value={value} index={5}>
         Item Six
