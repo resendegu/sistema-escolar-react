@@ -105,8 +105,14 @@ export default function AddStudent() {
       for (const classKey in schoolClasses) {
         if (Object.hasOwnProperty.call(schoolClasses, classKey)) {
           const classInfo = schoolClasses[classKey];
-          rows.push({ id: classKey, col1: classKey, col2: classInfo.hora + 'h', col3: classInfo.professor[0].nome})
-          coursesData.push({turmaAluno: classKey, horaAluno: classInfo.hora + 'h', profAluno: classInfo.professor[0], courseId: classInfo.curso})
+          let teacher
+          if (classInfo.hasOwnProperty('professor')) {
+            teacher = classInfo.professor[0].nome
+          } else {
+            teacher = 'Não cadastrado'
+          }
+          rows.push({ id: classKey, col1: classKey, col2: classInfo.hora + 'h', col3: teacher})
+          coursesData.push({turmaAluno: classKey, horaAluno: classInfo.hora + 'h', profAluno: teacher, courseId: classInfo.curso})
         }
       }
       sessionStorage.setItem('coursesData', JSON.stringify(coursesData))
@@ -115,6 +121,7 @@ export default function AddStudent() {
       setLoader(false)
 
     } catch (error) {
+      console.log(error)
       setLoader(false)
       setErrorMessage(error.message)
     }

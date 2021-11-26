@@ -13,6 +13,7 @@ import AddStudent from './addStudent/AddStudent';
 import SchoolSettings from './schoolSettings/SchoolSettings';
 import Students from './students/Students';
 import AddClass from './addClass/AddClass';
+import Classes from './classes/Classes';
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -85,13 +86,13 @@ export default function SecretariaTabs() {
         </Tabs>
       </AppBar>
       <TabPanel value={value} index={0}>
-        Dashboard
+        
       </TabPanel>
       <TabPanel value={value} index={1}>
         <Students />
       </TabPanel>
       <TabPanel value={value} index={2}>
-        Item Three
+        <Classes />
       </TabPanel>
       <TabPanel value={value} index={3}>
         <AddStudent />
