@@ -1,17 +1,20 @@
-import { Button, Dialog, Grid } from "@material-ui/core";
+import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Grid } from "@material-ui/core";
 import { PlusOneRounded } from "@material-ui/icons";
 import { DataGrid, GridToolbar, GridToolbarContainer, GridToolbarExport } from "@mui/x-data-grid";
+import { useSnackbar } from "notistack";
 import { Fragment, useEffect, useState } from "react";
 import { studentsRef } from "../../../services/databaseRefs";
 import { LocaleText } from "../../../shared/DataGridLocaleText";
 import FullScreenDialog from "../../../shared/FullscreenDialog";
+import { handleEnableDisableStudents } from "../../../shared/FunctionsUse";
 import StudentInfo from "../../../shared/ViewStudentInfo";
 
 const Students = () => {
 
 
     const [ loading, setLoading ] = useState(false);
-    const [ open, setOpen ] = useState(false)
+    const [ open, setOpen ] = useState(false);
+    const [ openDialog, setOpenDialog ] = useState(false);
 
     const [filterModel, setFilterModel] = useState({
         items: [],
@@ -20,30 +23,34 @@ const Students = () => {
     // const [ students, setStudents ] = useState({});  
     const [ rows, setRows ] = useState([]);
     const [ selectedRows, setSelectedRows ] = useState([]);
-    const [ studentData, setStudentData ] = useState({})
+    const [ studentInfo, setStudentInfo ] = useState({})
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar()
 
     useEffect(() => {
-        async function getData() {
-            setLoading(true)
-            let snapshot = await studentsRef.once('value');
-            
-            let students = snapshot.exists() ? snapshot.val() : []
-            let studentsArray = []
-            for (const id in students) {
-                if (Object.hasOwnProperty.call(students, id)) {
-                    let student = students[id];
-                    student.id = id;
-                    studentsArray.push(student);
-                }
-            }
-            // setStudents(students);
-            setRows(studentsArray);
-            setLoading(false);
-        }
+        
         getData()
         
     }, [])
     
+    async function getData() {
+        setLoading(true)
+        let snapshot = await studentsRef.once('value');
+        
+        let students = snapshot.exists() ? snapshot.val() : []
+        let studentsArray = []
+        for (const id in students) {
+            if (Object.hasOwnProperty.call(students, id)) {
+                let student = students[id];
+                student.id = id;
+                studentsArray.push(student);
+            }
+        }
+        // setStudents(students);
+        setRows(studentsArray);
+        setLoading(false);
+    }
+
     const handleAddRow = () => {
         let rowsArray = JSON.parse(JSON.stringify(rows))
         rowsArray.push({id: rowsArray.length, label: 'Digite um nome...', placeholder: 'Digite...', required: false})
@@ -95,12 +102,51 @@ const Students = () => {
     const handleRowClick = (e) => {
         console.log(e)
         setOpen(true);
-        setStudentData(e.row)
+        setStudentInfo({id: e.id, classCode: e.row.turmaAluno})
 
+    }
+
+    const handleConfirmDisable = () => {
+        setOpenDialog(true)
+    }
+
+    const handleDisableStudents = async () => {
+        setOpenDialog(false)
+        setLoading(true)
+        try {
+            let message = await handleEnableDisableStudents(selectedRows)
+            getData()
+            enqueueSnackbar(message, {title: 'Sucesso', variant: 'success', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
+            setLoading(false)
+        } catch (error) {
+            getData()
+            enqueueSnackbar(error.message, {title: 'Sucesso', variant: 'error', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button>})
+            setLoading(false)
+        }
     }
 
     return (
         <Fragment>
+            <Dialog 
+                 
+                 aria-labelledby="confirmation-dialog-title"
+                 open={openDialog}
+                 onClose={() => setOpenDialog(false)}
+            >
+                <DialogTitle id="confirmation-dialog-title">Você confirma esta ação?</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>{selectedRows.length > 1 ? 'Serão' : 'Será'} desativado{selectedRows.length > 1 && 's'} {selectedRows.length} aluno{selectedRows.length > 1 && 's'}.</DialogContentText>
+                </DialogContent>
+                
+                <DialogActions>
+                    <Button onClick={() => setOpenDialog(false)} color="primary">
+                        Cancelar
+                    </Button>
+                    <Button onClick={handleDisableStudents} color="primary" autoFocus>
+                        Sim
+                    </Button>
+                </DialogActions>
+            </Dialog>
             <FullScreenDialog 
                 isOpen={open}
                 onClose={() => {
@@ -114,7 +160,7 @@ const Students = () => {
                 saveButton={"Salvar"}
                 saveButtonDisabled={true}
             > 
-                <StudentInfo studentData={studentData} />
+                <StudentInfo studentInfo={studentInfo} />
             </FullScreenDialog>
             <Grid
             justifyContent="flex-start"   
@@ -161,7 +207,7 @@ const Students = () => {
                     
                 </Grid>
                 <Grid item>
-                    {selectedRows.length > 0 && (<Button variant="contained" color="secondary" onClick={() => {handleDeleteRows()}}>Botão de ações</Button>)}
+                    {selectedRows.length > 0 && (<Button variant="contained" color="secondary" onClick={() => {handleConfirmDisable()}}>Desativar selecionado{selectedRows.length > 1 && 's'}</Button>)}
                 </Grid>
             </Grid>
         </Fragment>

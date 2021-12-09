@@ -195,5 +195,30 @@ const generateClassCode = async (classData) => {
 
     return classCode;
 }
+
+const handleEnableDisableStudents = async (studentsId, classCode='', mode='desativa') => {
+    // 'mode' can be "ativa" or "desativa"
+    // The 'classCode' needs to be defined only for enabling students back. If sent a classCode but 'mode' is "desativa" it won't have any effects
+    let data = {alunos: {}, codTurma: classCode, modo: mode}
+    let studentsArray = []
+    if (typeof studentsId === "string") {
+        studentsArray.push(studentsId)
+    } else {
+        studentsArray = studentsId
+    }
+    studentsArray.map((id, i) => {
+        data.alunos[id] = ''
+        return 0;
+    })
+
+    let enableDisableStudentFunction = functions.httpsCallable('ativaDesativaAlunos')
+    try {
+        let result = await enableDisableStudentFunction(data);
+        return result.data.answer;
+    } catch (error) {
+        throw new Error(error.message)
+    }
+    
+}
  
-export { calculateAge, checkCpf, getAddress, enrollStudent, handleSendClassData, formatBytes, generateClassCode };
+export { calculateAge, checkCpf, getAddress, enrollStudent, handleSendClassData, formatBytes, generateClassCode, handleEnableDisableStudents };

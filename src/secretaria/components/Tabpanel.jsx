@@ -4,6 +4,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import AppBar from '@material-ui/core/AppBar';
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
+import '../../App.css';
 
 import Typography from '@material-ui/core/Typography';
 
@@ -14,6 +15,7 @@ import SchoolSettings from './schoolSettings/SchoolSettings';
 import Students from './students/Students';
 import AddClass from './addClass/AddClass';
 import Classes from './classes/Classes';
+import Dashboard from '../../muiDashboard/Dashboard';
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -86,7 +88,7 @@ export default function SecretariaTabs() {
         </Tabs>
       </AppBar>
       <TabPanel value={value} index={0}>
-        
+        <Dashboard />
       </TabPanel>
       <TabPanel value={value} index={1}>
         <Students />

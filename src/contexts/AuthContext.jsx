@@ -58,6 +58,7 @@ export function AuthContextProvider(props) {
   async function signOut() {
     await auth.signOut();
     setUser(undefined);
+    window.open('/');
     return ;
     
   }

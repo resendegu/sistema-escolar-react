@@ -6,7 +6,9 @@ import { Fragment, useEffect, useState } from "react";
 
 import { classesRef, coursesRef } from '../services/databaseRefs'
 import { LocaleText } from "./DataGridLocaleText";
+import FullScreenDialog from "./FullscreenDialog";
 import StudentFiles from "./StudentFiles";
+import StudentInfo from "./ViewStudentInfo";
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -81,7 +83,9 @@ const ClassInfo = (props) => {
     const [selectedRows, setSelectedRows] = useState([]);
     const [teachers, setTeachers] = useState([])
     const [students, setStudents] = useState([]);
+    const [studentInfo, setStudentInfo] = useState({});
     const [loader, setLoader] = useState(true);
+    const [open, setOpen] = useState(false);
     const [filterModel, setFilterModel] = useState({
       items: [],
   });
@@ -172,9 +176,9 @@ const ClassInfo = (props) => {
   }
 
   const handleRowClick = (e) => {
-     
-      
-
+    console.log(e)
+    setStudentInfo({id: e.id, classCode: classCode})
+    setOpen(true);
   }
 
   const handleTeacherClick = (e) => {
@@ -188,6 +192,21 @@ const ClassInfo = (props) => {
 
     return ( 
         <Fragment>
+          <FullScreenDialog 
+                isOpen={open}
+                onClose={() => {
+                    setOpen(false);
+                }}
+                hideSaveButton
+                onSave={() => {
+                    alert('Save clicked')
+                }}
+                title={"Informações do aluno"}
+                saveButton={"Salvar"}
+                saveButtonDisabled={true}
+            > 
+                <StudentInfo studentInfo={studentInfo} />
+          </FullScreenDialog>
             <div style={{position: 'absolute'}}>
               <Backdrop className={classes.backdrop} open={loader}>
                 <CircularProgress color="inherit" />

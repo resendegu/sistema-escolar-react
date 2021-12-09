@@ -1,9 +1,9 @@
 import { Avatar, Box, Button, Card, CardActions, CardContent, Container, Divider, Grid, List, ListItem, ListItemText, makeStyles, Typography } from "@material-ui/core";
 import { green } from "@material-ui/core/colors";
-import { AccountBox, Assignment, Assistant, AttachFile, ChromeReaderMode, Description, DoneAll, Edit, Person, Print, School, SupervisedUserCircle, TransferWithinAStation } from "@material-ui/icons";
+import { AccountBox, Assignment, Assistant, AttachFile, ChromeReaderMode, Description, DoneAll, Edit, NotInterested, Person, Print, School, SupervisedUserCircle, TransferWithinAStation } from "@material-ui/icons";
 import { Fragment, useEffect, useState } from "react";
 
-import { classesRef } from '../services/databaseRefs'
+import { classesRef, studentsRef } from '../services/databaseRefs'
 import StudentFiles from "./StudentFiles";
 
 const useStyles = makeStyles({
@@ -58,24 +58,25 @@ const useStyles = makeStyles({
 
 const StudentInfo = (props) => {
 
-    const { studentData } = props;
+    const { studentInfo } = props;
     const classes = useStyles();
 
-    const classCode = studentData.turmaAluno
+    const classCode = studentInfo.classCode
+    const studentId = studentInfo.id
 
-
+    const [studentData, setStudentData] = useState({});
     const [academicData, setAcademicData] = useState({});
     const [currentGrade, setCurrentGrade] = useState('Notas não lançadas');
 
     useEffect(() => {
       const getData = async () => {
         try {
-          let data = await classesRef.child(classCode).child('alunos').child(studentData.matriculaAluno).once('value');
-          console.log(data.val());
-          if (data.exists()) {
-            setAcademicData(data.val());
-            calculateGrade(data.val().notas);
-          }
+          let data = await classesRef.child(classCode).child('alunos').child(studentId).once('value');
+          let studentData = (await studentsRef.child(studentId).once('value')).val()
+          console.log(studentData);
+          studentData && setStudentData(studentData)
+          data.exists() && setAcademicData(data.val());
+          data.exists() && calculateGrade(data.val().notas);
           console.log(data.val())
         } catch (error) {
           console.log(error)
@@ -84,7 +85,7 @@ const StudentInfo = (props) => {
       }
       getData();
       
-    }, [classCode, studentData])
+    }, [classCode, studentId])
 
     const calculateGrade = (grades) => {
       let finalGrade = 0;
@@ -144,7 +145,7 @@ const StudentInfo = (props) => {
                           Matrícula: {studentData.matriculaAluno}
                         </Typography>
                         <Typography className={classes.pos} color="textSecondary">
-                          Nascimento: {studentData.dataNascimentoAluno.split('-').reverse().join('/')}
+                          Nascimento: {studentData.hasOwnProperty('dataNascimentoAluno') && studentData.dataNascimentoAluno.split('-').reverse().join('/')}
                         </Typography>
                         <Typography className={classes.pos} color="textSecondary">
                           CPF: {studentData.cpfAluno}
@@ -225,7 +226,9 @@ const StudentInfo = (props) => {
                       <Box m={1}>
                         <Button fullWidth size="large" variant="contained" color="primary" startIcon={<SupervisedUserCircle />}>Responsáveis</Button>
                       </Box>
-                      
+                      <Box m={1}>
+                        <Button fullWidth size="small" variant="contained" color={"secondary"} startIcon={<NotInterested />}>Desativar</Button>
+                      </Box>
                       
                       </CardContent>
                       
@@ -279,7 +282,7 @@ const StudentInfo = (props) => {
                         <Typography variant="h6" component="h6">
                             Faltas Registradas
                         </Typography>
-                        {academicData.hasOwnProperty('frequencia')  ? Object.keys(academicData.frequencia).map((name, i) => {
+                        {academicData.hasOwnProperty('frequencia') ? Object.keys(academicData.frequencia).map((name, i) => {
                           let date = new Date(name)
                           let dateConverted = date.toISOString().substring(0, 10).split('-').reverse().join('/')
                           return (
@@ -319,7 +322,7 @@ const StudentInfo = (props) => {
                       </Grid>
                       <hr />
                       
-                        <StudentFiles studentId={studentData.matriculaAluno} />
+                        <StudentFiles studentId={studentId} />
                         
                       </CardContent>
                       <CardActions>

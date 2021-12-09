@@ -1,9 +1,13 @@
+import { useState } from "react"
+import { classesRef } from "../services/databaseRefs"
+
 const useCourses = async () => {
     let columns = [
         { field: 'col1', headerName: 'Turma', width: 150 }, 
         { field: 'col2', headerName: 'Horário', width: 125 },
         { field: 'col3', headerName: 'Professor', width: 170 },
     ]
+    const [errorMessage, setErrorMessage] = useState('Error')
     let rows = []
     try {
         const schoolClasses = (await (classesRef.once('value'))).val()
