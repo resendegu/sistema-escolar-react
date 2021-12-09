@@ -49,7 +49,7 @@ const CalendarComponent = () => {
         localStorage.setItem('view', e.view.type)
     }
 
-    const initialView = localStorage.getItem('view')
+    const initialView = localStorage.getItem('view') || 'dayGridMonth';
 
     
 
@@ -68,7 +68,8 @@ const CalendarComponent = () => {
                headerToolbar={{
                  left: 'prevYear,prev,next,nextYear today',
                  center: 'title',
-                 right: 'dayGridMonth,timeGridWeek,listWeek'
+                 right: 'dayGridMonth,timeGridWeek,listWeek',
+
                }}
                 locale={brLocale}
                 eventSources={events}
