@@ -1,12 +1,14 @@
-import { Avatar, Box, Button, Card, CardActions, CardContent, Container, Divider, Grid, List, ListItem, ListItemText, makeStyles, Typography } from "@material-ui/core";
+import { Avatar, Backdrop, Box, Button, Card, CardActions, CardContent, CircularProgress, Container, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, Grid, List, ListItem, ListItemText, makeStyles, MenuItem, Select, Typography } from "@material-ui/core";
 import { green } from "@material-ui/core/colors";
-import { AccountBox, Assignment, Assistant, AttachFile, ChromeReaderMode, Description, DoneAll, Edit, NotInterested, Person, Print, School, SupervisedUserCircle, TransferWithinAStation } from "@material-ui/icons";
+import { AccountBox, Assignment, Assistant, AttachFile, Check, ChromeReaderMode, Description, DoneAll, Edit, NotInterested, Person, Print, School, SupervisedUserCircle, TransferWithinAStation } from "@material-ui/icons";
+import { useSnackbar } from "notistack";
 import { Fragment, useEffect, useState } from "react";
 
-import { classesRef, studentsRef } from '../services/databaseRefs'
+import { classesRef, disabledStudentsRef, studentsRef } from '../services/databaseRefs'
+import { handleEnableDisableStudents, handleTransferStudents } from "./FunctionsUse";
 import StudentFiles from "./StudentFiles";
 
-const useStyles = makeStyles({
+const useStyles = makeStyles((theme) => ({
     root: {
       width: "100%",
       maxWidth: "70vw",
@@ -53,8 +55,12 @@ const useStyles = makeStyles({
     },
     avatar: {
       backgroundColor: '#3f51b5',
-    }
-  });
+    },
+    backdrop: {
+      zIndex: theme.zIndex.drawer + 1,
+      color: '#fff',
+    },
+  }));
 
 const StudentInfo = (props) => {
 
@@ -63,29 +69,48 @@ const StudentInfo = (props) => {
 
     const classCode = studentInfo.classCode
     const studentId = studentInfo.id
+    const disabledStudent = studentInfo.disabled
+
+    const [ openDialog, setOpenDialog ] = useState(false);
+    const [ loading, setLoading ] = useState(false);
+
+    const {enqueueSnackbar, closeSnackbar} = useSnackbar();
 
     const [studentData, setStudentData] = useState({});
     const [academicData, setAcademicData] = useState({});
     const [currentGrade, setCurrentGrade] = useState('Notas não lançadas');
+    const [classesCodes, setClassesCodes] = useState([]);
+    const [classCodeEnable, setClassCodeEnable] = useState('');
+    const [desablingStudent, setDesablingStudent] = useState(false);
+    const [classCodeTransfer, setClassCodeTransfer] = useState('');
 
     useEffect(() => {
-      const getData = async () => {
-        try {
-          let data = await classesRef.child(classCode).child('alunos').child(studentId).once('value');
-          let studentData = (await studentsRef.child(studentId).once('value')).val()
-          console.log(studentData);
-          studentData && setStudentData(studentData)
-          data.exists() && setAcademicData(data.val());
-          data.exists() && calculateGrade(data.val().notas);
-          console.log(data.val())
-        } catch (error) {
-          console.log(error)
-        }
-        
-      }
+      
       getData();
       
     }, [classCode, studentId])
+
+    const getData = async () => {
+      try {
+        if (disabledStudent || !desablingStudent) {
+          let classes = (await (classesRef.once('value'))).val()
+          let classesArray = Object.keys(classes)
+          setClassesCodes(classesArray)
+          setClassCodeEnable(classesArray[0])
+        }
+        console.log(disabledStudent)
+        let data = await classesRef.child(classCode).child('alunos').child(studentId).once('value');
+        let studentData = !disabledStudent ? (await studentsRef.child(studentId).once('value')).val() : (await disabledStudentsRef.child(studentId + '/dadosAluno').once('value')).val()
+        console.log(studentData);
+        studentData && setStudentData(studentData)
+        data.exists() && setAcademicData(data.val());
+        data.exists() && calculateGrade(data.val().notas);
+        console.log(data.val())
+      } catch (error) {
+        console.log(error)
+      }
+      
+    }
 
     const calculateGrade = (grades) => {
       let finalGrade = 0;
@@ -98,11 +123,101 @@ const StudentInfo = (props) => {
       setCurrentGrade(finalGrade);
     }
 
+    const handleConfirmDisable = () => {
+      setDesablingStudent(true)
+      setOpenDialog(true)
+    }
+
+  const handleDisableStudent = async () => {
+      setOpenDialog(false)
+      setLoading(true)
+      try {
+          let message = await handleEnableDisableStudents(studentId)
+          
+          enqueueSnackbar(message, {title: 'Sucesso', variant: 'success', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
+          setLoading(false)
+      } catch (error) {
+          
+          enqueueSnackbar(error.message, {title: 'Sucesso', variant: 'error', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button>})
+          setLoading(false)
+      }
+  }
+
+  const handleConfirmEnable = () => {
+    setDesablingStudent(false)
+    setOpenDialog(true)
+  }
+
+  const handleEnableStudent = async () => {
+    setOpenDialog(false)
+    setLoading(true)
+    try {
+        let message = await handleEnableDisableStudents(studentId, classCodeEnable, 'ativa')
+        
+        enqueueSnackbar(message, {title: 'Sucesso', variant: 'success', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
+        setLoading(false)
+    } catch (error) {
+        
+        enqueueSnackbar(error.message, {title: 'Sucesso', variant: 'error', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button>})
+        setLoading(false)
+    }
+}
+    
+const handleConfirmTransfer = () => {
+  setDesablingStudent(false)
+  setOpenDialog(true)
+}
+
+const handleTransfer = async () => {
+  setOpenDialog(false)
+  setLoading(true)
+  try {
+      let message = await handleTransferStudents(classCode, classCodeTransfer, studentId)
+      getData()
+      enqueueSnackbar(message, {title: 'Sucesso', variant: 'success', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
+      setLoading(false)
+  } catch (error) {
+      getData()
+      enqueueSnackbar(error.message, {title: 'Sucesso', variant: 'error', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button>})
+      setLoading(false)
+  }
+}
+
 
 
     return ( 
         <Fragment>
-            
+              <Dialog 
+                 aria-labelledby="confirmation-dialog-title"
+                 open={openDialog}
+                 onClose={() => setOpenDialog(false)}
+              >
+                <DialogTitle id="confirmation-dialog-title">Você confirma esta ação?</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>{desablingStudent ? `Você está ${disabledStudent ? 'ativando' : 'desativando'} este aluno.` : `Você está transferindo este aluno. Escolha a turma de destino:`}</DialogContentText>
+                    {(disabledStudent || !desablingStudent) && 
+                    <Select 
+                      autoFocus
+                      fullWidth
+                      required
+                      onChange={!desablingStudent ? (e) => setClassCodeTransfer(e.target.value) : (e) => setClassCodeEnable(e.target.value)}
+                      value={!desablingStudent ? classCodeTransfer : classCodeEnable}
+                    >
+                      
+                      {classesCodes.map((id, i) => <MenuItem value={id}>{id}</MenuItem>)}
+                      </Select>}
+                </DialogContent>
+                
+                <DialogActions>
+                    <Button onClick={() => setOpenDialog(false)} color="primary">
+                        Cancelar
+                    </Button>
+                    <Button onClick={desablingStudent ? (disabledStudent ? handleEnableStudent : handleDisableStudent) : handleTransfer } variant="contained" color="primary" autoFocus>
+                        Sim, continuar
+                    </Button>
+                </DialogActions>
+            </Dialog>
+              <Backdrop open={loading} className={classes.backdrop}><CircularProgress color="inherit" /></Backdrop>
               <div className={classes.container}>
                 <Card className={classes.smallCards} variant="outlined" >
                   <CardContent>
@@ -206,13 +321,13 @@ const StudentInfo = (props) => {
                     </Grid>
                       <hr />
                       <Box  m={1}>
-                        <Button fullWidth size="large" variant="contained" color="primary" startIcon={<TransferWithinAStation />}>Transferir</Button>
+                        <Button fullWidth size="large" variant="contained" color="primary" startIcon={<TransferWithinAStation />} disabled={disabledStudent} onClick={handleConfirmTransfer}>Transferir</Button>
                       </Box>
                       <Box  m={1}>
                         <Button fullWidth size="large" variant="contained" color="primary" startIcon={<Edit />}>Editar dados</Button>
                       </Box>
                       <Box m={1}>
-                        <Button fullWidth size="large" variant="contained" color="primary" startIcon={<DoneAll />}>Checklist</Button>
+                        <Button fullWidth size="large" variant="contained" color="primary" startIcon={<DoneAll />}disabled={disabledStudent}>Checklist</Button>
                       </Box>
                       <Box m={1}>
                         <Button fullWidth size="large" variant="contained" color="primary" startIcon={<Description />}>Contratos</Button>
@@ -227,7 +342,7 @@ const StudentInfo = (props) => {
                         <Button fullWidth size="large" variant="contained" color="primary" startIcon={<SupervisedUserCircle />}>Responsáveis</Button>
                       </Box>
                       <Box m={1}>
-                        <Button fullWidth size="small" variant="contained" color={"secondary"} startIcon={<NotInterested />}>Desativar</Button>
+                        <Button fullWidth size="small" variant="contained" color={"secondary"} startIcon={disabledStudent ? <Check /> :<NotInterested />} onClick={disabledStudent ? handleConfirmEnable : handleConfirmDisable}>{disabledStudent ? 'Reativar' : 'Desativar'}</Button>
                       </Box>
                       
                       </CardContent>

@@ -1,12 +1,14 @@
-import { Avatar, Backdrop, Box, Button, Card, CardActions, CardContent, CircularProgress, Container, Divider, Grid, IconButton, List, ListItem, ListItemSecondaryAction, ListItemText, makeStyles, Typography } from "@material-ui/core";
+import { Avatar, Backdrop, Box, Button, Card, CardActions, CardContent, CircularProgress, Container, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, Grid, IconButton, List, ListItem, ListItemSecondaryAction, ListItemText, makeStyles, MenuItem, Select, Typography } from "@material-ui/core";
 import { green } from "@material-ui/core/colors";
 import { AccountBox, Add, Assignment, Assistant, AttachFile, ChromeReaderMode, Clear, DeleteForever, Description, DoneAll, Edit, Grade, Lock, LockOpen, Person, Print, School, SupervisedUserCircle, TransferWithinAStation } from "@material-ui/icons";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
+import { useSnackbar } from "notistack";
 import { Fragment, useEffect, useState } from "react";
 
 import { classesRef, coursesRef } from '../services/databaseRefs'
 import { LocaleText } from "./DataGridLocaleText";
 import FullScreenDialog from "./FullscreenDialog";
+import { handleEnableDisableStudents, handleTransferStudents } from "./FunctionsUse";
 import StudentFiles from "./StudentFiles";
 import StudentInfo from "./ViewStudentInfo";
 
@@ -89,43 +91,53 @@ const ClassInfo = (props) => {
     const [filterModel, setFilterModel] = useState({
       items: [],
   });
+    const [classesCodes, setClassesCodes] = useState([]);
+    const [classCodeTransfer, setClassCodeTransfer] = useState('');
+    const [ openDialog, setOpenDialog ] = useState(false);
+    const {enqueueSnackbar, closeSnackbar} = useSnackbar();
+    const [desablingStudent, setDesablingStudent] = useState(false);
 
     
     useEffect(() => {
-      const getData = async () => {
-        setLoader(true)
-        try {
-          let data = (await classesRef.child(classCode).once('value')).val();
-          let courseData = (await coursesRef.child(data.curso).once('value')).val();
-          console.log(data)
-          if (data && courseData) {
-            setClassData(data);
-            if (data.hasOwnProperty('professor')) {
-              setTeachers(data.professor)
-            }
-            setCourseData(courseData);
-            let students = data.alunos
-            let studentsArray = []
-            for (const id in students) {
-              if (Object.hasOwnProperty.call(students, id)) {
-                let student = students[id];
-                student.id = id
-                studentsArray.push(student)
-              }
-            }
-            setStudents(studentsArray)
-          }
-          setLoader(false);
-
-        } catch (error) {
-          console.log(error)
-        }
-        
-      }
+      
       getData();
       
     }, [])
 
+    const getData = async () => {
+      setLoader(true)
+      try {
+        let classes = (await (classesRef.once('value'))).val()
+          let classesArray = Object.keys(classes)
+          setClassesCodes(classesArray.filter(classroomCode => classroomCode !== classCode))
+          setClassCodeTransfer(classesArray[0])
+        let data = (await classesRef.child(classCode).once('value')).val();
+        let courseData = (await coursesRef.child(data.curso).once('value')).val();
+        console.log(data)
+        if (data && courseData) {
+          setClassData(data);
+          if (data.hasOwnProperty('professor')) {
+            setTeachers(data.professor)
+          }
+          setCourseData(courseData);
+          let students = data.alunos
+          let studentsArray = []
+          for (const id in students) {
+            if (Object.hasOwnProperty.call(students, id)) {
+              let student = students[id];
+              student.id = id
+              studentsArray.push(student)
+            }
+          }
+          setStudents(studentsArray)
+        }
+        setLoader(false);
+
+      } catch (error) {
+        console.log(error)
+      }
+      
+    }
     
     const handleAddRow = () => {
       // let rowsArray = JSON.parse(JSON.stringify(rows))
@@ -190,8 +202,80 @@ const ClassInfo = (props) => {
   }
 
 
+  const handleConfirmTransfer = () => {
+    setDesablingStudent(false)
+    setOpenDialog(true)
+  }
+
+  const handleTransfer = async () => {
+    setOpenDialog(false)
+    setLoader(true)
+    try {
+        let message = await handleTransferStudents(classCode, classCodeTransfer, selectedRows)
+        getData()
+        enqueueSnackbar(message, {title: 'Sucesso', variant: 'success', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
+        setLoader(false)
+    } catch (error) {
+        getData()
+        enqueueSnackbar(error.message, {title: 'Sucesso', variant: 'error', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button>})
+        setLoader(false)
+    }
+  }
+
+  const handleConfirmDisable = () => {
+    setDesablingStudent(true)
+    setOpenDialog(true) 
+  }
+
+const handleDisableStudents = async () => {
+    setOpenDialog(false)
+    setLoader(true)
+    try {
+        let message = await handleEnableDisableStudents(selectedRows)
+        getData()
+        enqueueSnackbar(message, {title: 'Sucesso', variant: 'success', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
+        setLoader(false)
+    } catch (error) {
+        getData()
+        enqueueSnackbar(error.message, {title: 'Sucesso', variant: 'error', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button>})
+        setLoader(false)
+    }
+}
+
     return ( 
         <Fragment>
+          <Dialog 
+                 aria-labelledby="confirmation-dialog-title"
+                 open={openDialog}
+                 onClose={() => setOpenDialog(false)}
+              >
+                <DialogTitle id="confirmation-dialog-title">Você confirma esta ação?</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>{desablingStudent ? `Você está desativando ${selectedRows.length} alunos.` : `Você está transferindo ${selectedRows.length} alunos. Escolha a turma de destino:`}</DialogContentText>
+                    
+                    {!desablingStudent &&
+                      <Select 
+                        autoFocus
+                        fullWidth
+                        required
+                        onChange={(e) => setClassCodeTransfer(e.target.value)}
+                        value={classCodeTransfer}
+                      >
+                      
+                      {classesCodes.map((id, i) => <MenuItem value={id}>{id}</MenuItem>)}
+                      </Select>}
+                </DialogContent>
+                
+                <DialogActions>
+                    <Button onClick={() => setOpenDialog(false)} color="primary">
+                        Cancelar
+                    </Button>
+                    <Button onClick={desablingStudent ? handleDisableStudents : handleTransfer} variant="contained" color="primary" autoFocus>
+                        Sim, continuar
+                    </Button>
+                </DialogActions>
+            </Dialog>
+            <Backdrop open={loader} className={classes.backdrop}><CircularProgress color="inherit" /></Backdrop>
           <FullScreenDialog 
                 isOpen={open}
                 onClose={() => {
@@ -389,8 +473,8 @@ const ClassInfo = (props) => {
                         />
                         {selectedRows.length > 0 && 
                           <div className={classes.container}>
-                            <Button size="medium" variant="contained" color="primary" startIcon={<TransferWithinAStation />}>Transferir</Button>
-                            <Button size="medium" variant="contained" color="secondary" startIcon={<Clear />}>Desativar</Button>
+                            <Button size="medium" variant="contained" color="primary" startIcon={<TransferWithinAStation />} onClick={handleConfirmTransfer}>Transferir</Button>
+                            <Button size="medium" variant="contained" color="secondary" startIcon={<Clear />} onClick={handleConfirmDisable}>Desativar</Button>
                           </div>
                         }
                         

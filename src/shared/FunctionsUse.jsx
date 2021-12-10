@@ -220,5 +220,24 @@ const handleEnableDisableStudents = async (studentsId, classCode='', mode='desat
     }
     
 }
+
+const handleTransferStudents = async (currentClass, destinationClass, studentsId) => {
+    let data = {turmaAtual: currentClass, turmaParaTransferir: destinationClass, alunos: studentsId}
+    let studentsArray = []
+    if (typeof studentsId === "string") {
+        studentsArray.push(studentsId)
+    } else {
+        studentsArray = studentsId
+    }
+    data.alunos = studentsArray
+
+    let transferStudentsFunction = functions.httpsCallable('transfereAlunos')
+    try {
+        let result = await transferStudentsFunction(data);
+        return result.data.answer;
+    } catch (error) {
+        throw new Error(error.message)
+    }
+}
  
-export { calculateAge, checkCpf, getAddress, enrollStudent, handleSendClassData, formatBytes, generateClassCode, handleEnableDisableStudents };
+export { calculateAge, checkCpf, getAddress, enrollStudent, handleSendClassData, formatBytes, generateClassCode, handleEnableDisableStudents, handleTransferStudents };

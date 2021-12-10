@@ -1,20 +1,73 @@
-import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Grid } from "@material-ui/core";
-import { PlusOneRounded } from "@material-ui/icons";
+import { Button, Checkbox, createTheme, darken, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControlLabel, Grid, lighten, makeStyles } from "@material-ui/core";
+import { CheckBox, PlusOneRounded, Refresh } from "@material-ui/icons";
 import { DataGrid, GridToolbar, GridToolbarContainer, GridToolbarExport } from "@mui/x-data-grid";
 import { useSnackbar } from "notistack";
 import { Fragment, useEffect, useState } from "react";
-import { studentsRef } from "../../../services/databaseRefs";
+import { disabledStudentsRef, studentsRef } from "../../../services/databaseRefs";
 import { LocaleText } from "../../../shared/DataGridLocaleText";
 import FullScreenDialog from "../../../shared/FullscreenDialog";
 import { handleEnableDisableStudents } from "../../../shared/FunctionsUse";
 import StudentInfo from "../../../shared/ViewStudentInfo";
 
+// TODO v5: remove
+function getThemePaletteMode(palette) {
+    return palette.type || palette.mode;
+  }
+  
+  const defaultTheme = createTheme();
+  const useStyles = makeStyles(
+    (theme) => {
+      const getBackgroundColor = (color) =>
+        getThemePaletteMode(theme.palette) === 'dark'
+          ? darken(color, 0.6)
+          : lighten(color, 0.6);
+  
+      const getHoverBackgroundColor = (color) =>
+        getThemePaletteMode(theme.palette) === 'dark'
+          ? darken(color, 0.5)
+          : lighten(color, 0.5);
+  
+      return {
+        root: {
+          '& .super-app-theme--Open': {
+            backgroundColor: getBackgroundColor(theme.palette.info.main),
+            '&:hover': {
+              backgroundColor: getHoverBackgroundColor(theme.palette.info.main),
+            },
+          },
+          '& .super-app-theme--Filled': {
+            backgroundColor: getBackgroundColor(theme.palette.success.main),
+            '&:hover': {
+              backgroundColor: getHoverBackgroundColor(theme.palette.success.main),
+            },
+          },
+          '& .super-app-theme--PartiallyFilled': {
+            backgroundColor: getBackgroundColor(theme.palette.warning.main),
+            '&:hover': {
+              backgroundColor: getHoverBackgroundColor(theme.palette.warning.main),
+            },
+          },
+          '& .super-app-theme--true': {
+            backgroundColor: getBackgroundColor(theme.palette.error.main),
+            '&:hover': {
+              backgroundColor: getHoverBackgroundColor(theme.palette.error.main),
+            },
+          },
+        },
+      };
+    },
+    { defaultTheme },
+  );
+
 const Students = () => {
 
+    const classes = useStyles();
 
+    const defaultShowDisabledStudents = localStorage.getItem('showDisabledStudents') ? true : false;
     const [ loading, setLoading ] = useState(false);
     const [ open, setOpen ] = useState(false);
     const [ openDialog, setOpenDialog ] = useState(false);
+    const [ showDisabledStudents, setShowDisabledStudents ] = useState(defaultShowDisabledStudents)
 
     const [filterModel, setFilterModel] = useState({
         items: [],
@@ -31,19 +84,31 @@ const Students = () => {
         
         getData()
         
-    }, [])
+    }, [showDisabledStudents])
     
     async function getData() {
         setLoading(true)
         let snapshot = await studentsRef.once('value');
+        let snapshot2 = showDisabledStudents && await disabledStudentsRef.once('value')
         
         let students = snapshot.exists() ? snapshot.val() : []
+        let disabledStudents = showDisabledStudents && snapshot2.exists() ? snapshot2.val() : []
         let studentsArray = []
         for (const id in students) {
             if (Object.hasOwnProperty.call(students, id)) {
                 let student = students[id];
                 student.id = id;
                 studentsArray.push(student);
+            }
+        }
+        if (showDisabledStudents) {
+            for (const id in disabledStudents) {
+                if (Object.hasOwnProperty.call(disabledStudents, id)) {
+                    let student = disabledStudents[id];
+                    student.dadosAluno.id = id;
+                    student.dadosAluno.disabled = true
+                    studentsArray.push(student.dadosAluno);
+                }
             }
         }
         // setStudents(students);
@@ -79,7 +144,9 @@ const Students = () => {
 
     const handleRowSelection = (selectedRows) => {
         console.log(selectedRows)
+        
         setSelectedRows(selectedRows)
+
     }
 
     const handleDeleteRows = async () => {
@@ -102,12 +169,24 @@ const Students = () => {
     const handleRowClick = (e) => {
         console.log(e)
         setOpen(true);
-        setStudentInfo({id: e.id, classCode: e.row.turmaAluno})
+        setStudentInfo({id: e.id, classCode: e.row.turmaAluno, disabled: e.row.hasOwnProperty('disabled') ? true : false})
 
     }
 
     const handleConfirmDisable = () => {
-        setOpenDialog(true)
+        let disabledStudentsSelected = false
+        selectedRows.map((id, i) => {
+            let student = rows.filter(row => id === row.id)
+            disabledStudentsSelected = student[0].hasOwnProperty('disabled') && true
+            return 0;
+        })
+        
+        if (!disabledStudentsSelected) {
+            setOpenDialog(true)
+        } else {
+            enqueueSnackbar('Por favor, selecione apenas alunos ativos para realizar esta ação.', {variant: 'warning', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
+        }
+        
     }
 
     const handleDisableStudents = async () => {
@@ -125,13 +204,18 @@ const Students = () => {
         }
     }
 
+    const handleShowDisabledStudents = (e) => {
+        const checked = e.target.checked;
+        checked ? localStorage.setItem('showDisabledStudents', 'yes') : localStorage.removeItem('showDisabledStudents');
+        setShowDisabledStudents(checked);
+    }
+
     return (
         <Fragment>
-            <Dialog 
-                 
-                 aria-labelledby="confirmation-dialog-title"
-                 open={openDialog}
-                 onClose={() => setOpenDialog(false)}
+            <Dialog
+                aria-labelledby="confirmation-dialog-title"
+                open={openDialog}
+                onClose={() => setOpenDialog(false)}
             >
                 <DialogTitle id="confirmation-dialog-title">Você confirma esta ação?</DialogTitle>
                 <DialogContent>
@@ -171,7 +255,7 @@ const Students = () => {
                 
                 
                 <Grid item xs={12}>
-                    <div style={{ height: "59vh", width: '100%' }}>
+                    <div style={{ height: "59vh", width: '100%' }} className={classes.root}>
                         <DataGrid 
                             filterModel={filterModel}
                             onFilterModelChange={(model) => setFilterModel(model)}
@@ -184,6 +268,7 @@ const Students = () => {
                                     {field: 'emailAluno', headerName: 'E-mail', width: 220},
                                     {field: 'celularAluno', headerName: 'Celular', width: 180},
                                     {field: 'turmaAluno', headerName: 'Turma', width: 180},
+                                    {field: 'disabled', headerName: 'Desativado?', type: 'boolean', width: 180}
                             
                                 ]
                             } 
@@ -198,12 +283,25 @@ const Students = () => {
                             localeText={LocaleText}
                             onSelectionModelChange={handleRowSelection}
                             onRowClick={handleRowClick}
+                            getRowClassName={(params) => {
+                                console.log(`super-app-theme--${params.getValue(params.id, 'disabled')}`)
+                                return `super-app-theme--${params.getValue(params.id, 'disabled')}`
+                            }
+                            }
+
                         />
                     </div>
                    
                 </Grid>
                 <Grid item>
-                    <Button variant="contained" color="primary" onClick={() => {handleAddRow()}}><PlusOneRounded />Botão</Button>
+                <FormControlLabel
+                    control={<Checkbox checked={showDisabledStudents} onChange={handleShowDisabledStudents}/>}
+                    label="Alunos desativados"
+                />
+                    
+                </Grid>
+                <Grid item>
+                    <Button variant="contained" color="primary" onClick={() => getData()}><Refresh />Atualizar lista</Button>
                     
                 </Grid>
                 <Grid item>

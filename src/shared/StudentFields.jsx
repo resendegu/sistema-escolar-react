@@ -51,9 +51,13 @@ function BasicDataFields(props) {
         try {
             if (basicData.tipoMatricula === 'preMatricula') {
                 setEnrollType({checked: true, value: 'preMatricula'})
+                handleOptionalSteps(1)
             } else {
                 setEnrollType({checked: false, value: 'matricula'})
+                
+                handleOptionalSteps(1, true)
             }
+            handleCalculateAge(basicData.dataNascimentoAluno)
         } catch (error) {
             console.log(error)
         }
@@ -61,8 +65,7 @@ function BasicDataFields(props) {
     }, [])
 
     const handleCalculateAge = async (date) => {
-        console.log(date.target.valueAsDate)
-        let birthdate = date.target.valueAsDate
+        let birthdate = (date.hasOwnProperty('target') && date.target.valueAsDate) || new Date(date)
         if (birthdate != null && !isNaN(birthdate.getDay()) ) {
             try {
                 setLoader(true)
@@ -722,10 +725,15 @@ const AddressAndParentsFields = (props) => {
     const [ dialogOpen, setDialogOpen ] = useState(false);
     const [ additionalFields, setAdditionalFields ] = useState(null);
 
+    const {enqueueSnackbar, closeSnackbar} = useSnackbar();
+
     useEffect(() => {
         let parentsArray = JSON.parse(sessionStorage.getItem('responsaveis'))
+        console.log(parentsArray)
         if (parentsArray) {
             setParentsFields(parentsArray)
+        } else if (parentsRequired) {
+            setDialogOpen(true)
         }
         additionalFieldsRef.once('value').then((snapshot) => {
             let fieldsData = snapshot.val();
@@ -779,7 +787,12 @@ const AddressAndParentsFields = (props) => {
     }
 
     const handleCloseDialog = () => {
-        setDialogOpen(false);
+        if (parentsFields.length === 0) {
+            enqueueSnackbar('O aluno é menor de idade. Deve ser cadastrado pelo menos um responsável.', {variant: 'warning', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
+        } else {
+            setDialogOpen(false);
+        }
+        
     }
 
     const handleSaveParentData = () => {
@@ -999,7 +1012,7 @@ const AddressAndParentsFields = (props) => {
                                     native
                                     // value={state.value}
                                     // onChange={handleChangeDay}
-                                    
+                                    disabled={true}
                                     value={field.relacao}
                                 >
                                     <option hidden selected>Escolha...</option>

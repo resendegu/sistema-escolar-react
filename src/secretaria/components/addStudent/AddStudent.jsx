@@ -97,7 +97,8 @@ export default function AddStudent() {
       let columns = [
         { field: 'col1', headerName: 'Turma', width: 150 }, 
         { field: 'col2', headerName: 'Horário', width: 125 },
-        { field: 'col3', headerName: 'Professor', width: 170 },
+        { field: 'col3', headerName: 'Professor(a)', width: 170 },
+        { field: 'col4', headerName: 'E-mail Prof.', width: 170 },
       ]
       let rows = []
       let coursesData = []
@@ -105,14 +106,18 @@ export default function AddStudent() {
       for (const classKey in schoolClasses) {
         if (Object.hasOwnProperty.call(schoolClasses, classKey)) {
           const classInfo = schoolClasses[classKey];
+          let teacherObj
           let teacher
+          let teacherEmail
           if (classInfo.hasOwnProperty('professor')) {
+            teacherObj = classInfo.professor[0]
+            teacherEmail = classInfo.professor[0].email
             teacher = classInfo.professor[0].nome
           } else {
             teacher = 'Não cadastrado'
           }
-          rows.push({ id: classKey, col1: classKey, col2: classInfo.hora + 'h', col3: teacher})
-          coursesData.push({turmaAluno: classKey, horaAluno: classInfo.hora + 'h', profAluno: teacher, courseId: classInfo.curso})
+          rows.push({ id: classKey, col1: classKey, col2: classInfo.hora + 'h', col3: teacher, col4: teacherEmail})
+          coursesData.push({turmaAluno: classKey, horaAluno: classInfo.hora + 'h', profAluno: teacherObj, courseId: classInfo.curso})
         }
       }
       sessionStorage.setItem('coursesData', JSON.stringify(coursesData))

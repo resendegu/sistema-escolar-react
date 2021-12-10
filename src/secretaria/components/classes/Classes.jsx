@@ -1,5 +1,5 @@
 import { Button, Dialog, Grid } from "@material-ui/core";
-import { PlusOneRounded } from "@material-ui/icons";
+import { PlusOneRounded, Refresh } from "@material-ui/icons";
 import { DataGrid, GridToolbar, GridToolbarContainer, GridToolbarExport } from "@mui/x-data-grid";
 import { Fragment, useEffect, useState } from "react";
 import { classesRef } from "../../../services/databaseRefs";
@@ -24,40 +24,45 @@ const Classes = () => {
     const [ classData, setClassData ] = useState({})
 
     useEffect(() => {
-        async function getData() {
-            setLoading(true)
-            let snapshot = await classesRef.once('value');
-            
-            let classes = snapshot.exists() ? snapshot.val() : []
-            let classesArray = []
-            for (const id in classes) {
-                if (Object.hasOwnProperty.call(classes, id)) {
-                    let theClass = classes[id];
-                    
-                    theClass.id = id;
-                    
-                    if (theClass.hasOwnProperty('professor')) {
-                        theClass.professor = theClass.professor[0].nome
-                    } else {
-                        theClass.professor = 'Professor(a) não encontrado(a)'
-                    }
-                    theClass.hora = theClass.hora.indexOf('_') === -1 ? theClass.hora + ':00' : theClass.hora.split('_').join(':')
-                    let timestamp = new Date(theClass.timestamp._seconds * 1000)
-                    theClass.timestamp = timestamp.toLocaleDateString() + ' ás ' + timestamp.toLocaleTimeString()
-
-                    theClass.modalidade = theClass.modalidade === 'ead' ? 'Ensino a Distância' : 'Presencial'
-
-          
-                    classesArray.push(theClass);
-                }
-            }
-            // setStudents(students);
-            setRows(classesArray);
-            setLoading(false);
-        }
+        
         getData()
         
     }, [])
+
+    async function getData() {
+        setLoading(true)
+        let snapshot = await classesRef.once('value');
+        
+        let classes = snapshot.exists() ? snapshot.val() : []
+        let classesArray = []
+        for (const id in classes) {
+            if (Object.hasOwnProperty.call(classes, id)) {
+                let theClass = classes[id];
+                
+                theClass.id = id;
+                
+                if (theClass.hasOwnProperty('professor')) {
+                    theClass.professor = theClass.professor[0].nome
+                } else {
+                    theClass.professor = 'Professor(a) não encontrado(a)'
+                }
+                theClass.hora = theClass.hora.indexOf('_') === -1 ? theClass.hora + ':00' : theClass.hora.split('_').join(':')
+                let timestamp = new Date(theClass.timestamp._seconds * 1000)
+                theClass.timestamp = timestamp.toLocaleDateString() + ' ás ' + timestamp.toLocaleTimeString()
+
+                theClass.modalidade = theClass.modalidade === 'ead' ? 'Ensino a Distância' : 'Presencial'
+
+                theClass.currentPeriod = theClass.hasOwnProperty('status') ? theClass.status.nomePeriodo : ''
+                theClass.status = theClass.hasOwnProperty('status') ? theClass.status.turma : '(Sem dados)'
+
+      
+                classesArray.push(theClass);
+            }
+        }
+        // setStudents(students);
+        setRows(classesArray);
+        setLoading(false);
+    }
     
     const handleAddRow = () => {
         let rowsArray = JSON.parse(JSON.stringify(rows))
@@ -154,8 +159,10 @@ const Classes = () => {
                                     {field: 'horarioTerminoTurma', headerName: 'Hr. Fim', width: 140},
                                     {field: 'professor', headerName: 'Prof. Referência', width: 220},
                                     {field: 'modalidade', headerName: 'Modalidade', width: 180},
+                                    {field: 'status', headerName: 'Status', width: 180},
+                                    {field: 'currentPeriod', headerName: 'Período', width: 180},
                                     {field: 'timestamp', headerName: 'Data/Hora Criação', width: 200},
-                            
+                                    
                                 ]
                             } 
                             disableSelectionOnClick 
@@ -174,7 +181,7 @@ const Classes = () => {
                    
                 </Grid>
                 <Grid item>
-                    <Button variant="contained" color="primary" onClick={() => {handleAddRow()}}><PlusOneRounded />Botão</Button>
+                    <Button variant="contained" color="primary" onClick={() => {getData()}}><Refresh />Atualizar lista</Button>
                     
                 </Grid>
                 <Grid item>

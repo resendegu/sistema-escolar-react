@@ -62,24 +62,30 @@ const CalendarComponent = () => {
                 <p>DIV</p>
             </div> */}
             <Title>Calendário da escola</Title>
-            <FullCalendar 
-               plugins={[ dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin ]}
-               initialView={initialView}
-               headerToolbar={{
-                 left: 'prevYear,prev,next,nextYear today',
-                 center: 'title',
-                 right: 'dayGridMonth,timeGridWeek,listWeek',
+            <div style={{width: '100%'}}>
+                <FullCalendar
+                    aspectRatio={2} 
+                    plugins={[ dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin ]}
+                    initialView={initialView}
+                    headerToolbar={{
+                        left: 'prevYear,prev,next,nextYear today',
+                        center: 'title',
+                        right: 'dayGridMonth,timeGridWeek,listWeek',
 
-               }}
-                locale={brLocale}
-                eventSources={events}
-                eventClick={handleEventClick}
-                dateClick={handleDateClick}
-                selectable
-                select={handleSelection}
-                viewDidMount={handleViewChange}
-                editable={true}
-            />
+                    }}
+                    
+                    locale={brLocale}
+                    eventSources={events}
+                    eventClick={handleEventClick}
+                    dateClick={handleDateClick}
+                    selectable
+                    select={handleSelection}
+                    viewDidMount={handleViewChange}
+                    editable={true}
+                    
+                />
+            </div>
+            
         </Fragment>
     );
 }
