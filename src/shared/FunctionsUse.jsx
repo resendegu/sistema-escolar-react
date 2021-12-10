@@ -239,5 +239,18 @@ const handleTransferStudents = async (currentClass, destinationClass, studentsId
         throw new Error(error.message)
     }
 }
+
+const handleAddTeacher = async (teacherEmail, classCode) => {
+    console.log(teacherEmail)
+    let data = {emailProf: teacherEmail, codSala: classCode};
+    let addTeacherFunction = functions.httpsCallable('addNovoProfTurma');
+    try {
+        let result = await addTeacherFunction(data);
+        return result.data.answer;
+    } catch (error) {
+        console.log(error)
+        throw new Error(error.message)
+    }
+}
  
-export { calculateAge, checkCpf, getAddress, enrollStudent, handleSendClassData, formatBytes, generateClassCode, handleEnableDisableStudents, handleTransferStudents };
+export { calculateAge, checkCpf, getAddress, enrollStudent, handleSendClassData, formatBytes, generateClassCode, handleEnableDisableStudents, handleTransferStudents, handleAddTeacher };

@@ -1,14 +1,14 @@
-import { Avatar, Backdrop, Box, Button, Card, CardActions, CardContent, CircularProgress, Container, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, Grid, IconButton, List, ListItem, ListItemSecondaryAction, ListItemText, makeStyles, MenuItem, Select, Typography } from "@material-ui/core";
+import { Avatar, Backdrop, Box, Button, Card, CardActions, CardContent, CircularProgress, Container, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, Grid, IconButton, List, ListItem, ListItemSecondaryAction, ListItemText, makeStyles, MenuItem, Select, Tooltip, Typography } from "@material-ui/core";
 import { green } from "@material-ui/core/colors";
 import { AccountBox, Add, Assignment, Assistant, AttachFile, ChromeReaderMode, Clear, DeleteForever, Description, DoneAll, Edit, Grade, Lock, LockOpen, Person, Print, School, SupervisedUserCircle, TransferWithinAStation } from "@material-ui/icons";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import { useSnackbar } from "notistack";
 import { Fragment, useEffect, useState } from "react";
 
-import { classesRef, coursesRef } from '../services/databaseRefs'
+import { classesRef, coursesRef, teachersListRef } from '../services/databaseRefs'
 import { LocaleText } from "./DataGridLocaleText";
 import FullScreenDialog from "./FullscreenDialog";
-import { handleEnableDisableStudents, handleTransferStudents } from "./FunctionsUse";
+import { handleEnableDisableStudents, handleTransferStudents, handleAddTeacher } from "./FunctionsUse";
 import StudentFiles from "./StudentFiles";
 import StudentInfo from "./ViewStudentInfo";
 
@@ -79,6 +79,7 @@ const ClassInfo = (props) => {
     const { classDataRows } = props;
     const classes = useStyles();
     const classCode = classDataRows.id
+    const classRef = classesRef.child(classCode)
 
     const [classData, setClassData] = useState({});
     const [courseData, setCourseData] = useState({});
@@ -96,6 +97,9 @@ const ClassInfo = (props) => {
     const [ openDialog, setOpenDialog ] = useState(false);
     const {enqueueSnackbar, closeSnackbar} = useSnackbar();
     const [desablingStudent, setDesablingStudent] = useState(false);
+    const [addingTeacher, setAddingTeacher] = useState(false);
+    const [teachersList, setTeachersList] = useState([]);
+    const [chosenTeacher, setChosenTeacher] = useState('');
 
     
     useEffect(() => {
@@ -111,8 +115,17 @@ const ClassInfo = (props) => {
           let classesArray = Object.keys(classes)
           setClassesCodes(classesArray.filter(classroomCode => classroomCode !== classCode))
           setClassCodeTransfer(classesArray[0])
-        let data = (await classesRef.child(classCode).once('value')).val();
+        let data = (await classRef.once('value')).val();
         let courseData = (await coursesRef.child(data.curso).once('value')).val();
+        let teachers = (await teachersListRef.once('value')).val();
+        let teachersArray = []
+        for (const uid in teachers) {
+          if (Object.hasOwnProperty.call(teachers, uid)) {
+            const teacher = teachers[uid];
+            teachersArray.push({email: teacher.email, nome: teacher.nome})
+          }
+        }
+        setTeachersList(teachersArray);
         console.log(data)
         if (data && courseData) {
           setClassData(data);
@@ -199,10 +212,12 @@ const ClassInfo = (props) => {
 
   const handleDeleteTeacher = (e) => {
     console.log(e)
+    // TODO
   }
 
 
   const handleConfirmTransfer = () => {
+    setAddingTeacher(false)
     setDesablingStudent(false)
     setOpenDialog(true)
   }
@@ -223,11 +238,13 @@ const ClassInfo = (props) => {
   }
 
   const handleConfirmDisable = () => {
+    setAddingTeacher(false)
     setDesablingStudent(true)
     setOpenDialog(true) 
   }
 
 const handleDisableStudents = async () => {
+    setAddingTeacher(false)
     setOpenDialog(false)
     setLoader(true)
     try {
@@ -242,6 +259,27 @@ const handleDisableStudents = async () => {
     }
 }
 
+  const handleConfirmAddTeacher = () => {
+    setAddingTeacher(true)
+    setDesablingStudent(false)
+    setOpenDialog(true)
+  }
+
+  const handleTeacherAdding = async () => {
+    setOpenDialog(false)
+    setLoader(true)
+    try {
+        let message = await handleAddTeacher(chosenTeacher, classCode);
+        getData()
+        enqueueSnackbar(message, {title: 'Sucesso', variant: 'success', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
+        setLoader(false)
+    } catch (error) {
+        getData()
+        enqueueSnackbar(error.message, {title: 'Sucesso', variant: 'error', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button>})
+        setLoader(false)
+    }
+  }
+
     return ( 
         <Fragment>
           <Dialog 
@@ -251,18 +289,18 @@ const handleDisableStudents = async () => {
               >
                 <DialogTitle id="confirmation-dialog-title">Você confirma esta ação?</DialogTitle>
                 <DialogContent>
-                    <DialogContentText>{desablingStudent ? `Você está desativando ${selectedRows.length} alunos.` : `Você está transferindo ${selectedRows.length} alunos. Escolha a turma de destino:`}</DialogContentText>
+                    <DialogContentText>{addingTeacher ? 'Você está adicionando um(a) professor(a) á esta turma. Escolha o(a) professor(a):' : (desablingStudent ? `Você está desativando ${selectedRows.length} alunos.` : `Você está transferindo ${selectedRows.length} alunos. Escolha a turma de destino:`)}</DialogContentText>
                     
-                    {!desablingStudent &&
+                    {(!desablingStudent || addingTeacher) &&
                       <Select 
                         autoFocus
                         fullWidth
                         required
-                        onChange={(e) => setClassCodeTransfer(e.target.value)}
-                        value={classCodeTransfer}
+                        onChange={(e) => addingTeacher ? setChosenTeacher(e.target.value) : setClassCodeTransfer(e.target.value)}
+                        value={addingTeacher ? chosenTeacher : classCodeTransfer}
                       >
                       
-                      {classesCodes.map((id, i) => <MenuItem value={id}>{id}</MenuItem>)}
+                      {addingTeacher ? (teachersList.map((teacher, i) => <MenuItem value={teacher.email}>{teacher.nome} ({teacher.email})</MenuItem>)) : (classesCodes.map((id, i) => <MenuItem value={id}>{id}</MenuItem>))}
                       </Select>}
                 </DialogContent>
                 
@@ -270,7 +308,7 @@ const handleDisableStudents = async () => {
                     <Button onClick={() => setOpenDialog(false)} color="primary">
                         Cancelar
                     </Button>
-                    <Button onClick={desablingStudent ? handleDisableStudents : handleTransfer} variant="contained" color="primary" autoFocus>
+                    <Button onClick={addingTeacher ? handleTeacherAdding : (desablingStudent ? handleDisableStudents : handleTransfer)} variant="contained" color="primary" autoFocus>
                         Sim, continuar
                     </Button>
                 </DialogActions>
@@ -306,9 +344,11 @@ const handleDisableStudents = async () => {
                       spacing={1}
                     >
                       <Grid item>
-                        <Avatar className={classes.orange} className={classes.avatar}>
-                          <AccountBox />
-                        </Avatar>
+                        <Tooltip title={(classData.hasOwnProperty('status') && classData.status.turma === 'aberta') ? 'Turma aberta' : 'Turma Fechada'}>
+                          <Avatar className={classes.avatar} style={{backgroundColor: `${(classData.hasOwnProperty('status') && classData.status.turma === 'aberta') ? '#38a800' : 'red'}`}}>
+                            {(classData.hasOwnProperty('status') && classData.status.turma === 'aberta') ? <LockOpen /> : <Lock />}
+                          </Avatar>
+                        </Tooltip>
                       </Grid>
 
                       <Grid item>
@@ -396,7 +436,7 @@ const handleDisableStudents = async () => {
                     </Grid>
                       <hr />
                       <Box  m={1}>
-                        <Button fullWidth size="large" variant="contained" color="primary" startIcon={<Add />}>Add professores</Button>
+                        <Button fullWidth size="large" variant="contained" color="primary" startIcon={<Add />} onClick={handleConfirmAddTeacher}> Add professores</Button>
                       </Box>
                       <Box  m={1}>
                         <Button fullWidth size="large" variant="contained" color="primary" startIcon={<Edit />}>Editar dados</Button>
@@ -411,11 +451,11 @@ const handleDisableStudents = async () => {
                         <Button fullWidth size="large" variant="contained" color="primary" startIcon={<Print />}>Diário de classe</Button>
                       </Box>
                       <Box m={1}>
-                        <Button fullWidth size="large" variant="contained" color="primary" startIcon={<LockOpen />}>Abrir turma</Button>
+                        <Button fullWidth size="large" variant="contained" color="primary" startIcon={(classData.hasOwnProperty('status') && classData.status.turma === 'aberta') ? <Lock /> : <LockOpen />}>{(classData.hasOwnProperty('status') && classData.status.turma === 'aberta') ? 'Fechar ' : 'Abrir '}turma</Button>
                       </Box>
-                      <Box m={1}>
-                        <Button fullWidth size="large" variant="contained" color="primary" startIcon={<Lock />}>Fechar turma</Button>
-                      </Box>
+                      {/* <Box m={1}>
+                        <Button fullWidth size="large" variant="contained" color="primary" startIcon={<Lock />}disabled={(!classData.hasOwnProperty('status') || classData.status.turma === 'fechada')}>Fechar turma</Button>
+                      </Box> */}
                       
                       
                       </CardContent>
