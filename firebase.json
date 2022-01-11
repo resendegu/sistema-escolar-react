@@ -8,7 +8,6 @@
   },
   "hosting": {
     "public": "build",
-    "site": "escola-react",
     "ignore": [
       "firebase.json",
       "**/.*",
@@ -23,5 +22,8 @@
   },
   "storage": {
     "rules": "storage.rules"
+  },
+  "functions": {
+    "source": "functions"
   }
 }

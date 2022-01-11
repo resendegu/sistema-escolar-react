@@ -22,7 +22,9 @@ import { mainListItems, secondaryListItems } from './listItems';
 import Chart from './Chart';
 import Deposits from './Deposits';
 import Orders from './Orders';
-import Calendar from './Calendar';
+import TuiCalendar from '../tui-calendar/Calendar';
+import CalendarComponent from './Calendar';
+
 
 function Copyright() {
   return (
@@ -101,11 +103,12 @@ const useStyles = makeStyles((theme) => ({
   content: {
     flexGrow: 1,
     height: '100vh',
-    
+    maxWidth: '100%',
   },
   container: {
     paddingTop: theme.spacing(4),
     paddingBottom: theme.spacing(4),
+    
   },
   paper: {
     padding: theme.spacing(2),
@@ -153,7 +156,7 @@ export default function Dashboard() {
             {/* Calendar */}
             <Grid item xs={12}>
               <Paper className={classes.paper}>
-                <Calendar />
+                <CalendarComponent />
               </Paper>
             </Grid>
            

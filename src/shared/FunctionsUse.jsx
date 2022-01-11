@@ -1,4 +1,4 @@
-import { booksRef, coursesRef, daysCodesRef } from "../services/databaseRefs"
+import { booksRef, classesRef, coursesRef, daysCodesRef } from "../services/databaseRefs"
 import { functions } from "../services/firebase"
 
 async function calculateAge(birthdate) { 
@@ -241,7 +241,6 @@ const handleTransferStudents = async (currentClass, destinationClass, studentsId
 }
 
 const handleAddTeacher = async (teacherEmail, classCode) => {
-    console.log(teacherEmail)
     let data = {emailProf: teacherEmail, codSala: classCode};
     let addTeacherFunction = functions.httpsCallable('addNovoProfTurma');
     try {
@@ -252,5 +251,28 @@ const handleAddTeacher = async (teacherEmail, classCode) => {
         throw new Error(error.message)
     }
 }
+
+const handleRemoveTeacher = async (classCode, index) => {
+    try {
+        await classesRef.child(classCode).child('professor').child(index).remove();
+        return 'Professor(a) desconectado(a) com sucesso.'
+    } catch (error) {
+        console.log(error)
+        throw new Error(error)
+    }
+    
+}
+
+const handleDeleteClass = async (classCode) => {
+    let data = {codTurma: classCode};
+    let deleteClassFunction = functions.httpsCallable('excluiTurma');
+    try {
+        let result = await deleteClassFunction(data);
+        return result.data.answer;
+    } catch (error) {
+        console.log(error)
+        throw new Error(error.message)
+    }
+}
  
-export { calculateAge, checkCpf, getAddress, enrollStudent, handleSendClassData, formatBytes, generateClassCode, handleEnableDisableStudents, handleTransferStudents, handleAddTeacher };
+export { calculateAge, checkCpf, getAddress, enrollStudent, handleSendClassData, formatBytes, generateClassCode, handleEnableDisableStudents, handleTransferStudents, handleAddTeacher, handleDeleteClass, handleRemoveTeacher };
