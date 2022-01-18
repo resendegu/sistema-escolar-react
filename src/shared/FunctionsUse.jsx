@@ -274,5 +274,11 @@ const handleDeleteClass = async (classCode) => {
         throw new Error(error.message)
     }
 }
+
+const getRandomKey = async () => {
+    // Just using classesRef to get a random key, won't take any effect in the database
+    const key = await classesRef.push().key;
+    return key;
+}
  
-export { calculateAge, checkCpf, getAddress, enrollStudent, handleSendClassData, formatBytes, generateClassCode, handleEnableDisableStudents, handleTransferStudents, handleAddTeacher, handleDeleteClass, handleRemoveTeacher };
+export { calculateAge, checkCpf, getAddress, enrollStudent, handleSendClassData, formatBytes, generateClassCode, handleEnableDisableStudents, handleTransferStudents, handleAddTeacher, handleDeleteClass, handleRemoveTeacher, getRandomKey };

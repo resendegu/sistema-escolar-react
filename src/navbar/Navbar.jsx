@@ -143,7 +143,7 @@ export default function Navbar(props) {
 
             <Grid item>
             <>
-                  <IconButton
+                  {/* <IconButton
                     aria-label="account of current user"
                     aria-controls="menu-notifications"
                     aria-haspopup="true"
@@ -156,7 +156,7 @@ export default function Navbar(props) {
                       <Notifications />
                     </Badge>
                     
-                  </IconButton>
+                  </IconButton> */}
                   {/* <Menu
                     id="menu-notifications"
                     anchorEl={anchorEl}

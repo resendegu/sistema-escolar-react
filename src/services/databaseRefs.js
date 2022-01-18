@@ -4,13 +4,14 @@ import { database } from "./firebase";
 const rootPath = 'sistemaEscolar/';
 
 // School info paths
-const schoolInfoPath = 'infoEscola/'
-const booksPath = schoolInfoPath + 'livros/'
-const coursesPath = schoolInfoPath + 'cursos/'
-const contractsPath = schoolInfoPath + 'contratos/'
-const additionalFieldsPath = schoolInfoPath + 'camposAdicionais/'
-const basicDataPath = schoolInfoPath + 'dadosBasicos/'
-const daysCodesPath = schoolInfoPath + 'codDiasSemana/'
+const schoolInfoPath = 'infoEscola/';
+const booksPath = schoolInfoPath + 'livros/';
+const coursesPath = schoolInfoPath + 'cursos/';
+const contractsPath = schoolInfoPath + 'contratos/';
+const additionalFieldsPath = schoolInfoPath + 'camposAdicionais/';
+const basicDataPath = schoolInfoPath + 'dadosBasicos/';
+const daysCodesPath = schoolInfoPath + 'codDiasSemana/';
+const calendarPath = schoolInfoPath + 'calendarioGeral/';
 
 
 // General paths
@@ -38,6 +39,7 @@ const notificationsRef = database.ref(notificationsPath);
 const studentsRef = rootRef.child(studentsPath);
 const disabledStudentsRef = rootRef.child(disabledStudentsPath);
 const teachersListRef = rootRef.child(teachersListPath);
+const calendarRef = rootRef.child(calendarPath);
 
 // Export the refs created
-export { classesRef, booksRef, coursesRef, contractRef, daysCodesRef, additionalFieldsRef, basicDataRef, notificationsRef, studentsRef, disabledStudentsRef, teachersListRef };
+export { classesRef, booksRef, coursesRef, contractRef, daysCodesRef, additionalFieldsRef, basicDataRef, notificationsRef, studentsRef, disabledStudentsRef, teachersListRef, calendarRef };

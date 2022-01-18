@@ -2,18 +2,18 @@ import { database } from '../services/firebase'
 import { useEffect, useState } from "react";
 
 const useCalendar = (ref) => {
-    const [events, setEvents] = useState([]);
+    const [eventsSources, setEvents] = useState([]);
 
     useEffect(() => {
         const calendarRef = database.ref(ref);
 
         calendarRef.on('value', snapshot => {
-            let events = snapshot.val();
-            console.log(events)
-            if (events.hasOwnProperty('length')) {
-                setEvents(events)
+            let eventsSources = snapshot.val();
+            console.log(eventsSources)
+            if (eventsSources.hasOwnProperty('length')) {
+                setEvents(eventsSources)
             } else {
-                setEvents([events])
+                setEvents([eventsSources])
             }
         })
 
@@ -22,7 +22,7 @@ const useCalendar = (ref) => {
         }
     }, [ref])
     
-    return { events };
+    return { eventsSources };
 }
  
 export default useCalendar;
