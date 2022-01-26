@@ -280,5 +280,8 @@ const getRandomKey = async () => {
     const key = await classesRef.push().key;
     return key;
 }
+
+
+
  
 export { calculateAge, checkCpf, getAddress, enrollStudent, handleSendClassData, formatBytes, generateClassCode, handleEnableDisableStudents, handleTransferStudents, handleAddTeacher, handleDeleteClass, handleRemoveTeacher, getRandomKey };

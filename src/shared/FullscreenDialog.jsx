@@ -29,6 +29,7 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 });
 
 export default function FullScreenDialog(props) {
+  
   const classes = useStyles();
   const { isOpen, onClose, onSave, title, saveButton, saveButtonDisabled, hideSaveButton } = props;
 

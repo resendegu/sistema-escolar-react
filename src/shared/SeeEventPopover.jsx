@@ -2,22 +2,61 @@ import { DialogActions, DialogContent, DialogTitle, Grid, IconButton, Popover, T
 import { Close, Delete, Edit, Event } from "@material-ui/icons";
 import { useEffect } from "react";
 import { Fragment } from "react";
+
 import { calendarRef } from "../services/databaseRefs";
 import { daysOfWeek } from "./LocaleDaysOfWeek";
+import { useConfirmation } from "../contexts/ConfirmContext";
 
 const SeeEventPopover = (props) => {
 
-    const { anchorElEventInfo, handleClose, event } = props;
+    const { anchorElEventInfo, handleClose, event, api } = props;
 
-    
-
-
+    const confirm = useConfirmation();
     
 
     const openEventInfo = Boolean(anchorElEventInfo);
     const id = openEventInfo ? 'simple-popover' : undefined;
     const recurrence = (event && event._def.recurringDef !== null) && event._def.recurringDef.typeData
+    const sourceId = (event && event.source.id)
+    const eventId = (event && event.id)
 
+    
+
+    const handleDeleteEvent = async () => {
+        try {
+            await confirm({
+                variant: "danger",
+                catchOnCancel: true,
+                title: "Confirmação",
+                description: "Você deseja deletar este evento? Este evento e todas as suas ocorrências serão apagadas."
+            })
+            handleClose();
+            
+            
+            const eventApi = api.getEventById(eventId)
+            eventApi.remove()
+            api.refetchEvents();
+            const eventsSources = api.getEventSources();
+            let rawSources = eventsSources.map((eventSource) => eventSource.internalEventSource._raw)
+            console.log(rawSources)
+            let thisSource = rawSources.filter(eventSource => eventSource.id === sourceId)
+            
+            console.log(thisSource)
+            rawSources = rawSources.filter(eventSource => eventSource.id !== sourceId)
+            console.log(rawSources)
+            let thisEvents = thisSource[0].events
+            let updatedEvents = thisEvents.filter(aEvent => aEvent.id !== eventId)
+            console.log(updatedEvents)
+            thisSource[0].events = updatedEvents
+            rawSources.push(thisSource[0])
+            console.log(rawSources)
+            await calendarRef.set(rawSources);
+        } catch (error) {
+            console.log(error)
+        }
+        
+    }
+    
 
     return (
         <Fragment>
@@ -49,7 +88,7 @@ const SeeEventPopover = (props) => {
                             <IconButton variant='outlined' edge="end" color="inherit"><Edit /></IconButton>
                         </Tooltip>
                         <Tooltip title={'Deletar evento'}>
-                            <IconButton variant='outlined' edge="end" color="inherit"><Delete /></IconButton>
+                            <IconButton variant='outlined' edge="end" color="inherit" onClick={handleDeleteEvent}><Delete /></IconButton>
                         </Tooltip>
                         
                             

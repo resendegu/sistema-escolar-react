@@ -14,6 +14,8 @@ import Home from './home/Home';
 import { Button } from '@material-ui/core';
 import { notificationsRef } from './services/databaseRefs';
 
+import { ConfirmationServiceProvider } from './contexts/ConfirmContext';
+
 export const AuthContext = createContext({});
 
 function App() {
@@ -58,14 +60,16 @@ function App() {
     <Fragment>
       <Notifications />
       <Router>
-      <AuthContextProvider>
-        <Navbar />
-        <Switch>
-          <Route path="/" exact component={Home} />
-          <Route path="/secretaria" component={Secretaria} />
-        </Switch>
-        
-      </AuthContextProvider>
+        <ConfirmationServiceProvider>
+          <AuthContextProvider>
+            <Navbar />
+            <Switch>
+              <Route path="/" exact component={Home} />
+              <Route path="/secretaria" component={Secretaria} />
+            </Switch>
+            
+          </AuthContextProvider>
+        </ConfirmationServiceProvider>
     </Router>
     </Fragment>
     

@@ -9,7 +9,7 @@ import AccountCircle from '@material-ui/icons/AccountCircle';
 import MenuItem from '@material-ui/core/MenuItem';
 import Menu from '@material-ui/core/Menu';
 import ResponsiveDrawer from './components/Drawer';
-import { Badge, Grid, ListItemIcon, MenuList } from '@material-ui/core';
+import { Badge, Dialog, Grid, ListItemIcon, MenuList } from '@material-ui/core';
 import { useAuth } from '../hooks/useAuth';
 import LoginDialog from '../login/LoginDialog';
 import SignUpDialog from '../login/SignUpDialog';
@@ -113,6 +113,7 @@ export default function Navbar(props) {
 
   return (
     <div className={classes.root}>
+
       {showSignInDialog ? (
         <LoginDialog onClose={onClose} />
       ) : null}
