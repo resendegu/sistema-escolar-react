@@ -7,9 +7,9 @@ import { calendarRef } from "../services/databaseRefs";
 import { daysOfWeek } from "./LocaleDaysOfWeek";
 import { useConfirmation } from "../contexts/ConfirmContext";
 
-const SeeEventPopover = (props) => {
+const SeeEventPopover = ({ anchorElEventInfo, handleClose, event, api, isFromClassCode }) => {
 
-    const { anchorElEventInfo, handleClose, event, api } = props;
+    
 
     const confirm = useConfirmation();
     
@@ -36,8 +36,8 @@ const SeeEventPopover = (props) => {
             const eventApi = api.getEventById(eventId)
             eventApi.remove()
             api.refetchEvents();
-            const eventsSources = api.getEventSources();
-            let rawSources = eventsSources.map((eventSource) => eventSource.internalEventSource._raw)
+            //const eventsSources = api.getEventSources();
+            let rawSources = (await calendarRef.once('value')).val();
             console.log(rawSources)
             let thisSource = rawSources.filter(eventSource => eventSource.id === sourceId)
             

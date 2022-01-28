@@ -1,9 +1,9 @@
 import FullCalendar from "@fullcalendar/react";
 import { Calendar,  } from "@fullcalendar/core";
 import { render } from "@fullcalendar/react";
-import { Avatar, Backdrop, Box, Button, Card, CardActions, CardContent, CircularProgress, Container, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, Grid, IconButton, List, ListItem, ListItemSecondaryAction, ListItemText, makeStyles, MenuItem, Select, Tooltip, Typography, TextField, FormControl, FormHelperText } from "@material-ui/core";
+import { Avatar, Backdrop, Box, Button, Card, CardActions, CardContent, CircularProgress, Container, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, Grid, IconButton, List, ListItem, ListItemSecondaryAction, ListItemText, makeStyles, MenuItem, Select, Tooltip, Typography, TextField, FormControl, FormHelperText, Paper } from "@material-ui/core";
 import { green } from "@material-ui/core/colors";
-import { AccountBox, Add, Assignment, Assistant, AttachFile, ChromeReaderMode, Clear, DeleteForever, Description, DoneAll, Edit, Grade, Lock, LockOpen, Person, Print, School, SupervisedUserCircle, TransferWithinAStation, Refresh } from "@material-ui/icons";
+import { AccountBox, Add, Assignment, Assistant, AttachFile, ChromeReaderMode, Clear, DeleteForever, Description, DoneAll, Edit, Grade, Lock, LockOpen, Person, Print, School, SupervisedUserCircle, TransferWithinAStation, Refresh, Event } from "@material-ui/icons";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import { useSnackbar } from "notistack";
 import { Fragment, useEffect, useState } from "react";
@@ -11,7 +11,7 @@ import { Fragment, useEffect, useState } from "react";
 import { classesRef, coursesRef, teachersListRef } from '../services/databaseRefs'
 import { LocaleText } from "./DataGridLocaleText";
 import FullScreenDialog from "./FullscreenDialog";
-import { handleEnableDisableStudents, handleTransferStudents, handleAddTeacher, handleDeleteClass, handleRemoveTeacher } from "./FunctionsUse";
+import { handleEnableDisableStudents, handleTransferStudents, handleAddTeacher, handleDeleteClass, handleRemoveTeacher, handleClassOpen, handleCloseClass } from "./FunctionsUse";
 import StudentFiles from "./StudentFiles";
 import StudentInfo from "./ViewStudentInfo";
 import dayGridPlugin from '@fullcalendar/daygrid';
@@ -20,6 +20,8 @@ import listPlugin from '@fullcalendar/list';
 import brLocale from '@fullcalendar/core/locales/pt-br';
 import interactionPlugin from '@fullcalendar/interaction';
 import { useRef } from "react";
+import CalendarComponent from "../muiDashboard/Calendar";
+import { useConfirmation } from "../contexts/ConfirmContext";
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -93,11 +95,20 @@ const useStyles = makeStyles((theme) => ({
       zIndex: theme.zIndex.drawer + 1,
       color: '#fff',
     },
+    paper: {
+      padding: theme.spacing(2),
+      display: 'flex',
+      overflow: 'auto',
+      flexDirection: 'column',
+    },
   }));
 
 const ClassInfo = (props) => {
 
     const { classDataRows } = props;
+
+    const confirm = useConfirmation();
+
     const classes = useStyles();
     const classCode = classDataRows.id
     const classRef = classesRef.child(classCode)
@@ -110,6 +121,7 @@ const ClassInfo = (props) => {
     const [studentInfo, setStudentInfo] = useState({});
     const [loader, setLoader] = useState(true);
     const [open, setOpen] = useState(false);
+    const [openCalendar, setOpenCalendar] = useState(false);
     const [filterModel, setFilterModel] = useState({
       items: [],
   });
@@ -125,6 +137,8 @@ const ClassInfo = (props) => {
     const [classEndTime, setClassEndTime] = useState(classData.hasOwnProperty('horarioTerminoTurma') && classData.horarioTerminoTurma)
     const [eventColor, setEventColor] = useState('#001EFF')
     const [eventTextColor, setEventTextColor] = useState('#FFFFFF')
+    const [periodName, setPeriodName] = useState('');
+    const [numberOfClasses, setNumberOfClasses] = useState('');
 
     
     useEffect(() => {
@@ -512,14 +526,72 @@ const handleRerenderCalendar = () => {
 
 }
 
+const handleCallClassOpen = async () => {
+  const classTime = classData.hora
+  const startTime = classTime.indexOf('_') === -1 ? classTime + ':00' : classTime.split('_')[0] + ':' + classTime.split('_')[1]
+  const source = {
+    color: eventColor,
+    id: classCode,
+    textColor: eventTextColor,
+    events: [
+      {
+        title: classCode, 
+        startRecur: startEndClasses.start, 
+        endRecur: startEndClasses.end, 
+        id: classCode, 
+        groupId: 'classes', 
+        daysOfWeek: classData.diasDaSemana, 
+        startTime: startTime, 
+        endTime: classEndTime, 
+        color: eventColor, 
+        textColor: eventTextColor 
+      }
+    ]
+  }
+
+  const info = {fim: startEndClasses.end, inicio: startEndClasses.start, horarioTermino: classEndTime, nomePeriodo: periodName, qtdeAulas: numberOfClasses}
+  try {
+    setLoader(true)
+    const message = await handleClassOpen(classCode, source, info)
+    getData()
+    enqueueSnackbar(message, {title: 'Sucesso', variant: 'success', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
+    setLoader(false)
+    setOpenDialog2(false)
+  } catch (error) {
+    getData()
+    enqueueSnackbar(error.message, {title: 'Sucesso', variant: 'error', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button>})
+    setLoader(false)
+  }
+  
+}
 
 const handleConfirmOpenClass = () => {
   setOpenDialog2(true)
   
 }
 
-const handleConfirmCloseClass = () => {
-
+const handleConfirmCloseClass = async () => {
+  try {
+    await confirm({
+      variant: "danger",
+      catchOnCancel: true,
+      title: "Confirmação",
+      description: "Você deseja fechar esta turma? Ao fechar, os processos para geração de boletins serão iniciados."
+    })
+    setLoader(true)
+    const message = await handleCloseClass(classCode);
+    
+    getData()
+    enqueueSnackbar(message, {title: 'Sucesso', variant: 'success', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
+    setLoader(false)
+  } catch (error) {
+    getData()
+    setLoader(false)
+    if (error)
+      enqueueSnackbar(error.message, {title: 'Sucesso', variant: 'error', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button>})
+    
+  }
+  
 }
 
     return ( 
@@ -533,6 +605,25 @@ const handleConfirmCloseClass = () => {
             {dialogContent}
                 
           </Dialog>
+
+          <FullScreenDialog
+            isOpen={openCalendar}
+            onClose={() => {
+                setOpenCalendar(false);
+            }}
+            hideSaveButton
+            onSave={() => {
+                alert('Save clicked')
+            }}
+            title={"Calendário da turma"}
+            saveButton={"Salvar"}
+            saveButtonDisabled={true}
+          >
+            <Container>
+              <CalendarComponent sourceId={classCode} isFromClassCode />
+            </Container>
+            
+          </FullScreenDialog>
 
           <Dialog
             aria-labelledby="confirmation-dialog-title"
@@ -556,6 +647,8 @@ const handleConfirmCloseClass = () => {
                   type="email"
                   style={{width: 'max-content'}}
                   variant="filled"
+                  value={periodName}
+                  onChange={(e) => setPeriodName(e.target.value)}
                   required
                 />
                 <TextField
@@ -567,6 +660,8 @@ const handleConfirmCloseClass = () => {
                   className={classes.textField}
                   variant="filled"
                   required
+                  value={numberOfClasses}
+                  onChange={(e) => setNumberOfClasses(e.target.value)}
                   helperText="Qtde. aulas"
                 />
               </div>
@@ -647,7 +742,7 @@ const handleConfirmCloseClass = () => {
                 <Button onClick={() => setOpenDialog2(false)} color="primary">
                     Cancelar
                 </Button>
-                <Button onClick={handleClassDelete} variant="contained" color="primary" autoFocus>
+                <Button onClick={handleCallClassOpen} variant="contained" color="primary" autoFocus>
                     Sim, continuar
                 </Button>
             </DialogActions>
@@ -787,12 +882,17 @@ const handleConfirmCloseClass = () => {
                       <Box m={1}>
                         <Button fullWidth size="large" variant="contained" color="primary" startIcon={<Grade />}>Distribuir notas</Button>
                       </Box>
+                      
                       <Box m={1}>
                         <Button fullWidth size="large" variant="contained" color="primary" startIcon={<Print />}>Diário de classe</Button>
                       </Box>
                       <Box m={1}>
                         <Button fullWidth size="large" variant="contained" color="primary" onClick={(classData.hasOwnProperty('status') && classData.status.turma === 'aberta') ? handleConfirmCloseClass : handleConfirmOpenClass} startIcon={(classData.hasOwnProperty('status') && classData.status.turma === 'aberta') ? <Lock /> : <LockOpen />}>{(classData.hasOwnProperty('status') && classData.status.turma === 'aberta') ? 'Fechar ' : 'Abrir '}turma</Button>
                       </Box>
+                     {(classData.hasOwnProperty('status') && classData.status.turma === 'aberta') && 
+                      <Box m={1}>
+                        <Button fullWidth size="large" variant="contained" color="primary" onClick={() => setOpenCalendar(true)} startIcon={<Event />}>Calendário da turma</Button>
+                      </Box>}
                       {/* <Box m={1}>
                         <Button fullWidth size="large" variant="contained" color="primary" startIcon={<Lock />}disabled={(!classData.hasOwnProperty('status') || classData.status.turma === 'fechada')}>Fechar turma</Button>
                       </Box> */}

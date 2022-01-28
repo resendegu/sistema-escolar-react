@@ -9,19 +9,21 @@ import { getRandomKey } from "./FunctionsUse";
 
 
 
-const CreateEventPopover = (props) => {
+const CreateEventPopover = ({ 
+    anchorElEventCreate, 
+    handleClose, 
+    eventsSources,
+    sourceSelected, 
+    setSourceSelected, 
+    e, 
+    eventId, 
+    setEventId,
+    calendarEl,
+    handleOpenNewCalendarDialog,
+    isFromClassCode 
+}) => {
 
-    const { anchorElEventCreate, 
-            handleClose, 
-            eventsSources,
-            sourceSelected, 
-            setSourceSelected, 
-            e, 
-            eventId, 
-            setEventId,
-            calendarEl,
-            handleOpenNewCalendarDialog 
-        } = props
+    
 
     console.log(eventsSources)
 
@@ -41,8 +43,8 @@ const CreateEventPopover = (props) => {
     const [allDay, setAllDay] = useState(true);
     const [title, setTitle] = useState('');
     const [endRecur, setEndRecur] = useState('');
-    const [color, setColor] = useState();
-    const [textColor, setTextColor] = useState();
+    const [color, setColor] = useState('#0000FF');
+    const [textColor, setTextColor] = useState('#000000');
 
     
     const openPop = Boolean(anchorElEventCreate);
@@ -208,7 +210,12 @@ const CreateEventPopover = (props) => {
 
         recurrenceEnd && setEndRecur('')
         console.log(chosenSource)
-        chosenSource.events.push(event)
+        if (chosenSource.hasOwnProperty('events')) {
+            chosenSource.events.push(event)
+        } else {
+            chosenSource.events = [event]
+        }
+        
         sources = sources.filter((source) => chosenSource.id !== source.id)
         sources.push(chosenSource)
 
@@ -274,7 +281,7 @@ const CreateEventPopover = (props) => {
                     </Grid>
                 </Grid>
                 </DialogTitle>
-                {eventsSources.length === 0 && (
+                {(eventsSources.length === 0 && !isFromClassCode) && (
                     <DialogContent>
                         
                         <IconButton onClick={handleOpenNewCalendarDialog}><Add /></IconButton>Novo calendário
@@ -289,7 +296,8 @@ const CreateEventPopover = (props) => {
                 <form id="eventAdd" autoComplete="off" onSubmit={handleEventSave}>
                 <DialogContent>
                     
-                <IconButton onClick={handleOpenNewCalendarDialog}><Add /></IconButton>Novo calendário
+                {!isFromClassCode && 
+                <><IconButton onClick={handleOpenNewCalendarDialog}><Add /></IconButton>Novo calendário</>}
                     <Box m={1}>
                         
                         <InputLabel>Calendário</InputLabel>

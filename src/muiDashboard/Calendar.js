@@ -9,7 +9,7 @@ import Title from './Title';
 import useCalendar from '../hooks/useCalendar'
 import { Avatar, Backdrop, Box, Button, Checkbox, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, FormControlLabel, FormGroup, FormHelperText, FormLabel, Grid, IconButton, InputLabel, ListItemIcon, makeStyles, Menu, MenuItem, Popover, Radio, RadioGroup, Select, TextField, Tooltip, Typography } from '@material-ui/core';
 
-import { ChevronRight, ChevronLeft, Today, ViewComfy, ViewList, ViewWeek, Assistant, Event, CalendarToday, Add, Close, Edit, Delete } from '@material-ui/icons';
+import { ChevronRight, ChevronLeft, Today, ViewComfy, ViewList, ViewWeek, Assistant, Event, CalendarToday, Add, Close, Edit, Delete, ViewAgenda, Visibility } from '@material-ui/icons';
 import { useState } from 'react';
 import { getRandomKey } from '../shared/FunctionsUse';
 import { endOfTomorrow } from 'date-fns/esm';
@@ -23,7 +23,7 @@ import useStyles from '../hooks/useStyles';
 
 
 
-const CalendarComponent = () => {
+const CalendarComponent = ({sourceId, isFromClassCode}) => {
     
 
     const classes = useStyles();
@@ -31,7 +31,7 @@ const CalendarComponent = () => {
     const initialView = localStorage.getItem('view') || 'dayGridMonth';
 
     const {enqueueSnackbar, closeSnackbar} = useSnackbar()
-
+    const [viewSource, setViewSource] = useState(sourceId)
     const [eventsSources, setEventsSources] = useState([]);
     const [sourceSelected, setSourceSelected] = useState({id: ''});
     const [view, setView] = useState(initialView);
@@ -39,6 +39,7 @@ const CalendarComponent = () => {
     const [anchorEl, setAnchorEl] = useState(null);
     const [anchorElCreate, setAnchorElCreate] = useState(null);
     const [anchorElCal, setAnchorElCal] = useState(null);
+    const [anchorElPop, setAnchorElPop] = useState(null);
     const [anchorElEventInfo, setAnchorElEventInfo] = useState(null);
     const [e, setE] = useState();
     const [openNewCalendar, setOpenNewCalendar] = useState(false);
@@ -49,27 +50,53 @@ const CalendarComponent = () => {
     const [api, setApi] = useState();
    
     useEffect(() => {
-        calendarRef.on('value', (snapshot) => {
-            const sources = snapshot.val()
-            console.log(sources)
-    
-            if (sources && sources.hasOwnProperty('length')) {
-                setEventsSources(sources)
-            } else {
-                sources !== null && setEventsSources([sources])
-            }
-        }, (error) => {
-            enqueueSnackbar(error.message, {title: 'Error', variant: 'error', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button>})
-        })
+        console.log(viewSource)
+        if (viewSource) {
+            calendarRef.orderByChild('id').equalTo(viewSource).on('value', (snapshot) => {
+                const sources = snapshot.val()
+                console.log(sources)
+        
+                if (sources && sources.hasOwnProperty('length')) {
+                    setEventsSources(sources)
+                } else {
+                    for (const key in sources) {
+                        if (Object.hasOwnProperty.call(sources, key)) {
+                            const single = sources[key];
+                            sources !== null && setEventsSources([single])
+                        }
+                    }
+                    
+                }
+            }, (error) => {
+                enqueueSnackbar(error.message, {title: 'Error', variant: 'error', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button>})
+            })
+        } else {
+            calendarRef.on('value', (snapshot) => {
+                const sources = snapshot.val()
+                console.log(sources)
+        
+                if (sources && sources.hasOwnProperty('length')) {
+                    setEventsSources(sources)
+                } else {
+                    sources !== null && setEventsSources([sources])
+                }
+            }, (error) => {
+                enqueueSnackbar(error.message, {title: 'Error', variant: 'error', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button>})
+            })
+        }
+        
         
         return () => {
             calendarRef.off('value');
         }
-    }, [])
+    }, [sourceId, viewSource])
     
 
     const open = Boolean(anchorEl);
     const openCreate = Boolean(anchorElCreate);
+    const openPop = Boolean(anchorElPop);
+
+    const id = openPop ? 'simple-popover' : undefined;
     
     const calendarEl = useRef();
     
@@ -162,10 +189,14 @@ const CalendarComponent = () => {
     }
 
     
-    const handleClosePop = () => {
+    const handleCloseCal = () => {
         setAnchorElCal(null);
         
     };
+
+    const handleClosePop = () => {
+        setAnchorElPop(null);
+    }
 
     const handleCloseEventInfo = () => {
         setAnchorElEventInfo(null);
@@ -201,6 +232,7 @@ const CalendarComponent = () => {
                 event={event}
                 eventSourceId={sourceSelected.id}
                 api={api}
+                isFromClassCode={isFromClassCode}
             />}
            
             {/* Popover for creating events */}
@@ -208,7 +240,7 @@ const CalendarComponent = () => {
             {anchorElCal && 
             <CreateEventPopover 
                 anchorElEventCreate={anchorElCal}
-                handleClose={handleClosePop}
+                handleClose={handleCloseCal}
                 api={api}
                 setSourceSelected={setSourceSelected}
                 sourceSelected={sourceSelected}
@@ -218,6 +250,7 @@ const CalendarComponent = () => {
                 calendarEl={calendarEl}
                 eventsSources={eventsSources}
                 handleOpenNewCalendarDialog={handleOpenNewCalendarDialog}
+                isFromClassCode={isFromClassCode}
             />}
             
             <Grid
@@ -236,9 +269,12 @@ const CalendarComponent = () => {
                 <Tooltip title={'Hoje'}>
                     <IconButton variant='outlined' edge="end" color="inherit" onClick={handleToday}><Today /></IconButton>
                 </Tooltip>
+                
+                 
                 <Tooltip title={'Criar'}>
                     <IconButton variant='outlined' edge="end" color="inherit" onClick={(e) => setAnchorElCreate(e.currentTarget)}><Add /></IconButton>
                 </Tooltip>
+                
                 <Menu
                     id="menu-appbar"
                     anchorEl={anchorElCreate}
@@ -256,7 +292,9 @@ const CalendarComponent = () => {
                     title='Visualização'
                 >
                         <MenuItem onClick={(e) => setAnchorElCal(e.currentTarget)}><ListItemIcon><Event fontSize='small' /></ListItemIcon>Novo evento</MenuItem>
-                        <MenuItem onClick={() => handleOpenNewCalendarDialog()}><ListItemIcon><CalendarToday fontSize='small' /></ListItemIcon>Criar calendário</MenuItem>
+                        {!isFromClassCode && 
+                            <MenuItem onClick={() => handleOpenNewCalendarDialog()}><ListItemIcon><CalendarToday fontSize='small' /></ListItemIcon>Criar calendário</MenuItem>
+                        }
                         
                     </Menu>
                     
@@ -265,6 +303,47 @@ const CalendarComponent = () => {
                     
                 </Grid>
                 <Grid item>
+                    
+                    {!isFromClassCode && 
+                    <Tooltip title={'Calendários'}>
+                        <IconButton variant='outlined' edge="end" color="inherit" onClick={(e) => setAnchorElPop(e.currentTarget)}><ViewAgenda /></IconButton>
+                    </Tooltip>}
+                    <Popover
+                        id={id}
+                        open={openPop}
+                        anchorEl={anchorElPop}
+                        onClose={handleClosePop}
+                        anchorOrigin={{
+                        vertical: 'top',
+                        horizontal: 'left',
+                        }}
+                        transformOrigin={{
+                        vertical: 'top',
+                        horizontal: 'right',
+                        }}
+                    >
+                        <Box m={2}>
+                        
+                            <InputLabel id="label">Escolha um calendário:</InputLabel>
+                            <Select
+                                labelId='label'
+                                value={viewSource}
+                                onChange={(e) => setViewSource(e.target.value)} 
+                                native
+                                style={{minWidth: '177px'}}
+                            >
+                                <option aria-label="None" value="" />
+                                {eventsSources.length > 0 && eventsSources.map((source, i) => 
+                                    <option value={source.id}>{source.id}</option>
+                                )}
+                
+                            </Select>
+                            <Tooltip title={'Ver todos os calendários'}>
+                                <IconButton variant='outlined' edge="end" color="inherit" onClick={(e) => setViewSource(sourceId)}><Visibility /></IconButton>
+                            </Tooltip>
+                        </Box>
+                        
+                    </Popover>
                     <Tooltip 
                         title={'Tipo de visualização'}
                     >

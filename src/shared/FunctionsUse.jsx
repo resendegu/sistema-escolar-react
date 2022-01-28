@@ -281,7 +281,30 @@ const getRandomKey = async () => {
     return key;
 }
 
+const handleClassOpen = async (classCode, eventSource, info) => {
+    const classRef = classesRef.child(classCode)
+    try {
+        await classRef.child('aulaEvento').set(eventSource);
+        await classRef.child('status').set({...info, turma: 'aberta'});
+        return 'Turma aberta com sucesso!';
+    } catch (error) {
+        console.log(error)
+        throw new Error(error.message)
+    }
+    
+}
 
+const handleCloseClass = async (classCode) => {
+    let data = classCode
+    let closeClassFunction = functions.httpsCallable('fechaTurma');
+    try {
+        let result = await closeClassFunction(data);
+        return result.data.answer;
+    } catch (error) {
+        console.log(error)
+        throw new Error(error.message)
+    }
+}
 
  
-export { calculateAge, checkCpf, getAddress, enrollStudent, handleSendClassData, formatBytes, generateClassCode, handleEnableDisableStudents, handleTransferStudents, handleAddTeacher, handleDeleteClass, handleRemoveTeacher, getRandomKey };
+export { calculateAge, checkCpf, getAddress, enrollStudent, handleSendClassData, formatBytes, generateClassCode, handleEnableDisableStudents, handleTransferStudents, handleAddTeacher, handleDeleteClass, handleRemoveTeacher, getRandomKey, handleClassOpen, handleCloseClass };
