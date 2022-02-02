@@ -41,6 +41,7 @@ const CalendarComponent = ({sourceId, isFromClassCode}) => {
     const [anchorElCal, setAnchorElCal] = useState(null);
     const [anchorElPop, setAnchorElPop] = useState(null);
     const [anchorElEventInfo, setAnchorElEventInfo] = useState(null);
+    const [anchorElRightClick, setAnchorElRightClick] = useState(null);
     const [e, setE] = useState();
     const [openNewCalendar, setOpenNewCalendar] = useState(false);
     
@@ -95,10 +96,24 @@ const CalendarComponent = ({sourceId, isFromClassCode}) => {
     const open = Boolean(anchorEl);
     const openCreate = Boolean(anchorElCreate);
     const openPop = Boolean(anchorElPop);
+    const openRightClick = Boolean(anchorElRightClick);
 
     const id = openPop ? 'simple-popover' : undefined;
     
     const calendarEl = useRef();
+
+    const RightClickContent = () => {
+
+        return (
+        <>
+            <Box m={2}>
+                <Tooltip title={'Retroceder'}>
+                    <IconButton variant='outlined' edge="end" color="inherit" onClick={handlePreviousYear}><ChevronLeft /></IconButton>
+                </Tooltip>
+            </Box>
+        </>
+        );
+    }
     
     
     const handleLoadedEvents = (e) => {
@@ -155,10 +170,23 @@ const CalendarComponent = ({sourceId, isFromClassCode}) => {
         API && API.next()
     }
 
-    const handlePreviousMonth = () => {
+    const handlePreviousMonth = (e) => {
+        console.log(e)
+        if (e.type === 'click') {
+            const API = getApi()
+            console.log(API)
+            API && API.prev()
+        } else {
+            e.preventDefault()
+            setAnchorElRightClick(e.currentTarget)
+        }
+        
+    }
+
+    const handlePreviousYear = (e) => {
         const API = getApi()
         console.log(API)
-        API && API.prev()
+        API && API.prevYear()
     }
 
     const handleToday = () => {
@@ -203,6 +231,10 @@ const CalendarComponent = ({sourceId, isFromClassCode}) => {
         
     };
 
+    const handleCloseRightClick = () => {
+        setAnchorElRightClick(null);
+    }
+
     const handleOpenNewCalendarDialog = () => {
         setOpenNewCalendar(true)
     }
@@ -217,6 +249,24 @@ const CalendarComponent = ({sourceId, isFromClassCode}) => {
                 <DialogTitle>Criar novo calendário</DialogTitle>
             </Dialog>
             <Title>Calendário da escola</Title> */}
+
+                    <Popover
+                        id={id}
+                        open={openRightClick}
+                        anchorEl={anchorElRightClick}
+                        onClose={handleCloseRightClick}
+                        anchorOrigin={{
+                        vertical: 'top',
+                        horizontal: 'left',
+                        }}
+                        transformOrigin={{
+                        vertical: 'top',
+                        horizontal: 'right',
+                        }}
+                    >
+                        <RightClickContent />
+                        
+                    </Popover>
 
             <CreateCalendar 
                 open={openNewCalendar}
@@ -260,10 +310,10 @@ const CalendarComponent = ({sourceId, isFromClassCode}) => {
                 alignItems="center"
             >
                 <Grid item>
-                <Tooltip title={'Mês anterior'}>
-                    <IconButton variant='outlined' edge="end" color="inherit" onClick={handlePreviousMonth}><ChevronLeft /></IconButton>
+                <Tooltip title={'Anterior'}>
+                    <IconButton variant='outlined' edge="end" color="inherit" onContextMenu={handlePreviousMonth} onClick={handlePreviousMonth} ><ChevronLeft /></IconButton>
                 </Tooltip>
-                <Tooltip title={'Próximo mês'}>
+                <Tooltip title={'Próximo'}>
                     <IconButton variant='outlined' edge="end" color="inherit" onClick={handleNextMonth}><ChevronRight /></IconButton>
                 </Tooltip>
                 <Tooltip title={'Hoje'}>

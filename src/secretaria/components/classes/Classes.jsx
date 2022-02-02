@@ -1,4 +1,4 @@
-import { Button, Dialog, Grid } from "@material-ui/core";
+import { Button, createTheme, darken, Dialog, Grid, lighten, makeStyles } from "@material-ui/core";
 import { PlusOneRounded, Refresh } from "@material-ui/icons";
 import { DataGrid, GridToolbar, GridToolbarContainer, GridToolbarExport } from "@mui/x-data-grid";
 import { Fragment, useEffect, useState } from "react";
@@ -8,8 +8,58 @@ import FullScreenDialog from "../../../shared/FullscreenDialog";
 import ClassInfo from "../../../shared/ViewClassInfo";
 import StudentInfo from "../../../shared/ViewStudentInfo";
 
+function getThemePaletteMode(palette) {
+    return palette.type || palette.mode;
+  }
+  
+  const defaultTheme = createTheme();
+  const useStyles = makeStyles(
+    (theme) => {
+      const getBackgroundColor = (color) =>
+        getThemePaletteMode(theme.palette) === 'dark'
+          ? darken(color, 0.6)
+          : lighten(color, 0.6);
+  
+      const getHoverBackgroundColor = (color) =>
+        getThemePaletteMode(theme.palette) === 'dark'
+          ? darken(color, 0.5)
+          : lighten(color, 0.5);
+  
+      return {
+        root: {
+          '& .super-app-theme--Open': {
+            backgroundColor: getBackgroundColor(theme.palette.info.main),
+            '&:hover': {
+              backgroundColor: getHoverBackgroundColor(theme.palette.info.main),
+            },
+          },
+          '& .super-app-theme--aberta': {
+            backgroundColor: getBackgroundColor(theme.palette.success.main),
+            '&:hover': {
+              backgroundColor: getHoverBackgroundColor(theme.palette.success.main),
+            },
+          },
+          '& .super-app-theme--PartiallyFilled': {
+            backgroundColor: getBackgroundColor(theme.palette.warning.main),
+            '&:hover': {
+              backgroundColor: getHoverBackgroundColor(theme.palette.warning.main),
+            },
+          },
+          '& .super-app-theme--fechada': {
+            backgroundColor: getBackgroundColor(theme.palette.error.main),
+            '&:hover': {
+              backgroundColor: getHoverBackgroundColor(theme.palette.error.main),
+            },
+          },
+        },
+      };
+    },
+    { defaultTheme },
+  );
+
 const Classes = () => {
 
+    const classes = useStyles();
 
     const [ loading, setLoading ] = useState(false);
     const [ open, setOpen ] = useState(false)
@@ -147,7 +197,7 @@ const Classes = () => {
                 
                 
                 <Grid item xs={12}>
-                    <div style={{ height: "59vh", width: '100%' }}>
+                    <div style={{ height: "59vh", width: '100%' }} className={classes.root}>
                         <DataGrid 
                             filterModel={filterModel}
                             onFilterModelChange={(model) => setFilterModel(model)}
@@ -176,6 +226,11 @@ const Classes = () => {
                             localeText={LocaleText}
                             onSelectionModelChange={handleRowSelection}
                             onRowClick={handleRowClick}
+                            getRowClassName={(params) => {
+                                console.log(`super-app-theme--${params.getValue(params.id, 'status')}`)
+                                return `super-app-theme--${params.getValue(params.id, 'status')}`
+                            }
+                            }
                         />
                     </div>
                    
