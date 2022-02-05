@@ -22,6 +22,7 @@ import interactionPlugin from '@fullcalendar/interaction';
 import { useRef } from "react";
 import CalendarComponent from "../muiDashboard/Calendar";
 import { useConfirmation } from "../contexts/ConfirmContext";
+import AddClass from "../secretaria/components/addClass/AddClass";
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -122,6 +123,18 @@ const ClassInfo = (props) => {
     const [loader, setLoader] = useState(true);
     const [open, setOpen] = useState(false);
     const [openCalendar, setOpenCalendar] = useState(false);
+    const [openClassEditing, setOpenClassEditing] = useState(false);
+    const [dataForEditing, setDataForEditing] = useState({
+      codTurmaAtual: "",
+      codigoSala: "",
+      curso: "",
+      diasDaSemana: [],
+      hora: "",
+      horarioTerminoTurma: "",
+      livros: [],
+      modalidade: "",
+      professor: '',
+  })
     const [filterModel, setFilterModel] = useState({
       items: [],
   });
@@ -172,6 +185,18 @@ const ClassInfo = (props) => {
         console.log(data)
         if (data && courseData) {
           setClassData(data);
+          const dataTemplate = {
+            codTurmaAtual: data.codigoSala,
+            codigoSala: data.codigoSala,
+            curso: data.curso,
+            diasDaSemana: data.diasDaSemana,
+            hora: data.hora.split('_').join(':'),
+            horarioTerminoTurma: data.horarioTerminoTurma,
+            livros: data.livros,
+            modalidade: data.modalidade,
+            professor: '',
+          }
+          setDataForEditing(dataTemplate)
           if (data.hasOwnProperty('professor')) {
             let classTeachers = data.professor
             setTeachers(classTeachers)
@@ -607,6 +632,22 @@ const handleConfirmCloseClass = async () => {
           </Dialog>
 
           <FullScreenDialog
+            isOpen={openClassEditing}
+            onClose={() => {
+                setOpenClassEditing(false);
+            }}
+            hideSaveButton
+            onSave={() => {
+                alert('Save clicked')
+            }}
+            title={"Editar as informações da turma"}
+            saveButton={"Salvar"}
+            saveButtonDisabled={true}
+          >
+            <AddClass dataForEditing={dataForEditing} />
+          </FullScreenDialog>
+
+          <FullScreenDialog
             isOpen={openCalendar}
             onClose={() => {
                 setOpenCalendar(false);
@@ -874,7 +915,7 @@ const handleConfirmCloseClass = async () => {
                         <Button fullWidth size="large" variant="contained" color="primary" startIcon={<Add />} onClick={handleConfirmAddTeacher}> Add professores</Button>
                       </Box>
                       <Box  m={1}>
-                        <Button fullWidth size="large" variant="contained" color="primary" startIcon={<Edit />}>Editar dados</Button>
+                        <Button fullWidth size="large" variant="contained" color="primary" onClick={() => setOpenClassEditing(true)} startIcon={<Edit />}>Editar dados</Button>
                       </Box>
                       <Box m={1}>
                         <Button fullWidth size="large" variant="contained" color="primary" startIcon={<DeleteForever />} onClick={handleDeleteClassConfirm}>Excluir turma</Button>

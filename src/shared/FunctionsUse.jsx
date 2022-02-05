@@ -123,6 +123,7 @@ const enrollStudent = async (studentData, classData, contractData, otherData) =>
 }
 
 const handleSendClassData = async (data) => {
+    console.log(data)
     data.hora = data.hora.split(':').join('_')
     try {
         let cadastraTurma = functions.httpsCallable('cadastraTurma');
@@ -306,5 +307,9 @@ const handleCloseClass = async (classCode) => {
     }
 }
 
+function capitalizeFirstLetter(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
  
-export { calculateAge, checkCpf, getAddress, enrollStudent, handleSendClassData, formatBytes, generateClassCode, handleEnableDisableStudents, handleTransferStudents, handleAddTeacher, handleDeleteClass, handleRemoveTeacher, getRandomKey, handleClassOpen, handleCloseClass };
+export { calculateAge, checkCpf, getAddress, enrollStudent, handleSendClassData, formatBytes, generateClassCode, handleEnableDisableStudents, handleTransferStudents, handleAddTeacher, handleDeleteClass, handleRemoveTeacher, getRandomKey, handleClassOpen, handleCloseClass, capitalizeFirstLetter };

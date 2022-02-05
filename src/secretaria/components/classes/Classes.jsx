@@ -5,6 +5,7 @@ import { Fragment, useEffect, useState } from "react";
 import { classesRef } from "../../../services/databaseRefs";
 import { LocaleText } from "../../../shared/DataGridLocaleText";
 import FullScreenDialog from "../../../shared/FullscreenDialog";
+import { capitalizeFirstLetter } from "../../../shared/FunctionsUse";
 import ClassInfo from "../../../shared/ViewClassInfo";
 import StudentInfo from "../../../shared/ViewStudentInfo";
 
@@ -33,7 +34,7 @@ function getThemePaletteMode(palette) {
               backgroundColor: getHoverBackgroundColor(theme.palette.info.main),
             },
           },
-          '& .super-app-theme--aberta': {
+          '& .super-app-theme--Aberta': {
             backgroundColor: getBackgroundColor(theme.palette.success.main),
             '&:hover': {
               backgroundColor: getHoverBackgroundColor(theme.palette.success.main),
@@ -45,7 +46,7 @@ function getThemePaletteMode(palette) {
               backgroundColor: getHoverBackgroundColor(theme.palette.warning.main),
             },
           },
-          '& .super-app-theme--fechada': {
+          '& .super-app-theme--Fechada': {
             backgroundColor: getBackgroundColor(theme.palette.error.main),
             '&:hover': {
               backgroundColor: getHoverBackgroundColor(theme.palette.error.main),
@@ -103,7 +104,7 @@ const Classes = () => {
                 theClass.modalidade = theClass.modalidade === 'ead' ? 'Ensino a Distância' : 'Presencial'
 
                 theClass.currentPeriod = theClass.hasOwnProperty('status') ? theClass.status.nomePeriodo : ''
-                theClass.status = theClass.hasOwnProperty('status') ? theClass.status.turma : '(Sem dados)'
+                theClass.status = theClass.hasOwnProperty('status') ? capitalizeFirstLetter(theClass.status.turma) : 'Sem dados'
 
       
                 classesArray.push(theClass);

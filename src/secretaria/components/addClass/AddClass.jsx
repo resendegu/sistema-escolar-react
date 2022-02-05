@@ -1,7 +1,8 @@
 import { Avatar, Backdrop, Box, Card, CardContent, Chip, CircularProgress, Fab, FormControl, Grid, Input, InputLabel, makeStyles, MenuItem, Select, TextField, Typography } from "@material-ui/core";
-import { Assistant, CloudUpload, EqualizerTwoTone, Label, LibraryBooks } from "@material-ui/icons";
+import { Add, Assistant, CloudUpload, EqualizerTwoTone, Label, LibraryBooks } from "@material-ui/icons";
 import { DataGrid, GridToolbarContainer, GridToolbarExport } from "@mui/x-data-grid";
 import { useSnackbar } from "notistack";
+import { useRef } from "react";
 import { Fragment, useEffect, useState } from "react";
 import { booksRef, coursesRef, daysCodesRef, teachersListRef } from "../../../services/databaseRefs";
 import { LocaleText } from "../../../shared/DataGridLocaleText";
@@ -21,7 +22,7 @@ const useStyles = makeStyles((theme) => ({
       display: "flex",
       flexDirection: "row",
       justifyContent: "space-evenly",
-      
+      marginTop: '8px',
       flexWrap: "wrap",
     },
     fieldsContainer: {
@@ -112,7 +113,10 @@ const MenuProps = {
 };
 
 
-const AddClass = () => {
+const AddClass = ({dataForEditing}) => {
+
+    console.log(dataForEditing)
+    const tableRef = useRef();
 
     function CustomToolbar() {
         return (
@@ -141,6 +145,8 @@ const AddClass = () => {
         professor: '',
     })
 
+    
+
     const [courses, setCourses] = useState([])
     const [teachers, setTeachers] = useState([])
 
@@ -165,7 +171,8 @@ const AddClass = () => {
             setLoading(false)
             let books = snapshot.exists() ? snapshot.val() : []
             console.log(books)
-            
+
+            console.log(tableRef)
             setRows(books)
         }
         getBooks()
@@ -176,6 +183,10 @@ const AddClass = () => {
         const allDays = (await daysCodesRef.once('value')).val()
 
         setDays(allDays)
+        if (dataForEditing) {
+            setClassData(dataForEditing)
+
+        }
     }
 
     const getCourses = async () => {
@@ -203,8 +214,11 @@ const AddClass = () => {
         let data = {...classData}
         data[id] = value
         
-        const classCode = await generateClassCode(data)
-        data['codigoSala'] = classCode
+        if (id !== 'codigoSala') {
+            const classCode = await generateClassCode(data)
+            data['codigoSala'] = classCode
+        }
+        
         setClassData(data)
         console.log(data)
     }
@@ -246,6 +260,8 @@ const AddClass = () => {
         
 
     }
+
+    
 
     return (
         <Fragment>
@@ -450,19 +466,22 @@ const AddClass = () => {
                         </Box>
                         <Box m={1}>
                         <div style={{ height: 250, width: '100%' }}>
-                            <DataGrid 
+                            <DataGrid
+                             ref={tableRef} 
                                 style={{width: '100%'}}
+                                
                                 rows={rows} 
                                 columns={
                                     [
                                         {field: 'codSistema', headerName: 'ID', width: 92, editable: false},
-                                        {field: 'codLivro', headerName: 'Código', width: 130, editable: true},
-                                        {field: 'nomeLivro', headerName: 'Nome do Livro', width: 300, editable: true},
-                                        {field: 'idLivro', headerName: 'Ident. do Livro', width: 300, editable: true},
+                                        {field: 'codLivro', headerName: 'Código', width: 130, editable: false},
+                                        {field: 'nomeLivro', headerName: 'Nome do Livro', width: 300, editable: false},
+                                        {field: 'idLivro', headerName: 'Ident. do Livro', width: 300, editable: false},
                                     ]
                                 } 
                                 disableSelectionOnClick 
                                 checkboxSelection
+                                
                                 components={{
                                     Toolbar: CustomToolbar
 
@@ -483,7 +502,7 @@ const AddClass = () => {
             </div>
             <div>
                 <Fab onClick={handleSubmit} style={fabStyle} variant="extended" color='primary'>
-                <CloudUpload className={classes.extendedIcon} />
+                <Add className={classes.extendedIcon} />
                     Cadastrar turma
                 </Fab>
             </div>
