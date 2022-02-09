@@ -123,11 +123,13 @@ const enrollStudent = async (studentData, classData, contractData, otherData) =>
 }
 
 const handleSendClassData = async (data) => {
-    console.log(data)
-    data.hora = data.hora.split(':').join('_')
+    
+    let classData = data
+    classData.hora = data.hora.split(':').join('_')
+    console.log(classData)
     try {
         let cadastraTurma = functions.httpsCallable('cadastraTurma');
-        const message = await cadastraTurma(data);
+        const message = await cadastraTurma(classData);
         return  message.data;
     } catch (error) {
         console.log(error)

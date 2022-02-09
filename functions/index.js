@@ -297,7 +297,7 @@ exports.cadastraTurma = functions.https.onCall(async (data, context) => {
                         return ;
                     }
 
-                    if (Object.keys(dadosTurmaAtual.alunos).length > 0) {
+                    if (dadosTurmaAtual.hasOwnProperty("alunos") && Object.keys(dadosTurmaAtual.alunos).length > 0) {
                         await atualizaAlunos();
                     }
 

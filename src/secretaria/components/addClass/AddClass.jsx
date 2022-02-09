@@ -113,7 +113,7 @@ const MenuProps = {
 };
 
 
-const AddClass = ({dataForEditing}) => {
+const AddClass = ({dataForEditing, onClose}) => {
 
     console.log(dataForEditing)
     const tableRef = useRef();
@@ -250,9 +250,12 @@ const AddClass = ({dataForEditing}) => {
     const handleSubmit = async () => {
         setLoader(true)
         try {
+            console.log(classData)
             let message = await handleSendClassData(classData);
             setLoader(false)
             enqueueSnackbar(message.answer, {variant: 'success'})
+            if (dataForEditing)
+                onClose();
         } catch (error) {
             setLoader(false)
             enqueueSnackbar(error.message, {variant: 'error'})

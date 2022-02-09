@@ -7,7 +7,6 @@
     "indexes": "firestore.indexes.json"
   },
   "hosting": {
-    "site": "escola-react",
     "public": "build",
     "ignore": [
       "firebase.json",

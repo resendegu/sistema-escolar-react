@@ -644,7 +644,7 @@ const handleConfirmCloseClass = async () => {
             saveButton={"Salvar"}
             saveButtonDisabled={true}
           >
-            <AddClass dataForEditing={dataForEditing} />
+            <AddClass dataForEditing={dataForEditing} onClose={() => setOpenClassEditing(false)} />
           </FullScreenDialog>
 
           <FullScreenDialog
