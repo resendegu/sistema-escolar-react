@@ -104,9 +104,9 @@ const useStyles = makeStyles((theme) => ({
     },
   }));
 
-const ClassInfo = (props) => {
+const ClassInfo = ({classDataRows, onClose}) => {
 
-    const { classDataRows } = props;
+    
 
     const confirm = useConfirmation();
 
@@ -644,7 +644,11 @@ const handleConfirmCloseClass = async () => {
             saveButton={"Salvar"}
             saveButtonDisabled={true}
           >
-            <AddClass dataForEditing={dataForEditing} onClose={() => setOpenClassEditing(false)} />
+            <AddClass dataForEditing={dataForEditing} onClose={() => {
+              setOpenClassEditing(false)
+              onClose()
+            }} 
+            />
           </FullScreenDialog>
 
           <FullScreenDialog

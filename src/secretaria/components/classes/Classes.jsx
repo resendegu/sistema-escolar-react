@@ -187,7 +187,7 @@ const Classes = () => {
                 saveButton={"Salvar"}
                 saveButtonDisabled={true}
             > 
-                <ClassInfo classDataRows={classData} />
+                <ClassInfo classDataRows={classData} onClose={() => setOpen(false)}/>
             </FullScreenDialog>
             <Grid
             justifyContent="flex-start"   

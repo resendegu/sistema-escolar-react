@@ -5,8 +5,10 @@ import { useSnackbar } from "notistack";
 import { Fragment, useEffect, useState } from "react";
 
 import { classesRef, disabledStudentsRef, studentsRef } from '../services/databaseRefs'
+import FullScreenDialog from "./FullscreenDialog";
 import { handleEnableDisableStudents, handleTransferStudents } from "./FunctionsUse";
 import StudentFiles from "./StudentFiles";
+import ViewParentsInfo from "./ViewParentsInfo";
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -72,6 +74,7 @@ const StudentInfo = (props) => {
     const disabledStudent = studentInfo.disabled
 
     const [ openDialog, setOpenDialog ] = useState(false);
+    const [ openParentsDialog, setOpenParentsDialog ] = useState(false);
     const [ loading, setLoading ] = useState(false);
 
     const {enqueueSnackbar, closeSnackbar} = useSnackbar();
@@ -183,10 +186,29 @@ const handleTransfer = async () => {
   }
 }
 
+const handleOpenParentsDialog = () => {
+  setOpenParentsDialog(true);
+}
+
 
 
     return ( 
         <Fragment>
+              <FullScreenDialog
+                isOpen={openParentsDialog}
+                onClose={() => {
+                    setOpenParentsDialog(false);
+                }}
+                hideSaveButton
+                onSave={() => {
+                    alert('Save clicked')
+                }}
+                title={"Ver/Editar informações dos responsáveis"}
+                saveButton={"Salvar"}
+                saveButtonDisabled={true}
+              >
+                <ViewParentsInfo studentId={studentId}/>
+              </FullScreenDialog>
               <Dialog 
                  aria-labelledby="confirmation-dialog-title"
                  open={openDialog}
@@ -339,7 +361,7 @@ const handleTransfer = async () => {
                         <Button fullWidth size="large" variant="contained" color="primary" startIcon={<Assignment />}>Follow Up</Button>
                       </Box>
                       <Box m={1}>
-                        <Button fullWidth size="large" variant="contained" color="primary" startIcon={<SupervisedUserCircle />}>Responsáveis</Button>
+                        <Button fullWidth size="large" variant="contained" color="primary" startIcon={<SupervisedUserCircle />} onClick={handleOpenParentsDialog}>Responsáveis</Button>
                       </Box>
                       <Box m={1}>
                         <Button fullWidth size="small" variant="contained" color={"secondary"} startIcon={disabledStudent ? <Check /> :<NotInterested />} onClick={disabledStudent ? handleConfirmEnable : handleConfirmDisable}>{disabledStudent ? 'Reativar' : 'Desativar'}</Button>
