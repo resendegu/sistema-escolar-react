@@ -787,7 +787,7 @@ const AddressAndParentsFields = (props) => {
     }
 
     const handleCloseDialog = () => {
-        if (parentsFields.length === 0) {
+        if (parentsFields.length === 0 && parentsRequired) {
             enqueueSnackbar('O aluno é menor de idade. Deve ser cadastrado pelo menos um responsável.', {variant: 'warning', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
         } else {
             setDialogOpen(false);

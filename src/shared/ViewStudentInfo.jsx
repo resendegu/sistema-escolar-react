@@ -75,6 +75,7 @@ const StudentInfo = (props) => {
 
     const [ openDialog, setOpenDialog ] = useState(false);
     const [ openParentsDialog, setOpenParentsDialog ] = useState(false);
+    const [ edit, setEdit ] = useState(false);
     const [ loading, setLoading ] = useState(false);
 
     const {enqueueSnackbar, closeSnackbar} = useSnackbar();
@@ -199,15 +200,15 @@ const handleOpenParentsDialog = () => {
                 onClose={() => {
                     setOpenParentsDialog(false);
                 }}
-                hideSaveButton
+                
                 onSave={() => {
-                    alert('Save clicked')
+                   setEdit(!edit)
                 }}
-                title={"Ver/Editar informações dos responsáveis"}
-                saveButton={"Salvar"}
-                saveButtonDisabled={true}
+                title={"Ver/Editar responsáveis"}
+                saveButton={edit ? "Salvar" : "Editar"}
+                
               >
-                <ViewParentsInfo studentId={studentId}/>
+                <ViewParentsInfo studentId={studentId} edit={edit} setEdit={setEdit}/>
               </FullScreenDialog>
               <Dialog 
                  aria-labelledby="confirmation-dialog-title"
