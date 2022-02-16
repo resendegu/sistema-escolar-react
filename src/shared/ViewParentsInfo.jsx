@@ -169,7 +169,6 @@ const ViewParentsInfo = ({studentId, isOpen, onClose}) => {
             let par = parentsCopy[key];
             
             return (
-            
                 <Card className={classes.smallCards} variant="outlined">
                     <CardContent>
                         <Grid
