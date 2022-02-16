@@ -156,7 +156,6 @@ const ViewParentsInfo = ({studentId, isOpen, onClose}) => {
             error && enqueueSnackbar(error.message, {title: 'Erro', variant: 'error', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
         }
         
-        
     }
 
     
