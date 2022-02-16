@@ -579,7 +579,7 @@ const handleCallClassOpen = async () => {
     setLoader(true)
     const message = await handleClassOpen(classCode, source, info)
     getData()
-    enqueueSnackbar(message, {title: 'Sucesso', variant: 'success', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
+    
     setLoader(false)
     setOpenDialog2(false)
   } catch (error) {
@@ -613,7 +613,7 @@ const handleConfirmCloseClass = async () => {
     getData()
     setLoader(false)
     if (error)
-      enqueueSnackbar(error.message, {title: 'Sucesso', variant: 'error', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button>})
+      enqueueSnackbar(error.message, {title: 'Erro', variant: 'error', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button>})
     
   }
   

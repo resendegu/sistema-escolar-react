@@ -1,16 +1,19 @@
-import { Avatar, Box, Button, Card, CardContent, Checkbox, FormControl, FormControlLabel, Grid, IconButton, InputLabel, makeStyles, Select, TextField, Tooltip, Typography } from "@material-ui/core";
-import { Add, SupervisedUserCircle } from "@material-ui/icons";
-import { useEffect, useState } from "react";
+import { Avatar, Box, Button, Card, CardContent, Checkbox, Fab, FormControl, FormControlLabel, Grid, IconButton, InputLabel, makeStyles, Select, TextField, Tooltip, Typography } from "@material-ui/core";
+import { Add, Delete, Save, SupervisedUserCircle } from "@material-ui/icons";
+import { useEffect, useState, useRef } from "react";
 import { Fragment } from "react";
 import { studentsRef } from "../services/databaseRefs";
+import { useSnackbar } from "notistack";
+import { getDateMeta } from "@fullcalendar/react";
+import FullScreenDialog from "./FullscreenDialog";
+import { useConfirmation } from "../contexts/ConfirmContext";
 
 const useStyles = makeStyles((theme) => ({
     root: {
-      width: "100%",
-      maxWidth: "70vw",
-      minWidth: 350,
-      
-      height: "85vh",
+        '& > *': {
+            margin: theme.spacing(1),
+          },
+          position: "absolute"
     },
     container: {
       width: "100%",
@@ -64,42 +67,58 @@ const useStyles = makeStyles((theme) => ({
         lineHeight: "200px",
         
         textAlign: "center",
-      }
+      },
+      extendedIcon: {
+        marginRight: theme.spacing(1),
+      },
   }));
 
 
-const ViewParentsInfo = ({studentId, setEdit, edit}) => {
+const ViewParentsInfo = ({studentId, isOpen, onClose}) => {
 
     const classes = useStyles();
 
+    const confirm = useConfirmation();
+
     const [parents, setParents] = useState({});
+    const [ edit, setEdit ] = useState(false);
+    const [mouseOver, setMouseOver] = useState();
+
+    const {enqueueSnackbar, closeSnackbar} = useSnackbar();
     
+    const form = useRef();
+
+    const getData = async () => {
+        const snapshot = await studentsRef.child(studentId).child('responsaveis').once("value");
+        const parentsArray = snapshot.exists() ? snapshot.val() : [];
+        console.log(parentsArray);
+        setParents(parentsArray);
+    }
 
     useEffect(() => {
         getData();
     }, [studentId])
 
-    useEffect(() => {
-        if(!edit && parents.length > 0) {
-            console.log(parents)
-            handleSaveData()
-            
-        }
-    }, [edit])
+    
 
-    useEffect(() => {
-        console.log(parents)
-    }, [parents])
-
-    const handleSaveData = async () => {
+    const handleSaveData = async (e) => {
+        e.preventDefault();
         try {
-            await studentsRef.child(studentId).child('responsaveis').set(parents)
+            if (edit && Object.keys(parents).length > 0) {
+                form.current.requestSubmit();
+                await studentsRef.child(studentId).child('responsaveis').set(parents);
+                enqueueSnackbar("Responsáveis atualizados com sucesso.", {title: 'Sucesso', variant: 'success', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
+                setEdit(false)
+            }
+            
         } catch (error) {
-            console.log(error)
+            console.log(error);
+            enqueueSnackbar(error.message, {title: 'Erro', variant: 'error', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
         }
         
 
     }
+
 
     const handleAddParent = async () => {
         const key = studentsRef.child(studentId).child('responsaveis').push().key
@@ -120,12 +139,27 @@ const ViewParentsInfo = ({studentId, setEdit, edit}) => {
         setEdit(true)
     }
 
-    const getData = async () => {
-        const snapshot = await studentsRef.child(studentId).child('responsaveis').once("value");
-        const parentsArray = snapshot.exists() ? snapshot.val() : [];
-        console.log(parentsArray);
-        setParents(parentsArray);
+    const handleDeleteParent = async (i) => {
+        try {
+            await confirm({
+                variant: "danger",
+                catchOnCancel: true,
+                title: "Confirmação",
+                description: "Você deseja excluir este responsável? Esta ação não pode ser revertida."
+            })
+            const key = Object.keys(parents)[i]
+            await studentsRef.child(studentId).child('responsaveis').child(key).remove()
+            enqueueSnackbar("Responsável excluído com sucesso.", {title: 'Sucesso', variant: 'success', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
+            getData()
+        } catch (error) {
+            console.log(error)
+            error && enqueueSnackbar(error.message, {title: 'Erro', variant: 'error', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
+        }
+        
+        
     }
+
+    
 
     const ParentsCards = ({parentsCopy}) => {
 
@@ -135,146 +169,186 @@ const ViewParentsInfo = ({studentId, setEdit, edit}) => {
             let par = parentsCopy[key];
             
             return (
-            <Card className={classes.smallCards} variant="outlined">
-                <CardContent>
-                    <Grid
-                        justifyContent="flex-start"
-                        direction="row"
-                        container
-                        spacing={1}
-                    >
-                        <Grid item>
-                            <Avatar className={classes.avatar}>
-                                <SupervisedUserCircle  />
-                            </Avatar>
-                        </Grid>
-
-                        <Grid item>
-                            <Typography variant="h5" component="h2">
-                            Responsável {i + 1}
-                            </Typography>
-                    
-                    
-                        </Grid>
-                    </Grid>
-                    <hr />
-                    <Box m={1}>
-                        <TextField 
-                            disabled={!edit}
-                            label={"Nome"}
-                            defaultValue={par.nome}
-                            onChange={(e) => {
-                                parentsCopy[key].nome = e.target.value
-                                setParents(parentsCopy)
-                            }}
-                            fullWidth
-                            type="text"
-                            size="small"
-                        />
-                    </Box>
-                    <Box m={1}>
-                        <TextField 
-                            disabled={!edit}
-                            label={"CPF"}
-                            defaultValue={par.cpf}
-                            fullWidth
-                            type="number"
-                            size="small"
-                        />
-                    </Box>
-                    <Box m={1}>
-                        <TextField 
-                            disabled={!edit}
-                            label={"RG"}
-                            defaultValue={par.rg}
-                            fullWidth
-                            type="text"
-                            size="small"
-                        />
-                    </Box>
-                    <Box m={1}>
-                        <TextField 
-                            disabled={!edit}
-                            label={"E-mail"}
-                            defaultValue={par.email}
-                            fullWidth
-                            type="email"
-                            size="small"
-                        />
-                    </Box>
-                    <Box m={1}>
-                        <TextField 
-                            disabled={!edit}
-                            label={"Celular"}
-                            defaultValue={par.celular}
-                            fullWidth
-                            type="number"
-                            size="small"
-                        />
-                    </Box>
-                    <Box m={1}>
-                        <FormControl fullWidth size="small" variant="filled">
-                            <InputLabel htmlFor="relacao" style={{marginTop: '16px',}} required shrink={true}>Relação</InputLabel>
-                            <Select
-                                disabled={!edit}
-                                fullWidth
-                                style={{marginTop: '16px',}}
-                                native
-                                // value={state.value}
-                                // onChange={handleChangeDay}
-                                inputProps={{
-                                    name: 'relacao',
-                                    id: 'relacao',
-                                }}
-                                defaultValue={par.relacao}
-                                size="small"
-                            >
-                                <option hidden>Escolha...</option>
-                                <option value="Mãe">Mãe</option>
-                                <option value="Pai">Pai</option>
-                                <option value="Tio">Tio</option>
-                                <option value="Tia">Tia</option>
-                                <option value="Avô">Avô</option>
-                                <option value="Avó">Avó</option>
-                                <option value="Responsável">Responsável</option>
-                                
-                            </Select>
-                            
-                        </FormControl>
-                    </Box>
-
-                    <Box m={1}>
-                        <FormControl className={classes.fields} size="small">
-                        <FormControlLabel
-                            defaultValue={par.pedagogico}
-                            control={<Checkbox id="pedagogico" checked={par.pedagogico} name="pedagogico" color="primary" size="small" />}
-                            label="Responsável Pedagógico"
-                            labelPlacement="end"
-                            disabled={!edit}
-                        />
-                        </FormControl>
-                    </Box>
-
-                    <Box m={1}>
-                        <FormControl className={classes.fields} size="small">
-                        <FormControlLabel
-                            defaultValue={par.financeiro}
-                            control={<Checkbox id="financeiro" size="small" checked={par.financeiro} name="financeiro" color="primary" />}
-                            label="Responsável Financeiro"
-                            labelPlacement="end"
-                            disabled={!edit}
-                            
-                        />
-                        </FormControl>
-                    </Box>
-
             
-                    
-                    
-                    
-                </CardContent>
-                    
-            </Card>
+                <Card className={classes.smallCards} variant="outlined">
+                    <CardContent>
+                        <Grid
+                            justifyContent="flex-start"
+                            direction="row"
+                            container
+                            spacing={1}
+                        >
+                            <Grid item >
+                            <div onMouseEnter={() => setMouseOver(i)} onMouseLeave={() => setMouseOver(false)}>
+                                {mouseOver === i ? (
+                                    <IconButton color="primary"  disabled={Object.keys(parents).length === 1} aria-label="delete parent" component="span" onClick={() => handleDeleteParent(i)}>
+                                        <Delete />
+                                    </IconButton>
+                                ) : ( 
+                                <Avatar className={classes.avatar}>
+                                    
+                                    <SupervisedUserCircle  />
+                                </Avatar>)}
+                            </div>
+                                
+                            </Grid>
+
+                            <Grid item>
+                                <Typography variant="h5" component="h2">
+                                Responsável {i + 1}
+                                </Typography>
+                        
+                        
+                            </Grid>
+                        </Grid>
+                        <hr />
+                        <Box m={1}>
+                            <TextField 
+                                disabled={!edit}
+                                label={"Nome"}
+                                defaultValue={par.nome}
+                                onChange={(e) => {
+                                    parentsCopy[key].nome = e.target.value
+                                    setParents(parentsCopy)
+                                }}
+                                fullWidth
+                                type="text"
+                                size="small"
+                                required
+                            />
+                        </Box>
+                        <Box m={1}>
+                            <TextField 
+                                disabled={!edit}
+                                label={"CPF"}
+                                defaultValue={par.cpf}
+                                onChange={(e) => {
+                                    parentsCopy[key].cpf = e.target.value
+                                    setParents(parentsCopy)
+                                }}
+                                fullWidth
+                                type="number"
+                                size="small"
+                            />
+                        </Box>
+                        <Box m={1}>
+                            <TextField 
+                                disabled={!edit}
+                                label={"RG"}
+                                defaultValue={par.rg}
+                                onChange={(e) => {
+                                    parentsCopy[key].rg = e.target.value
+                                    setParents(parentsCopy)
+                                }}
+                                fullWidth
+                                type="text"
+                                size="small"
+                            />
+                        </Box>
+                        <Box m={1}>
+                            <TextField 
+                                disabled={!edit}
+                                label={"E-mail"}
+                                defaultValue={par.email}
+                                onChange={(e) => {
+                                    parentsCopy[key].email = e.target.value
+                                    setParents(parentsCopy)
+                                }}
+                                fullWidth
+                                type="email"
+                                size="small"
+                            />
+                        </Box>
+                        <Box m={1}>
+                            <TextField 
+                                disabled={!edit}
+                                label={"Celular"}
+                                defaultValue={par.celular}
+                                onChange={(e) => {
+                                    parentsCopy[key].celular = e.target.value
+                                    setParents(parentsCopy)
+                                }}
+                                fullWidth
+                                type="number"
+                                size="small"
+                            />
+                        </Box>
+                        <Box m={1}>
+                            <FormControl fullWidth size="small" variant="filled">
+                                <InputLabel htmlFor="relacao" style={{marginTop: '16px',}} required shrink={true}>Relação</InputLabel>
+                                <Select
+                                    disabled={!edit}
+                                    fullWidth
+                                    style={{marginTop: '16px',}}
+                                    native
+                                    // value={state.value}
+                                    // onChange={handleChangeDay}
+                                    inputProps={{
+                                        name: 'relacao',
+                                        id: 'relacao',
+                                    }}
+                                    defaultValue={par.relacao}
+                                    onChange={(e) => {
+                                        parentsCopy[key].relacao = e.target.value
+                                        setParents(parentsCopy)
+                                    }}
+                                    size="small"
+                                    required
+                                >
+                                    <option hidden>Escolha...</option>
+                                    <option value="Mãe">Mãe</option>
+                                    <option value="Pai">Pai</option>
+                                    <option value="Tio">Tio</option>
+                                    <option value="Tia">Tia</option>
+                                    <option value="Avô">Avô</option>
+                                    <option value="Avó">Avó</option>
+                                    <option value="Responsável">Responsável</option>
+                                    
+                                </Select>
+                                
+                            </FormControl>
+                        </Box>
+
+                        <Box m={1}>
+                            <FormControl className={classes.fields} size="small">
+                            <FormControlLabel
+                                defaultValue={par.pedagogico}
+                                control={<Checkbox id="pedagogico" defaultChecked={par.pedagogico} onChange={(e) => {
+                                    parentsCopy[key].pedagogico = e.target.checked
+                                    setParents(parentsCopy)
+                                }} name="pedagogico" color="primary" size="small" />}
+                                label="Responsável Pedagógico"
+                                labelPlacement="end"
+                                disabled={!edit}
+                            />
+                            </FormControl>
+                        </Box>
+
+                        <Box m={1}>
+                            <FormControl className={classes.fields} size="small">
+                            <FormControlLabel
+                                defaultValue={par.financeiro}
+                                control={<Checkbox id="financeiro" size="small"  defaultChecked={par.financeiro} onChange={(e) => {
+                                    parentsCopy[key].financeiro = e.target.value
+                                    setParents(parentsCopy)
+                                }} name="financeiro" color="primary" />}
+                                label="Responsável Financeiro"
+                                labelPlacement="end"
+                                disabled={!edit}
+                                
+                            />
+                            </FormControl>
+                        </Box>
+
+                
+                        
+                        
+                        
+                    </CardContent>
+                        
+                </Card>
+            
+            
         )})
 
         return BuiltCards;
@@ -284,9 +358,23 @@ const ViewParentsInfo = ({studentId, setEdit, edit}) => {
 
     return (
         <Fragment>
-            <div className={classes.container}>
-
-                    <ParentsCards parentsCopy={parents} />
+            <FullScreenDialog
+                isOpen={isOpen}
+                onClose={onClose}
+                
+                onSave={() => {
+                    
+                    edit ? form.current.requestSubmit() : setEdit(true)
+                }}
+                title={"Ver/Editar responsáveis"}
+                saveButton={edit ? "Salvar" : "Editar"}
+                
+              >
+                <form ref={form} onSubmit={handleSaveData} className={classes.container}>
+                        
+                        <ParentsCards parentsCopy={parents} />
+                    
+                    
 
                     <Card className={classes.smallCards} variant="outlined">
                         <CardContent>
@@ -313,7 +401,7 @@ const ViewParentsInfo = ({studentId, setEdit, edit}) => {
                             <hr />
                             <div className={classes.center}>
                                 <Tooltip title="Adicionar responsável">
-                                    <IconButton color="primary" aria-label="upload picture" component="span" onClick={handleAddParent}>
+                                    <IconButton color="primary" disabled={edit} aria-label="upload picture" component="span" onClick={handleAddParent}>
                                         <Add fontSize="large" />
                                     </IconButton>
                                 </Tooltip>
@@ -329,8 +417,10 @@ const ViewParentsInfo = ({studentId, setEdit, edit}) => {
                         </CardContent>
                             
                     </Card>
-                
-            </div>
+
+                </form>
+              </FullScreenDialog>
+            
             
 
         </Fragment>
