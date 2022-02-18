@@ -32,11 +32,8 @@ const useStyles = makeStyles((theme) => ({
     }
   }));
 
-function BasicDataFields(props) {
-    const { shrink, handleOptionalSteps, setParentsRequired, setLoader,  } = props;
-
-
-
+function BasicDataFields({ shrink, handleOptionalSteps, setParentsRequired, setLoader, editMode=false }) {
+    
     const classes = useStyles();
 
     const [ age, setAge ] = useState(null)
@@ -72,11 +69,14 @@ function BasicDataFields(props) {
                 setAge('Calculando idade...')
                 let ageObj = await calculateAge(birthdate);
                 setAge(`Idade ${ageObj.years} anos, ${ageObj.months} meses e ${ageObj.days} dias`);
-                if (ageObj.years < 18) {
-                    setParentsRequired(true);
-                } else {
-                    setParentsRequired(false);
+                if (!editMode) {
+                    if (ageObj.years < 18) {
+                        setParentsRequired(true);
+                    } else {
+                        setParentsRequired(false);
+                    }
                 }
+                
                 setLoader(false)
             } catch (error) {
                 
@@ -108,17 +108,18 @@ function BasicDataFields(props) {
     return (
         <>
         <div className={classes.root}>
-        <FormControl component="fieldset">
-            <FormLabel component="legend">Tipo de Matrícula</FormLabel>
-            <FormGroup>
-                <FormControlLabel
-                control={<Switch checked={enrollType.checked} onChange={handleChangeEnrollType} id="tipoMatricula" name="tipoMatricula" value="preMatricula" color="primary"/>}
-                label={'Pré-matrícula'}
-                />
-                
-            </FormGroup>
-            <FormHelperText>Escolha se será uma matrícula ou pré-matrícula.</FormHelperText>
-        </FormControl>
+            {!editMode &&
+            <FormControl component="fieldset">
+                <FormLabel component="legend">Tipo de Matrícula</FormLabel>
+                <FormGroup>
+                    <FormControlLabel
+                    control={<Switch checked={enrollType.checked} onChange={handleChangeEnrollType} id="tipoMatricula" name="tipoMatricula" value="preMatricula" color="primary"/>}
+                    label={'Pré-matrícula'}
+                    />
+                    
+                </FormGroup>
+                <FormHelperText>Escolha se será uma matrícula ou pré-matrícula.</FormHelperText>
+            </FormControl>}
               <Grid 
               justifyContent="flex-start"   
               container
@@ -711,10 +712,7 @@ function CourseDataFields(props) {
 }
 
 
-const AddressAndParentsFields = (props) => {
-    
-
-    const { shrink, parentsRequired } = props;
+const AddressAndParentsFields = ({ shrink, parentsRequired, editMode=false }) => {
 
     const classes = useStyles();
     
@@ -726,6 +724,7 @@ const AddressAndParentsFields = (props) => {
     const [ additionalFields, setAdditionalFields ] = useState(null);
 
     const {enqueueSnackbar, closeSnackbar} = useSnackbar();
+    
 
     useEffect(() => {
         let parentsArray = JSON.parse(sessionStorage.getItem('responsaveis'))
@@ -982,8 +981,12 @@ const AddressAndParentsFields = (props) => {
                 
                 
               </Grid>
-              <h4>Responsáveis</h4>
-              <Button variant="contained" color="primary" onClick={() => {handleAddParentField()}}><PlusOneRounded /> Cadastrar Responsável </Button>
+              {!editMode && (
+                <>
+                    <h4>Responsáveis</h4>
+                    <Button variant="contained" color="primary" onClick={() => {handleAddParentField()}}><PlusOneRounded /> Cadastrar Responsável </Button>
+                </>
+                )}
 
         
             <Fragment>
@@ -1092,7 +1095,6 @@ const AddressAndParentsFields = (props) => {
 
             <h4>Dados adicionais</h4>
             {additionalFields && additionalFields.map(field => (
-                
                     <FormControl className={classes.fields} style={{width: '100%'}}> 
                         <TextField required={field.required}  placeholder={field.placeholder} autoComplete="off" InputLabelProps={{shrink: shrink,}} variant="filled" label={field.label} type="text" id={"additional" + field.id} name={"additional" + field.id} aria-describedby={field.placeholder} />
                     </FormControl>

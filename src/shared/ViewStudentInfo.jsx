@@ -5,6 +5,7 @@ import { useSnackbar } from "notistack";
 import { Fragment, useEffect, useState } from "react";
 
 import { classesRef, disabledStudentsRef, studentsRef } from '../services/databaseRefs'
+import EditStudentData from "./EditStudentData";
 import FullScreenDialog from "./FullscreenDialog";
 import { handleEnableDisableStudents, handleTransferStudents } from "./FunctionsUse";
 import StudentFiles from "./StudentFiles";
@@ -75,6 +76,7 @@ const StudentInfo = (props) => {
 
     const [ openDialog, setOpenDialog ] = useState(false);
     const [ openParentsDialog, setOpenParentsDialog ] = useState(false);
+    const [ openEditStudentsInfo, setOpenEditStudentsInfo ] = useState(false);
   
     const [ loading, setLoading ] = useState(false);
 
@@ -191,6 +193,10 @@ const handleOpenParentsDialog = () => {
   setOpenParentsDialog(true);
 }
 
+const handleOpenEditStudentInfo = () => {
+  setOpenEditStudentsInfo(true)
+}
+
 
 
     return ( 
@@ -199,6 +205,8 @@ const handleOpenParentsDialog = () => {
               <ViewParentsInfo studentId={studentId} isOpen={openParentsDialog} onClose={() => {
                   setOpenParentsDialog(false);
               }}/>
+
+              <EditStudentData studentId={studentId} isOpen={openEditStudentsInfo} onClose={() => setOpenEditStudentsInfo(false)} />
               
               <Dialog 
                  aria-labelledby="confirmation-dialog-title"
@@ -337,7 +345,7 @@ const handleOpenParentsDialog = () => {
                         <Button fullWidth size="large" variant="contained" color="primary" startIcon={<TransferWithinAStation />} disabled={disabledStudent} onClick={handleConfirmTransfer}>Transferir</Button>
                       </Box>
                       <Box  m={1}>
-                        <Button fullWidth size="large" variant="contained" color="primary" startIcon={<Edit />}>Editar dados</Button>
+                        <Button fullWidth size="large" variant="contained" color="primary" startIcon={<Edit />} onClick={handleOpenEditStudentInfo}>Editar dados</Button>
                       </Box>
                       <Box m={1}>
                         <Button fullWidth size="large" variant="contained" color="primary" startIcon={<DoneAll />}disabled={disabledStudent}>Checklist</Button>

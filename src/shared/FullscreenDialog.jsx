@@ -28,10 +28,9 @@ const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-export default function FullScreenDialog(props) {
+export default function FullScreenDialog({ isOpen, onClose, onSave, title, saveButton, saveButtonDisabled, hideSaveButton, children }) {
   
   const classes = useStyles();
-  const { isOpen, onClose, onSave, title, saveButton, saveButtonDisabled, hideSaveButton } = props;
 
   const handleClose = () => {
     onClose();
@@ -71,7 +70,7 @@ export default function FullScreenDialog(props) {
             
           </Toolbar>
         </AppBar>
-        <>{props.children}</>
+        <>{children}</>
         {!hideSaveButton && (
           <div>
             <Fab onClick={handleSave} style={fabStyle} disabled={saveButtonDisabled} variant="extended" color='primary'>
