@@ -19,18 +19,19 @@ import { LocaleText } from './DataGridLocaleText';
  * @param {rows, columns, rowHeight, onRowClick, disableColmunFilter, disableColumnMenu, disableColumnSelector, disableExtendRowFullWidth, disableSelectionOnClick,} props Props for the DataGrid
  * @returns A data grid.
  */
-export default function CrudTable(props) {
-    const { rows, 
-            columns, 
-            rowHeight, 
-            onRowClick, 
-            disableColmunFilter, 
-            disableColumnMenu, 
-            disableColumnSelector,
-            disableExtendRowFullWidth,
-            disableSelectionOnClick,
-            hideFooter, 
-        } = props;
+export default function CrudTable({ 
+    rows, 
+    columns, 
+    rowHeight, 
+    onRowClick, 
+    disableColmunFilter, 
+    disableColumnMenu, 
+    disableColumnSelector,
+    disableExtendRowFullWidth,
+    disableSelectionOnClick,
+    hideFooter, 
+}) {
+
     return (
         <div style={{ height: 300, width: '100%' }}>
         <DataGrid 

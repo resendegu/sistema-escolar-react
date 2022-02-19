@@ -6,6 +6,7 @@ import { Fragment, useEffect, useState } from "react";
 
 import { classesRef, disabledStudentsRef, studentsRef } from '../services/databaseRefs'
 import EditStudentData from "./EditStudentData";
+import FollowUp from "./FollowUp";
 import FullScreenDialog from "./FullscreenDialog";
 import { handleEnableDisableStudents, handleTransferStudents } from "./FunctionsUse";
 import StudentFiles from "./StudentFiles";
@@ -77,6 +78,7 @@ const StudentInfo = (props) => {
     const [ openDialog, setOpenDialog ] = useState(false);
     const [ openParentsDialog, setOpenParentsDialog ] = useState(false);
     const [ openEditStudentsInfo, setOpenEditStudentsInfo ] = useState(false);
+    const [ openFollowUp, setOpenFollowUp ] = useState(false);
   
     const [ loading, setLoading ] = useState(false);
 
@@ -197,6 +199,11 @@ const handleOpenEditStudentInfo = () => {
   setOpenEditStudentsInfo(true)
 }
 
+const handleOpenFollowUp = () => {
+  setOpenFollowUp(true)
+  console.log(`hey`)
+}
+
 
 
     return ( 
@@ -207,6 +214,8 @@ const handleOpenEditStudentInfo = () => {
               }}/>
 
               <EditStudentData studentId={studentId} isOpen={openEditStudentsInfo} onClose={() => setOpenEditStudentsInfo(false)} />
+
+              <FollowUp isOpen={openFollowUp} onClose={() => setOpenFollowUp(false)} />
               
               <Dialog 
                  aria-labelledby="confirmation-dialog-title"
@@ -357,7 +366,7 @@ const handleOpenEditStudentInfo = () => {
                         <Button fullWidth size="large" variant="contained" color="primary" startIcon={<Print />}>Ficha de Matrícula</Button>
                       </Box>
                       <Box m={1}>
-                        <Button fullWidth size="large" variant="contained" color="primary" startIcon={<Assignment />}>Follow Up</Button>
+                        <Button fullWidth size="large" variant="contained" color="primary" onClick={handleOpenFollowUp} startIcon={<Assignment />}>Follow Up</Button>
                       </Box>
                       <Box m={1}>
                         <Button fullWidth size="large" variant="contained" color="primary" startIcon={<SupervisedUserCircle />} onClick={handleOpenParentsDialog}>Responsáveis</Button>
