@@ -1,3 +1,5 @@
+![example event parameter](https://github.com/proxdigital/sistema-escolar-react/actions/workflows/firebase-hosting-merge.yml/badge.svg?event=push)
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
