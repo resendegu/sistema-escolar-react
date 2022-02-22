@@ -1,4 +1,4 @@
-![example event parameter](https://github.com/proxdigital/sistema-escolar-react/actions/workflows/firebase-hosting-merge.yml/badge.svg?event=push)
+[![Deploy to Firebase Hosting on merge](https://github.com/ProXDigital/sistema-escolar-react/actions/workflows/firebase-hosting-merge.yml/badge.svg?branch=master&event=push)](https://github.com/ProXDigital/sistema-escolar-react/actions/workflows/firebase-hosting-merge.yml)
 
 # Sistema de gestão escolar
 
