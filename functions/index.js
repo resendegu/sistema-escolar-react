@@ -9,6 +9,8 @@ const { info } = require('firebase-functions/lib/logger');
 const { Merchant } = require('steplix-emv-qrcps');
 const { Constants } = Merchant;
 const QRCode = require('qrcode');
+const axios = require('axios').default
+
 
 admin.initializeApp()
 
@@ -1259,14 +1261,97 @@ exports.alteracaoDados = functions.database.ref('sistemaEscolar/alunos/{matricul
     functions.logger.log(snapshot.after.val())
 })
 
-// exports.systemUpdate = functions.pubsub.schedule('every sunday 03:00')
-//   .timeZone('America/Sao_Paulo') // Users can choose timezone - default is America/Los_Angeles
-//   .onRun((context) => {
-//     let aniversariantesRef = admin.database().ref('sistemaEscolar/aniversariantes')
-//     let alunosRef = admin.database().ref('sistemaEscolar/alunos')
-//     let alunosRef = admin.database().ref('sistemaEscolar/alunos')
-//   return null;
-// });
+exports.systemUpdate = functions.pubsub.schedule('0 2 * * 0')
+  .timeZone('America/Sao_Paulo') // Users can choose timezone - default is America/Los_Angeles
+  .onRun((context) => {
+    // let aniversariantesRef = admin.database().ref('sistemaEscolar/aniversariantes')
+    // let alunosRef = admin.database().ref('sistemaEscolar/alunos')
+    // let alunosRef = admin.database().ref('sistemaEscolar/alunos')
+
+    const firestoreRef = admin.firestore().collection('mail');
+
+    const now = new Date(context.timestamp)
+
+    /**
+     * Example:
+    [
+        {
+            "date": "2022-01-01",
+            "name": "Confraternização mundial",
+            "type": "national"
+        },
+        {
+            "date": "2022-03-01",
+            "name": "Carnaval",
+            "type": "national"
+        }
+        ...
+    ]
+     * @param {string} year The year to get the holidays
+     * @returns array
+     * 
+     * 
+     */
+    const getBrazilianHolidays = async (year) => {
+        
+        const response = await axios.get(`https://brasilapi.com.br/api/feriados/v1/${year}`)
+        console.log(response)
+        console.log(response.data)
+        const holidays = response.data
+        // const response = await fetch(`https://brasilapi.com.br/api/feriados/v1/${year}`)
+        // const holidays = await response.json()
+        
+        
+        return holidays;
+    }
+
+    let holidaySource = {events: [], id: 'holidays', color: '#0b8043'};
+
+    getBrazilianHolidays(now.getFullYear()).then(holidays => {
+        holidays.map((holiday, i) => {
+            holidaySource.events.push({title: holiday.name, start: holiday.date})
+        })
+
+        admin.database().ref("sistemaEscolar/infoEscola/calendarioGeral").transaction((sources) => {
+            if (sources) {
+                sources.push(holidaySource)
+            } else {
+                sources = [holidaySource]
+            }
+
+            return sources;
+        }, (error) => {
+            if (error) {
+                console.log(error)
+            }   
+        })
+    }).catch(error => console.log(error))
+
+    
+
+
+
+    const emailContent = {
+        to: "gustavo.resende@grupoprox.com",
+        message: {
+            subject: `Job de domingo realizado`,
+            text: `Veja o log do job de domingo`,
+            html: `<h3>Olá!</h3><p>O Job de systemUpdate do Sistema Escolar foi executado.</p><p>Ano base: ${now.getFullYear()}</p><p> Timestamp: ${context.timestamp}</p><p> EventId: ${context.eventId}</p><p> EventType: ${context.eventType}</p><p>Sistemas ProjetoX.</p>`
+        }
+    }
+
+
+    
+
+    firestoreRef.add(emailContent).then(() => {
+        console.log('Queued email for delivery to gustavo@resende.app')
+    }).catch(error => {
+        console.error(error)
+        throw new Error(error.message)
+    })
+
+  return null;
+});
 // exports.adicionaFotoAluno = functions.storage.object().onFinalize(async (object) => {
 //     const fileBucket = object.bucket; // The Storage bucket that contains the file.
 //     const filePath = object.name; // File path in the bucket.

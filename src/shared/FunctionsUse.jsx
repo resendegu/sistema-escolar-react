@@ -313,5 +313,10 @@ function capitalizeFirstLetter(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
+const getBrazilianHolidays = async (year) => {
+    const response = await fetch(`https://brasilapi.com.br/api/feriados/v1/${year}`)
+    console.log(await response.json())
+    
+}
  
-export { calculateAge, checkCpf, getAddress, enrollStudent, handleSendClassData, formatBytes, generateClassCode, handleEnableDisableStudents, handleTransferStudents, handleAddTeacher, handleDeleteClass, handleRemoveTeacher, getRandomKey, handleClassOpen, handleCloseClass, capitalizeFirstLetter };
+export { calculateAge, checkCpf, getAddress, enrollStudent, handleSendClassData, formatBytes, generateClassCode, handleEnableDisableStudents, handleTransferStudents, handleAddTeacher, handleDeleteClass, handleRemoveTeacher, getRandomKey, handleClassOpen, handleCloseClass, capitalizeFirstLetter, getBrazilianHolidays };
