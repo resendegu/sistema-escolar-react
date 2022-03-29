@@ -23,6 +23,7 @@ import { useRef } from "react";
 import CalendarComponent from "../muiDashboard/Calendar";
 import { useConfirmation } from "../contexts/ConfirmContext";
 import AddClass from "../secretaria/components/addClass/AddClass";
+import GradeDefinition from "./GradeDefinition";
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -152,6 +153,7 @@ const ClassInfo = ({classDataRows, onClose}) => {
     const [eventTextColor, setEventTextColor] = useState('#FFFFFF')
     const [periodName, setPeriodName] = useState('');
     const [numberOfClasses, setNumberOfClasses] = useState('');
+    const [gradeDefinition, setGradeDefinition] = useState(false);
 
     
     useEffect(() => {
@@ -619,8 +621,14 @@ const handleConfirmCloseClass = async () => {
   
 }
 
+  const handleGradeDefinition = () => {
+    setGradeDefinition(true);
+  }
+
     return ( 
         <Fragment>
+          <GradeDefinition open={gradeDefinition} onClose={setGradeDefinition} classCode={classCode}/>
+
           <Dialog 
             aria-labelledby="confirmation-dialog-title"
             open={openDialog}
@@ -901,7 +909,7 @@ const handleConfirmCloseClass = async () => {
                       spacing={1}
                     >
                       <Grid item>
-                        <Avatar className={classes.orange} className={classes.avatar}>
+                        <Avatar className={classes.avatar}>
                           <Assistant />
                         </Avatar>
                       </Grid>
@@ -925,7 +933,7 @@ const handleConfirmCloseClass = async () => {
                         <Button fullWidth size="large" variant="contained" color="primary" startIcon={<DeleteForever />} onClick={handleDeleteClassConfirm}>Excluir turma</Button>
                       </Box>
                       <Box m={1}>
-                        <Button fullWidth size="large" variant="contained" color="primary" startIcon={<Grade />}>Distribuir notas</Button>
+                        <Button fullWidth size="large" variant="contained" color="primary" startIcon={<Grade />} onClick={handleGradeDefinition}>Distribuir notas</Button>
                       </Box>
                       
                       <Box m={1}>
@@ -958,7 +966,7 @@ const handleConfirmCloseClass = async () => {
                         spacing={1}
                       >
                         <Grid item>
-                          <Avatar className={classes.orange} className={classes.avatar}>
+                          <Avatar className={classes.avatar}>
                             <School />
                           </Avatar>
                         </Grid>

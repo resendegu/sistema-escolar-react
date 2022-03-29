@@ -23,6 +23,7 @@ const chatsPath = 'chats/';
 const notificationsPath = 'notifications/';
 const teachersListPath = 'listaDeProfessores/';
 const followUpPath = 'followUp/'
+const performanceGradesPath = 'notasDesempenho/referencia'
 
 
 // Setting the root ref
@@ -42,6 +43,7 @@ const disabledStudentsRef = rootRef.child(disabledStudentsPath);
 const teachersListRef = rootRef.child(teachersListPath);
 const calendarRef = rootRef.child(calendarPath);
 const followUpRef = rootRef.child(followUpPath);
+const performanceGradesRef = rootRef.child(performanceGradesPath);
 
 // Export the refs created
-export { classesRef, booksRef, coursesRef, contractRef, daysCodesRef, additionalFieldsRef, basicDataRef, notificationsRef, studentsRef, disabledStudentsRef, teachersListRef, calendarRef, followUpRef };
+export { classesRef, booksRef, coursesRef, contractRef, daysCodesRef, additionalFieldsRef, basicDataRef, notificationsRef, studentsRef, disabledStudentsRef, teachersListRef, calendarRef, followUpRef, performanceGradesRef };

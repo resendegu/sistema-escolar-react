@@ -31,8 +31,9 @@ const CalendarComponent = ({sourceId, isFromClassCode}) => {
     const initialView = localStorage.getItem('view') || 'dayGridMonth';
 
     const {enqueueSnackbar, closeSnackbar} = useSnackbar()
-    const [viewSource, setViewSource] = useState(sourceId)
+
     const [eventsSources, setEventsSources] = useState([]);
+    const [viewSources, setViewSources] = useState(eventsSources)
     const [sourceSelected, setSourceSelected] = useState({id: ''});
     const [view, setView] = useState(initialView);
     const [eventId, setEventId] = useState('');
@@ -52,19 +53,20 @@ const CalendarComponent = ({sourceId, isFromClassCode}) => {
     const [api, setApi] = useState();
    
     useEffect(() => {
-        console.log(viewSource)
-        if (viewSource) {
-            calendarRef.orderByChild('id').equalTo(viewSource).on('value', (snapshot) => {
+        
+        if (sourceId) {
+            
+            calendarRef.orderByChild('id').equalTo(sourceId).on('value', (snapshot) => {
                 const sources = snapshot.val()
                 console.log(sources)
-        
+                setEventsSources(sources)
                 if (sources && sources.hasOwnProperty('length')) {
-                    setEventsSources(sources)
+                    setViewSources(sources)
                 } else {
                     for (const key in sources) {
                         if (Object.hasOwnProperty.call(sources, key)) {
                             const single = sources[key];
-                            sources !== null && setEventsSources([single])
+                            sources !== null && setViewSources([single])
                         }
                     }
                     
@@ -76,11 +78,11 @@ const CalendarComponent = ({sourceId, isFromClassCode}) => {
             calendarRef.on('value', (snapshot) => {
                 const sources = snapshot.val()
                 console.log(sources)
-        
+                setEventsSources(sources)
                 if (sources && sources.hasOwnProperty('length')) {
-                    setEventsSources(sources)
+                    setViewSources(sources)
                 } else {
-                    sources !== null && setEventsSources([sources])
+                    sources !== null && setViewSources([sources])
                 }
             }, (error) => {
                 enqueueSnackbar(error.message, {title: 'Error', variant: 'error', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button>})
@@ -91,7 +93,7 @@ const CalendarComponent = ({sourceId, isFromClassCode}) => {
         return () => {
             calendarRef.off('value');
         }
-    }, [sourceId, viewSource])
+    }, [sourceId])
     
 
     const open = Boolean(anchorEl);
@@ -240,6 +242,10 @@ const CalendarComponent = ({sourceId, isFromClassCode}) => {
         setOpenNewCalendar(true)
     }
 
+    const handleShowSources = (id, show) => {
+        const view = eventsSources.filter(source => source.id )
+    }
+
     return (
         <Fragment>
             
@@ -375,22 +381,16 @@ const CalendarComponent = ({sourceId, isFromClassCode}) => {
                     >
                         <Box m={2}>
                         
-                            <InputLabel id="label">Escolha um calendário:</InputLabel>
-                            <Select
-                                labelId='label'
-                                value={viewSource}
-                                onChange={(e) => setViewSource(e.target.value)} 
-                                native
-                                style={{minWidth: '177px'}}
-                            >
-                                <option aria-label="None" value="" />
-                                {eventsSources.length > 0 && eventsSources.map((source, i) => 
-                                    <option value={source.id}>{source.id}</option>
-                                )}
-                
-                            </Select>
+                            <InputLabel id="label">Exibir calendários:</InputLabel>
+                            {eventsSources.map((calendar, i) => (
+                                <FormControlLabel
+                                    control={<Checkbox checked={viewSources.indexOf(calendar) !== -1} onChange={(e) => handleShowSources(calendar.id, e.target.checked)} name={calendar.id} />}
+                                    label={calendar.id}
+                                />
+                            ))}
+                            
                             <Tooltip title={'Ver todos os calendários'}>
-                                <IconButton variant='outlined' edge="end" color="inherit" onClick={(e) => setViewSource(sourceId)}><Visibility /></IconButton>
+                                <IconButton variant='outlined' edge="end" color="inherit" ><Visibility /></IconButton>
                             </Tooltip>
                         </Box>
                         
@@ -455,7 +455,7 @@ const CalendarComponent = ({sourceId, isFromClassCode}) => {
                     }}
                     
                     locale={brLocale}
-                    eventSources={eventsSources}
+                    eventSources={viewSources}
                     eventClick={handleEventClick}
                     dateClick={handleDateClick}
                     // selectable
