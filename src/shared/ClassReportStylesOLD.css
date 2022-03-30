@@ -1,0 +1,20 @@
+.tg  {border-collapse:collapse; border-style: solid; border-color:#000000;border-spacing:0;margin:0px auto; width: 28cm;}
+      .tg td{background-color:#ffffff;border-color:#000000;border-style:hidden;border-width:1px;color:#444;
+        font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:2px 15px;word-break:normal;}
+      .tg th{background-color:#ffffff;border-color:#000000;border-style:hidden;border-width:1px;color:#fff;
+        font-family:Arial, sans-serif;font-size:14px;font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}
+      .tg .tg-yj5y{background-color:#efefef;border-color:inherit;text-align:center;vertical-align:center}
+      .tg .tg-sg5v{border-bottom: solid; font-size: 9pt;}
+      .tg .tg-wp8o{text-align:center;vertical-align:center; }
+      .tg .tg-m1nc{background-color:#ffffff;border-color:inherit;color:#000000;font-size:10px;text-align:right;vertical-align:center}
+      .tg .tg-0pky{border-color:inherit;border-style: solid; text-align:left;vertical-align:center; text-align: center;}
+      .tg .tg-73oq{border-color:#000000;text-align:left;vertical-align:center}
+      .tg .tg-hvas{font-size:xx-small;text-align:left;vertical-align:center}
+      .tg .tg-0lax{text-align:left;vertical-align:center; font-size: 9pt; border-style: solid; }
+      .blank_row
+        {
+            height: 10px !important; /* overwrites any other rules */
+            
+            border-top: #000000;
+            border-bottom: #000000;
+        }

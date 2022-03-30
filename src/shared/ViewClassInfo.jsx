@@ -25,6 +25,7 @@ import { useConfirmation } from "../contexts/ConfirmContext";
 import AddClass from "../secretaria/components/addClass/AddClass";
 import GradeDefinition from "./GradeDefinition";
 import ClassReport from "./ClassReport";
+import ClassReportOLD from "./ClassReportOLD";
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -640,7 +641,7 @@ const handleConfirmCloseClass = async () => {
 
     return ( 
         <Fragment>
-          <ClassReport open={classReport} onClose={setClassReport} classCode={classCode}/>
+          <ClassReportOLD open={classReport} onClose={setClassReport} classCode={classCode}/>
           <GradeDefinition open={gradeDefinition} onClose={setGradeDefinition} classCode={classCode}/>
 
           <Dialog 
