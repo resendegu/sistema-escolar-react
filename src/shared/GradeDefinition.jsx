@@ -1,12 +1,12 @@
 import { Box, Button, Checkbox, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, IconButton, makeStyles, TextField, Tooltip, useMediaQuery, useTheme } from "@material-ui/core";
-import { Add, Close, Delete, FormatListNumberedRtl, Help, QuestionAnswer } from "@material-ui/icons";
+import { Add, Close, Delete, FormatListNumberedRtl, Help, QuestionAnswer, Refresh } from "@material-ui/icons";
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import { classesRef, performanceGradesRef } from "../services/databaseRefs";
 import { useSnackbar } from "notistack";
 
 const useStyles = makeStyles((theme) => ({
-    textFields: {
-      
+    table: {
+        minWidth: 650,
     },
     flex: {
         display: "flex",
@@ -18,6 +18,8 @@ const useStyles = makeStyles((theme) => ({
         },
     }
   }));
+
+  
 
 const GradeDefinition = ({open, onClose, classCode}) => {
     const classes = useStyles();
@@ -33,6 +35,18 @@ const GradeDefinition = ({open, onClose, classCode}) => {
 
     useEffect(() => {getData()}, [classCode]);
 
+    function createData(name, calories, fat, carbs, protein) {
+        return { name, calories, fat, carbs, protein };
+      }
+
+      const rows = [
+        createData('Frozen yoghurt', 159, 6.0, 24, 4.0),
+        createData('Ice cream sandwich', 237, 9.0, 37, 4.3),
+        createData('Eclair', 262, 16.0, 24, 6.0),
+        createData('Cupcake', 305, 3.7, 67, 4.3),
+        createData('Gingerbread', 356, 16.0, 49, 3.9),
+      ];
+
     const getData = async () => {
         let performanceGrades = (await performanceGradesRef.once('value')).val();
         let localPerformanceSum = 0;
@@ -43,14 +57,16 @@ const GradeDefinition = ({open, onClose, classCode}) => {
             }
         }
         setPerformanceGradesSum(localPerformanceSum);
-        let classGrades = (await classesRef.child('notas').once('value')).val();
+        let classGrades = (await classesRef.child(classCode).child('notas').once('value')).val();
         let gradesArray = [];
         for (const key in classGrades) {
             if (Object.hasOwnProperty.call(classGrades, key)) {
                 const value = classGrades[key];
-                gradesArray.push({key: key, value: value});
+                gradesArray.push({key: key, value: value, readonly: key === "Desempenho"});
             }
         }
+        console.log(gradesArray)
+        setGrades([...gradesArray]);
     }
 
     const handleSum = (localGrades) => {
@@ -80,9 +96,9 @@ const GradeDefinition = ({open, onClose, classCode}) => {
                     localGrades[grade.key] = grade.value;
                 })
                 console.log(localGrades)
-                //await classesRef.child().child().set();
+                await classesRef.child(classCode).child('notas').set(localGrades);
                 enqueueSnackbar("Notas distribuídas com sucesso.", {title: 'Sucesso', variant: 'success', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
-                
+                onClose();
                 
             } catch (error) {
                 console.log(error);
@@ -110,7 +126,9 @@ const GradeDefinition = ({open, onClose, classCode}) => {
             handleAddGrade('Desempenho', performanceGradesSum, true)
         } else {
             //handleDeleteGrade()
-            console.log(grades.indexOf({readonly: true}))
+            let localGrades = grades;
+            const newGrades = localGrades.filter(grade => grade.readonly !== true);
+            setGrades([...newGrades]);
         }
             
     }
@@ -155,9 +173,10 @@ const GradeDefinition = ({open, onClose, classCode}) => {
                             disabled={grade.readonly}
                             required
                         />
+                        {!grade.readonly &&(
                         <IconButton aria-label="delete" onClick={() => handleDeleteGrade(i)}>
                             <Delete />
-                        </IconButton>
+                        </IconButton>)}
                     </div>  
                     
                 </Fragment>
@@ -173,21 +192,29 @@ const GradeDefinition = ({open, onClose, classCode}) => {
                 <DialogTitle> Distribuição de notas </DialogTitle>
                 <DialogContent>
                     <div>
-                        <FormControlLabel
-                            control={
-                            <Checkbox
-                                //checked={state.checkedB}
-                                //onChange={handleChange}
-                                name="checkedB"
-                                color="primary"
-                                onChange={handleChangePerformanceGrade}
+                        <div>
+                            <FormControlLabel
+                                control={
+                                <Checkbox
+                                    //checked={state.checkedB}
+                                    //onChange={handleChange}
+                                    name="checkedB"
+                                    color="primary"
+                                    onChange={handleChangePerformanceGrade}
+                                    defaultChecked={true && grades.filter(grade => grade.readonly === true)}
+                                />
+                                }
+                                label="Incluir desempenho"
                             />
-                            }
-                            label="Incluir desempenho"
-                        />
-                        <Tooltip title={"Ao marcar esta caixa, o somatório das notas de desempenho (que são definidas pela secretaria) será adicionado automaticamente ao somatório da distribuição de notas desta turma."}>
-                            <Help fontSize="small" />
-                        </Tooltip>
+                            <Tooltip title={"Ao marcar esta caixa, o somatório das notas de desempenho (que são definidas pela secretaria) será adicionado automaticamente ao somatório da distribuição de notas desta turma."}>
+                                <Help fontSize="small" />
+                            </Tooltip>
+                            
+                            <Button endIcon={<Refresh />} style={{float: "right"}} onClick={getData}>Atualizar</Button>
+                            
+                            
+                        </div>
+                        
                     </div>
                     <div>
                         <form ref={form} onSubmit={handleSaveData}>
@@ -199,7 +226,7 @@ const GradeDefinition = ({open, onClose, classCode}) => {
                     </div>
                     <div className={classes.flex}>
                         <div>
-                            <IconButton aria-label="delete" onClick={handleAddGrade}>
+                            <IconButton aria-label="delete" onClick={() => handleAddGrade()}>
                                 <Add />
                             </IconButton>
                             <label>Nova nota</label>
