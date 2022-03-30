@@ -30,6 +30,7 @@ const performanceGradesPath = 'notasDesempenho/referencia'
 const rootRef = database.ref(rootPath);
 
 // Setting any other refs in the database structure
+const schoolInfoRef = rootRef.child(schoolInfoPath);
 const classesRef = rootRef.child(classesPath);
 const booksRef = rootRef.child(booksPath);
 const coursesRef = rootRef.child(coursesPath);
@@ -46,4 +47,4 @@ const followUpRef = rootRef.child(followUpPath);
 const performanceGradesRef = rootRef.child(performanceGradesPath);
 
 // Export the refs created
-export { classesRef, booksRef, coursesRef, contractRef, daysCodesRef, additionalFieldsRef, basicDataRef, notificationsRef, studentsRef, disabledStudentsRef, teachersListRef, calendarRef, followUpRef, performanceGradesRef };
+export { schoolInfoRef, classesRef, booksRef, coursesRef, contractRef, daysCodesRef, additionalFieldsRef, basicDataRef, notificationsRef, studentsRef, disabledStudentsRef, teachersListRef, calendarRef, followUpRef, performanceGradesRef };

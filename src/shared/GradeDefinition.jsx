@@ -15,6 +15,7 @@ const useStyles = makeStyles((theme) => ({
         '& > div': {
             width: '25ch',
             margin: theme.spacing(1),
+            
         },
     }
   }));
@@ -98,7 +99,7 @@ const GradeDefinition = ({open, onClose, classCode}) => {
                 console.log(localGrades)
                 await classesRef.child(classCode).child('notas').set(localGrades);
                 enqueueSnackbar("Notas distribuídas com sucesso.", {title: 'Sucesso', variant: 'success', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
-                onClose();
+                onClose(false);
                 
             } catch (error) {
                 console.log(error);

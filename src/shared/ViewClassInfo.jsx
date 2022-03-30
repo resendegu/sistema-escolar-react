@@ -24,6 +24,7 @@ import CalendarComponent from "../muiDashboard/Calendar";
 import { useConfirmation } from "../contexts/ConfirmContext";
 import AddClass from "../secretaria/components/addClass/AddClass";
 import GradeDefinition from "./GradeDefinition";
+import ClassReport from "./ClassReport";
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -154,6 +155,7 @@ const ClassInfo = ({classDataRows, onClose}) => {
     const [periodName, setPeriodName] = useState('');
     const [numberOfClasses, setNumberOfClasses] = useState('');
     const [gradeDefinition, setGradeDefinition] = useState(false);
+    const [classReport, setClassReport] = useState(false);
 
     
     useEffect(() => {
@@ -212,6 +214,13 @@ const ClassInfo = ({classDataRows, onClose}) => {
             if (Object.hasOwnProperty.call(students, id)) {
               let student = students[id];
               student.id = id
+              student.gradeSum = 0;
+              for (const gradeName in student.notas) {
+                if (Object.hasOwnProperty.call(student.notas, gradeName)) {
+                  const grade = student.notas[gradeName];
+                  student.gradeSum += parseFloat(grade);
+                }
+              }
               studentsArray.push(student)
             }
           }
@@ -625,8 +634,13 @@ const handleConfirmCloseClass = async () => {
     setGradeDefinition(true);
   }
 
+  const handleClassReport = () => {
+    setClassReport(true);  
+  }
+
     return ( 
         <Fragment>
+          <ClassReport open={classReport} onClose={setClassReport} classCode={classCode}/>
           <GradeDefinition open={gradeDefinition} onClose={setGradeDefinition} classCode={classCode}/>
 
           <Dialog 
@@ -937,7 +951,7 @@ const handleConfirmCloseClass = async () => {
                       </Box>
                       
                       <Box m={1}>
-                        <Button fullWidth size="large" variant="contained" color="primary" startIcon={<Print />}>Diário de classe</Button>
+                        <Button fullWidth size="large" variant="contained" color="primary" startIcon={<Print />}onClick={handleClassReport}>Diário de classe</Button>
                       </Box>
                       <Box m={1}>
                         <Button fullWidth size="large" variant="contained" color="primary" onClick={(classData.hasOwnProperty('status') && classData.status.turma === 'aberta') ? handleConfirmCloseClass : handleConfirmOpenClass} startIcon={(classData.hasOwnProperty('status') && classData.status.turma === 'aberta') ? <Lock /> : <LockOpen />}>{(classData.hasOwnProperty('status') && classData.status.turma === 'aberta') ? 'Fechar ' : 'Abrir '}turma</Button>
@@ -989,7 +1003,7 @@ const handleConfirmCloseClass = async () => {
                               [
                                   {field: 'nome', headerName: 'Nome', width: 200},
                                   {field: 'id', headerName: 'Matrícula', width: 140},
-                                  
+                                  {field: 'gradeSum', headerName: 'Nota atual', width: 145}
                               ]
                           } 
                           disableSelectionOnClick 
@@ -1004,12 +1018,12 @@ const handleConfirmCloseClass = async () => {
                           onSelectionModelChange={handleRowSelection}
                           onRowClick={handleRowClick}
                         />
-                        {selectedRows.length > 0 && 
+                        
                           <div className={classes.container}>
-                            <Button size="medium" variant="contained" color="primary" startIcon={<TransferWithinAStation />} onClick={handleConfirmTransfer}>Transferir</Button>
-                            <Button size="medium" variant="contained" color="secondary" startIcon={<Clear />} onClick={handleConfirmDisable}>Desativar</Button>
+                            <Button size="medium" variant="contained" color="primary" disabled={selectedRows.length === 0} startIcon={<TransferWithinAStation />} onClick={handleConfirmTransfer}>Transferir</Button>
+                            <Button size="medium" variant="contained" color="secondary" startIcon={<Clear />} disabled={selectedRows.length === 0} onClick={handleConfirmDisable}>Desativar</Button>
                           </div>
-                        }
+                        
                         
                       </div>
                       
