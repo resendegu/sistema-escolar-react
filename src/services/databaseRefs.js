@@ -45,6 +45,7 @@ const teachersListRef = rootRef.child(teachersListPath);
 const calendarRef = rootRef.child(calendarPath);
 const followUpRef = rootRef.child(followUpPath);
 const performanceGradesRef = rootRef.child(performanceGradesPath);
+const usersRef = rootRef.child(usersPath);
 
 // Export the refs created
-export { schoolInfoRef, classesRef, booksRef, coursesRef, contractRef, daysCodesRef, additionalFieldsRef, basicDataRef, notificationsRef, studentsRef, disabledStudentsRef, teachersListRef, calendarRef, followUpRef, performanceGradesRef };
+export { schoolInfoRef, classesRef, booksRef, coursesRef, contractRef, daysCodesRef, additionalFieldsRef, basicDataRef, notificationsRef, studentsRef, disabledStudentsRef, teachersListRef, calendarRef, followUpRef, performanceGradesRef, usersRef };

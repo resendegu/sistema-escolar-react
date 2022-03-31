@@ -1,21 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import { makeStyles } from '@material-ui/core/styles';
-import Table from '@material-ui/core/Table';
-import TableBody from '@material-ui/core/TableBody';
-import TableCell from '@material-ui/core/TableCell';
-import TableContainer from '@material-ui/core/TableContainer';
-import TableHead from '@material-ui/core/TableHead';
-import TableRow from '@material-ui/core/TableRow';
-import Paper from '@material-ui/core/Paper';
-import { Button, Dialog, DialogActions, DialogTitle, DialogContent } from '@material-ui/core';
+import { Backdrop, Button, CircularProgress, Dialog, DialogActions, DialogContent, makeStyles } from '@material-ui/core';
 import { functions } from '../services/firebase';
 import { classesRef, performanceGradesRef, schoolInfoRef } from '../services/databaseRefs';
 import './ClassReportStylesOLD.css'
 
-
+const useStyles = makeStyles((theme) => ({
+    backdrop: {
+        zIndex: 9999999999999999999999999999999,
+        color: '#fff',
+    },
+     
+   }));
 
 export default function ClassReportOLD({classCode, open, onClose}) {
-
+    const classes = useStyles();
+    const [loader, setLoader] = useState(false);
  
   const getData = async () => {
     let hash = window.location.hash;
@@ -127,7 +126,7 @@ function lastRow(row) {
 }
 
 async function geraDiario(turma, codHistorico) {
-    //loaderRun(true, 'Aguarde, processando...')
+    setLoader(true);
     const turmaRef = classesRef.child(turma);
     const desempenhoRef = performanceGradesRef
     const infoEscola = (await schoolInfoRef.once('value')).val();
@@ -202,13 +201,14 @@ async function geraDiario(turma, codHistorico) {
     lastRowArray.push({text: 'Assinatura', size: 14})
     lastRow(lastRowArray)
 
-    // loaderRun()
+    setLoader(false)
 }
   
   
 
   return (
       <>
+      <Backdrop open={loader} className={classes.backdrop}><CircularProgress color="inherit" /></Backdrop>
         <Dialog open={open} fullScreen>
             <DialogContent>
             <table class="tg">
@@ -217,7 +217,7 @@ async function geraDiario(turma, codHistorico) {
             <th class="tg-m1nc" colspan="16" id="timestamp">Data de emissão: --/--/-- --:--:--</th>
           </tr>
           <tr id="title">
-            <td class="tg-wp8o" colspan="16"><span style={{fontWeight: "bold"}}>TÍTULO TABELA</span></td>
+            <td class="tg-wp8o" colspan="16"><span style={{fontWeight: "bold"}}>Carregando dados...</span></td>
           </tr>
           <tr id="infoSchool">
             <td class="tg-wp8o" colspan="16">INFORMAÇÕES DA ESCOLA</td>

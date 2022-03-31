@@ -15,6 +15,7 @@ import { Button } from '@material-ui/core';
 import { notificationsRef } from './services/databaseRefs';
 
 import { ConfirmationServiceProvider } from './contexts/ConfirmContext';
+import Professores from './professores/Professores';
 
 export const AuthContext = createContext({});
 
@@ -66,6 +67,7 @@ function App() {
             <Switch>
               <Route path="/" exact component={Home} />
               <Route path="/secretaria" component={Secretaria} />
+              <Route path="/professores" component={Professores} />
             </Switch>
             
           </AuthContextProvider>

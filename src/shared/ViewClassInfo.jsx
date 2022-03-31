@@ -641,7 +641,7 @@ const handleConfirmCloseClass = async () => {
 
     return ( 
         <Fragment>
-          <ClassReportOLD open={classReport} onClose={setClassReport} classCode={classCode}/>
+          {classReport && <ClassReportOLD open={classReport} onClose={setClassReport} classCode={classCode}/>}
           <GradeDefinition open={gradeDefinition} onClose={setGradeDefinition} classCode={classCode}/>
 
           <Dialog 
