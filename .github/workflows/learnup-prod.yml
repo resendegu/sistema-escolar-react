@@ -5,7 +5,7 @@ name: Deploy to LearnUp Production
 'on':
   push:
     branches:
-      - learnup-prod
+      - master
 
 
 jobs:
@@ -30,5 +30,4 @@ jobs:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
           firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_LEARNUPSCHOOL }}'
           channelId: live
-          target: learnupschool
           projectId: learnupschool

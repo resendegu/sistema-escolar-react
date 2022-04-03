@@ -3,5 +3,13 @@
     "default": "projetoxagencia",
     "learnup-prod": "learnupschool"
   },
-  "targets": {}
+  "targets": {
+    "projetoxagencia": {
+      "hosting": {
+        "prox-prod": [
+          "escola-react"
+        ]
+      }
+    }
+  }
 }
