@@ -5,6 +5,7 @@ import { useSnackbar } from "notistack";
 import { Fragment, useEffect, useState } from "react";
 import { useAuth } from "../../../hooks/useAuth";
 import { classesRef, disabledStudentsRef, studentsRef, usersRef } from "../../../services/databaseRefs";
+import { functions } from "../../../services/firebase";
 import { LocaleText } from "../../../shared/DataGridLocaleText";
 import FullScreenDialog from "../../../shared/FullscreenDialog";
 import { handleEnableDisableStudents } from "../../../shared/FunctionsUse";
@@ -91,6 +92,9 @@ const Students = () => {
     
     async function getData() {
         setLoading(true)
+        let acess
+        acess = await functions.httpsCallable("verificadorDeAcesso") 
+        console.log(await acess('professor'))
         const localTeacherClasses = (await usersRef.child(user.id).child("professor/turmas").once("value")).val()
         let localTeacherStudents = [];
         for (const id in localTeacherClasses) {
@@ -106,14 +110,14 @@ const Students = () => {
         }
         console.log(localTeacherStudents)
 
-        let snapshot = await studentsRef.once('value');
+        //let snapshot = await studentsRef.once('value');
         
-        let students = snapshot.exists() ? snapshot.val() : []
+        //let students = snapshot.exists() ? snapshot.val() : []
         let studentsArray = []
         for (const i in localTeacherStudents) {
             if (Object.hasOwnProperty.call(localTeacherStudents, i)) {
                 const id = localTeacherStudents[i];
-                let student = students[id];
+                let student = (await studentsRef.child(id).once('value')).val()
                 console.log(id)
                 student.id = id;
                 studentsArray.push(student);
