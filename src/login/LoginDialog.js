@@ -8,7 +8,7 @@ import {
 import FormDialog from "../shared/FormDialog";
 
 import { useAuth } from "../hooks/useAuth";
-import SimpleSnackbar from "../shared/Snackbar";
+import { useSnackbar } from "notistack";
 
 const LoginDialog = (props) => {
     const {
@@ -21,6 +21,7 @@ const LoginDialog = (props) => {
     const [ open, setOpen ] = useState(true);
     const [ status, setStatus ] = useState(null)
     const [ showSnack, setShowSnack ] = useState(false);
+    const {enqueueSnackbar, closeSnackbar} = useSnackbar();
 
     const { signInWithEmailAndPassword, passwordRecover } = useAuth();
 
@@ -31,12 +32,13 @@ const LoginDialog = (props) => {
         if (loginEmail.current.value !== "") {
             try {
                 await passwordRecover(loginEmail.current.value);
-                setShowSnack(true);
+                enqueueSnackbar("E-mail enviado. Verifique sua caixa de entrada ou SPAM.", {title: 'Info', variant: 'info', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
             
                 
             } catch (error) {
                 console.log(error)
                 setStatus(error.code)
+                enqueueSnackbar(error.message, {title: 'Erro', variant: 'error', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
             }
         } else {
             setStatus('auth/user-not-found')
@@ -73,18 +75,6 @@ const LoginDialog = (props) => {
 
     return (
         <Fragment>
-            {showSnack ? (
-                <SimpleSnackbar 
-                    duration={10000} 
-                    message={'Um e-mail foi enviado para você com um link para recuperação.'} 
-                    closeButtonLabel={'Ok'}
-                    isOpen={true}
-                    onClose={setShowSnack(false)}
-                />
-            ) : ""
-            
-            }
-            
             <FormDialog
                 open={open}
                 onClose={onClose}
@@ -138,7 +128,7 @@ const LoginDialog = (props) => {
                             status === "auth/wrong-password" ? (
                                 <span>
                                 Senha incorreta. Tente novamente ou clique em{" "}
-                                <b>&quot;Esqueçeu sua senha?&quot;</b> para redefini-la.
+                                <b>&quot;Esqueceu sua senha?&quot;</b> para redefini-la.
                                 </span>
                             ) : (
                                 ""
@@ -159,9 +149,10 @@ const LoginDialog = (props) => {
                         color="secondary"
                         disabled={isLoading}
                         size="large"
+                        endIcon={isLoading && <CircularProgress />}
                         >
                         Login
-                        {isLoading && <CircularProgress />}
+                        
                         </Button>
                         <Typography
                             align="center"
