@@ -152,7 +152,7 @@ const StudentInfo = (props) => {
   }
 
   const handleConfirmEnable = () => {
-    setDesablingStudent(false)
+    setDesablingStudent(true)
     setOpenDialog(true)
   }
 
@@ -224,14 +224,14 @@ const handleOpenFollowUp = () => {
               >
                 <DialogTitle id="confirmation-dialog-title">Você confirma esta ação?</DialogTitle>
                 <DialogContent>
-                    <DialogContentText>{disabledStudent ? `Você está ${disabledStudent ? 'ativando' : 'desativando'} este aluno.` : `Você está transferindo este aluno. Escolha a turma de destino:`}</DialogContentText>
-                    {(disabledStudent) && 
+                    <DialogContentText>{desablingStudent ? `Você está ${disabledStudent ? 'ativando' : 'desativando'} este aluno.` : `Você está transferindo este aluno. Escolha a turma de destino:`}</DialogContentText>
+                    {(disabledStudent || !desablingStudent) && 
                     <Select 
                       autoFocus
                       fullWidth
                       required
-                      onChange={!disabledStudent ? (e) => setClassCodeTransfer(e.target.value) : (e) => setClassCodeEnable(e.target.value)}
-                      value={!disabledStudent ? classCodeTransfer : classCodeEnable}
+                      onChange={!desablingStudent ? (e) => setClassCodeTransfer(e.target.value) : (e) => setClassCodeEnable(e.target.value)}
+                      value={!desablingStudent ? classCodeTransfer : classCodeEnable}
                     >
                       
                       {classesCodes.map((id, i) => <MenuItem value={id}>{id}</MenuItem>)}
