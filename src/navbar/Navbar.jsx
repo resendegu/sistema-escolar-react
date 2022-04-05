@@ -9,7 +9,7 @@ import AccountCircle from '@material-ui/icons/AccountCircle';
 import MenuItem from '@material-ui/core/MenuItem';
 import Menu from '@material-ui/core/Menu';
 import ResponsiveDrawer from './components/Drawer';
-import { Badge, Dialog, Grid, ListItemIcon, MenuList } from '@material-ui/core';
+import { Badge, Box, Dialog, Grid, ListItemIcon, MenuList } from '@material-ui/core';
 import { useAuth } from '../hooks/useAuth';
 import LoginDialog from '../login/LoginDialog';
 import SignUpDialog from '../login/SignUpDialog';
@@ -221,17 +221,24 @@ export default function Navbar(props) {
                     id="menu-appbar"
                     anchorEl={anchorEl}
                     anchorOrigin={{
-                      vertical: 'top',
-                      horizontal: 'right',
+                      vertical: 'bottom',
+                      horizontal: 'bottom',
                     }}
                     keepMounted
                     transformOrigin={{
-                      vertical: 'top',
+                      vertical: 'bottom',
                       horizontal: 'right',
                     }}
                     open={open}
                     onClose={handleClose}
                   >
+                    {/* <MenuItem disabled> */}
+                    <Box m={1}>
+                      <Typography component={'p'} variant='h6'>{user.name}</Typography>
+                      <Typography style={{color: 'gray'}} component={'small'} variant="subtitle2">{user.email}</Typography>
+                    </Box>
+                      
+                    {/* </MenuItem> */}
                     <MenuItem onClick={handleAccountCenter}>Central da Conta</MenuItem>
                     <MenuItem onClick={handleSignOut}>Sair</MenuItem>
                   </Menu>

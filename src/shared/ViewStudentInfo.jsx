@@ -224,14 +224,14 @@ const handleOpenFollowUp = () => {
               >
                 <DialogTitle id="confirmation-dialog-title">Você confirma esta ação?</DialogTitle>
                 <DialogContent>
-                    <DialogContentText>{desablingStudent ? `Você está ${disabledStudent ? 'ativando' : 'desativando'} este aluno.` : `Você está transferindo este aluno. Escolha a turma de destino:`}</DialogContentText>
-                    {(disabledStudent || !desablingStudent) && 
+                    <DialogContentText>{disabledStudent ? `Você está ${disabledStudent ? 'ativando' : 'desativando'} este aluno.` : `Você está transferindo este aluno. Escolha a turma de destino:`}</DialogContentText>
+                    {(disabledStudent) && 
                     <Select 
                       autoFocus
                       fullWidth
                       required
-                      onChange={!desablingStudent ? (e) => setClassCodeTransfer(e.target.value) : (e) => setClassCodeEnable(e.target.value)}
-                      value={!desablingStudent ? classCodeTransfer : classCodeEnable}
+                      onChange={!disabledStudent ? (e) => setClassCodeTransfer(e.target.value) : (e) => setClassCodeEnable(e.target.value)}
+                      value={!disabledStudent ? classCodeTransfer : classCodeEnable}
                     >
                       
                       {classesCodes.map((id, i) => <MenuItem value={id}>{id}</MenuItem>)}
@@ -258,7 +258,7 @@ const handleOpenFollowUp = () => {
                       spacing={1}
                     >
                       <Grid item>
-                        <Avatar className={classes.orange} className={classes.avatar}>
+                        <Avatar className={classes.orange}>
                           <AccountBox />
                         </Avatar>
                       </Grid>
@@ -336,7 +336,7 @@ const handleOpenFollowUp = () => {
                       spacing={1}
                     >
                       <Grid item>
-                        <Avatar className={classes.orange} className={classes.avatar}>
+                        <Avatar className={classes.orange}>
                           <Assistant />
                         </Avatar>
                       </Grid>
@@ -390,7 +390,7 @@ const handleOpenFollowUp = () => {
                         spacing={1}
                       >
                         <Grid item>
-                          <Avatar className={classes.orange} className={classes.avatar}>
+                          <Avatar className={classes.orange}>
                             <School />
                           </Avatar>
                         </Grid>

@@ -1418,42 +1418,42 @@ exports.newYear = functions.pubsub.schedule('0 2 1 1 *')
 
 // Functions for chat app
 
-exports.chatListener = functions.database.instance('chatchat-7d3bc').ref('chats').onCreate(async (snapshot, context) => {
+// exports.chatListener = functions.database.instance('chatchat-7d3bc').ref('chats').onCreate(async (snapshot, context) => {
     
-    const chat = snapshot.val();
-    const chatKey = chat.chatKey;
+//     const chat = snapshot.val();
+//     const chatKey = chat.chatKey;
 
-    await admin.database('https://chatchat-7d3bc.firebaseio.com/').ref('chats').child(chatKey + '/createdAt').set(context.timestamp)
-    
-
-    
-    const settingsRef = admin.database('https://chatchat-7d3bc.firebaseio.com/').ref('settings')
-
-    const settings = (await settingsRef.once('value')).val()
-
-    if (settings.sendEmail) {
-        const now = new Date(context.timestamp)
-        const emailContent = {
-            to: 'chat@grupoprox.com',
-            cco: settings.emails,
-            message: {
-                subject: `Novo Chat pendente`,
-                text: `${chat.name.split(' ')[0]} está esperando ser atendido.`,
-                html: `<h3>${chat.name.split(' ')[0]} está esperando ser atendido.</h3><p>Informações coletadas já coletadas:</p><p>Nome: ${chat.name}</p><p> Criado em: ${now.toLocaleDateString()}</p><p>Sistemas GrupoProX.</p>`
-            }
-        }
-
-        const firestoreRef = admin.firestore().collection('mail');
-        firestoreRef.add(emailContent).then(() => {
-            console.log('Queued email for delivery to gustavo@resende.app')
-        }).catch(error => {
-            console.error(error)
-            throw new Error(error.message)
-        })
-    }
-
+//     await admin.database('https://chatchat-7d3bc.firebaseio.com/').ref('chats').child(chatKey + '/createdAt').set(context.timestamp)
     
 
     
+//     const settingsRef = admin.database('https://chatchat-7d3bc.firebaseio.com/').ref('settings')
 
-})
+//     const settings = (await settingsRef.once('value')).val()
+
+//     if (settings.sendEmail) {
+//         const now = new Date(context.timestamp)
+//         const emailContent = {
+//             to: 'chat@grupoprox.com',
+//             cco: settings.emails,
+//             message: {
+//                 subject: `Novo Chat pendente`,
+//                 text: `${chat.name.split(' ')[0]} está esperando ser atendido.`,
+//                 html: `<h3>${chat.name.split(' ')[0]} está esperando ser atendido.</h3><p>Informações coletadas já coletadas:</p><p>Nome: ${chat.name}</p><p> Criado em: ${now.toLocaleDateString()}</p><p>Sistemas GrupoProX.</p>`
+//             }
+//         }
+
+//         const firestoreRef = admin.firestore().collection('mail');
+//         firestoreRef.add(emailContent).then(() => {
+//             console.log('Queued email for delivery to gustavo@resende.app')
+//         }).catch(error => {
+//             console.error(error)
+//             throw new Error(error.message)
+//         })
+//     }
+
+    
+
+    
+
+// })

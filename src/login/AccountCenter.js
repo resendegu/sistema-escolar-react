@@ -60,7 +60,8 @@ const useStyles = makeStyles((theme) => ({
 const AccountCenter = ({history, onClose, openChangePasswordDialog}) => {
     const classes = useStyles();
     const { signOut, updatePhoto, updateName, sendEmailVerification, passwordRecover } = useAuth();
-    const [ isLoading, setIsLoading ] = useState(false); 
+    const [ isLoading, setIsLoading ] = useState(false);
+    const [ verifyingAccess, setVerifyingAccess ] = useState(false); 
     const [ open, setOpen ] = useState(true);
     const [ status, setStatus ] = useState(null)
     const [ showSnack, setShowSnack ] = useState(false);
@@ -79,12 +80,13 @@ const AccountCenter = ({history, onClose, openChangePasswordDialog}) => {
 
     const verifyAdminAccess = async () => {
       try {
+        setVerifyingAccess(true)
         await accessVerification('master');
         setIsAdmin(true);
       } catch (error) {
         setIsAdmin(false);
       }
-      
+      setVerifyingAccess(false)
     }
     
 
@@ -186,7 +188,7 @@ const AccountCenter = ({history, onClose, openChangePasswordDialog}) => {
                         <input type="file" accept="image/*" name="foto" id="alteraFoto" style={{visibility: 'hidden'}} onChange={(e) => handleChangePhoto(e.target.files)} />
                         <Button fullWidth className={classes.button} onClick={handlePasswordRecover}>Alterar minha senha</Button>
                         <Button fullWidth className={classes.button} onClick={() => signOut()} color="secondary" variant="contained">Sair</Button>
-                        <Button fullWidth className={classes.button} variant="contained" color="primary" disabled={!isAdmin}>Central do administrador</Button>
+                        <Button fullWidth className={classes.button} variant="contained" color="primary" disabled={!isAdmin}>Central do administrador {verifyingAccess && <CircularProgress color="secondary" style={{float: 'right'}} size={20} />}</Button>
                         
                         
                     </div>
