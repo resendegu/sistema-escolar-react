@@ -2,7 +2,7 @@ import { Avatar, Box, Button, Card, CardContent, Checkbox, Fab, FormControl, For
 import { Add, Delete, Save, SupervisedUserCircle } from "@material-ui/icons";
 import { useEffect, useState, useRef } from "react";
 import { Fragment } from "react";
-import { studentsRef } from "../services/databaseRefs";
+import { disabledStudentsRef, studentsRef } from "../services/databaseRefs";
 import { useSnackbar } from "notistack";
 import { getDateMeta } from "@fullcalendar/react";
 import FullScreenDialog from "./FullscreenDialog";
@@ -74,7 +74,7 @@ const useStyles = makeStyles((theme) => ({
   }));
 
 
-const ViewParentsInfo = ({studentId, isOpen, onClose}) => {
+const ViewParentsInfo = ({studentId, isOpen, onClose, isDisabled}) => {
 
     const classes = useStyles();
 
@@ -89,7 +89,7 @@ const ViewParentsInfo = ({studentId, isOpen, onClose}) => {
     const form = useRef();
 
     const getData = async () => {
-        const snapshot = await studentsRef.child(studentId).child('responsaveis').once("value");
+        const snapshot = !isDisabled ? (await studentsRef.child(studentId).child('responsaveis').once("value")) : (await disabledStudentsRef.child(studentId + '/dadosAluno').child('responsaveis').once('value'));
         const parentsArray = snapshot.exists() ? snapshot.val() : [];
         console.log(parentsArray);
         setParents(parentsArray);
@@ -140,21 +140,24 @@ const ViewParentsInfo = ({studentId, isOpen, onClose}) => {
     }
 
     const handleDeleteParent = async (i) => {
-        try {
-            await confirm({
-                variant: "danger",
-                catchOnCancel: true,
-                title: "Confirmação",
-                description: "Você deseja excluir este responsável? Esta ação não pode ser revertida."
-            })
-            const key = Object.keys(parents)[i]
-            await studentsRef.child(studentId).child('responsaveis').child(key).remove()
-            enqueueSnackbar("Responsável excluído com sucesso.", {title: 'Sucesso', variant: 'success', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
-            getData()
-        } catch (error) {
-            console.log(error)
-            error && enqueueSnackbar(error.message, {title: 'Erro', variant: 'error', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
-        }
+        if (!isDisabled)
+            try {
+                await confirm({
+                    variant: "danger",
+                    catchOnCancel: true,
+                    title: "Confirmação",
+                    description: "Você deseja excluir este responsável? Esta ação não pode ser revertida."
+                })
+                const key = Object.keys(parents)[i]
+                await studentsRef.child(studentId).child('responsaveis').child(key).remove()
+                enqueueSnackbar("Responsável excluído com sucesso.", {title: 'Sucesso', variant: 'success', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
+                getData()
+            } catch (error) {
+                console.log(error)
+                error && enqueueSnackbar(error.message, {title: 'Erro', variant: 'error', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
+            }
+        else
+            enqueueSnackbar('Não é possível apagar enquanto o aluno está desativado', {title: 'Erro', variant: 'info', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
         
     }
 
@@ -361,8 +364,10 @@ const ViewParentsInfo = ({studentId, isOpen, onClose}) => {
                 onClose={onClose}
                 
                 onSave={() => {
-                    
-                    edit ? form.current.requestSubmit() : setEdit(true)
+                    if (!isDisabled)
+                        edit ? form.current.requestSubmit() : setEdit(true)
+                    else
+                        enqueueSnackbar('Não é possível editar enquanto o aluno está desativado', {title: 'Erro', variant: 'info', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
                 }}
                 title={"Ver/Editar responsáveis"}
                 saveButton={edit ? "Salvar" : "Editar"}
@@ -399,9 +404,10 @@ const ViewParentsInfo = ({studentId, isOpen, onClose}) => {
                             <hr />
                             <div className={classes.center}>
                                 <Tooltip title="Adicionar responsável">
+                                    {isDisabled ? (<p>Reative o estudante para adicionar responsáveis</p>) :( 
                                     <IconButton color="primary" disabled={edit} aria-label="upload picture" component="span" onClick={handleAddParent}>
                                         <Add fontSize="large" />
-                                    </IconButton>
+                                    </IconButton>)}
                                 </Tooltip>
                                 
                             </div>

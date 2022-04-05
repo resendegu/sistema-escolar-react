@@ -209,7 +209,7 @@ const handleOpenFollowUp = () => {
     return ( 
         <Fragment>
               
-              <ViewParentsInfo studentId={studentId} isOpen={openParentsDialog} onClose={() => {
+              <ViewParentsInfo studentId={studentId} isDisabled={disabledStudent} isOpen={openParentsDialog} onClose={() => {
                   setOpenParentsDialog(false);
               }}/>
 
