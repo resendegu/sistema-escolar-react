@@ -17,8 +17,6 @@ admin.initializeApp()
 const app = admin.app()
 
 exports.verificadorDeAcesso = functions.https.onCall((data, context) => {
-    console.log(context)
-    return context;
     try {
         if (context.auth.token.master == true) {
             return true

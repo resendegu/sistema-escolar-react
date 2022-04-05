@@ -424,7 +424,7 @@ const AddClass = ({dataForEditing, onClose}) => {
                             spacing={1}
                         >
                             <Grid item>
-                                <Avatar className={classes.orange} className={classes.avatar}>
+                                <Avatar className={classes.avatar}>
                                     <LibraryBooks />
                                 </Avatar>
                             </Grid>

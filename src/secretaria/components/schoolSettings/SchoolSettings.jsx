@@ -47,7 +47,7 @@ const SchoolSettings = () => {
                     id="panel1bh-header"
                     >
                         <Typography className={classes.heading}>Dados Básicos</Typography>
-                        <Typography className={classes.secondaryHeading}>Dados básicos como o nome e contatos da escola</Typography>
+                        <Typography className={classes.secondaryHeading}>Dados básicos como o nome, contatos da escola, e chave pix para carnês</Typography>
                     </AccordionSummary>
                     <AccordionDetails>
                         <BasicSchoolData />

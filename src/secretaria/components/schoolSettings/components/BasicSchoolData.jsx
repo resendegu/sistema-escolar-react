@@ -1,4 +1,4 @@
-import { Button, Checkbox, CircularProgress, FormControl, FormControlLabel, FormGroup, FormHelperText, FormLabel, Grid, Input, InputAdornment, InputLabel, LinearProgress, makeStyles, Switch, TextField } from "@material-ui/core";
+import { Button, Checkbox, CircularProgress, FormControl, FormControlLabel, FormGroup, FormHelperText, FormLabel, Grid, Input, InputAdornment, InputLabel, LinearProgress, makeStyles, Select, Switch, TextField } from "@material-ui/core";
 import { Fragment, useEffect, useState } from "react";
 
 import $ from 'jquery'
@@ -204,6 +204,57 @@ const BasicSchoolData = () => {
                 </FormGroup>
                 <FormHelperText>Caso você não permita, a secretaria será a responsável por definir as pontuações máximas de atividades da turma, ou seja, será responsável por distribuir as notas.</FormHelperText>
             </FormControl>
+            <h4>Configurações da Chave PIX</h4>
+            <Grid
+                justifyContent="flex-start"   
+                container
+                direction="row"
+                spacing={1}
+            >
+                <Grid item xl={6}>
+                <FormControl variant="filled">
+                    <InputLabel htmlFor="filled-age-native-simple">Tipo da chave pix:</InputLabel>
+                    <Select
+                        InputLabelProps={{shrink: false,}}
+                        native
+                        inputProps={{
+                            name: 'tipoChavePix',
+                            id: 'tipoChavePix',
+                        }}
+                    >
+                        <option selected>Escolha...</option>
+                        <option value="cpf">CPF</option>
+                        <option value="cnpj">CNPJ</option>
+                        <option value="celular">Celular</option>
+                        <option value="email">E-mail</option>
+                        <option value="aleatoria">Chave aleatória</option>
+                    </Select>
+                    <FormHelperText>Tipo da chave pix utilizada</FormHelperText>
+                </FormControl>
+                </Grid>
+                <Grid item xl={6}>
+                    <FormControl  style={{width: '100%'}}> 
+                        <TextField placeholder={"Insira a chave pix..."} autoComplete="off" InputLabelProps={{shrink: shrink,}} variant="filled" label={"Chave Pix"} type="text" id={"chavePix"} name={"chavePix"} aria-describedby={"Frequência mínima para aprovação"} />
+                        <FormHelperText>Chave pix atrelada ao banco que receberá os valores</FormHelperText>
+                    </FormControl>
+                    
+                </Grid>
+                <Grid item xl={6}>
+                    <FormControl  style={{width: '100%'}}> 
+                        <TextField placeholder={"Insira o nome ou razão social do beneficiário..."} autoComplete="off" InputLabelProps={{shrink: shrink,}} variant="filled" label={"Nome ou Razão Social"} type="text" id={"nomePix"} name={"nomePix"} aria-describedby={"Frequência mínima para aprovação"} />
+                        <FormHelperText>Nome completo ou razão social do beneficiário na conta bancária atrelada</FormHelperText>
+                    </FormControl>
+                    
+                </Grid>
+                <Grid item xl={6}>
+                    <FormControl  style={{width: '100%'}}> 
+                        <TextField placeholder={"Cidade do beneficiário..."} autoComplete="off" InputLabelProps={{shrink: shrink,}} variant="filled" label={"Cidade do beneficiário"} type="text" id={"cidadePix"} name={"cidadePix"} aria-describedby={"Frequência mínima para aprovação"} />
+                        <FormHelperText>Nome da cidade do beneficiário da chave pix atrelada</FormHelperText>
+                    </FormControl>
+                    
+                </Grid>
+
+            </Grid>
             <br /><br />
             <Button type="submit" variant="contained" color="primary" fullWidth>Salvar dados básicos  </Button>
             {loading &&<LinearProgress color="secondary" />}

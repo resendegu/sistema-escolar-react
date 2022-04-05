@@ -173,7 +173,7 @@ const LoginDialog = (props) => {
                                 }
                             }}
                             >
-                            Esqueçeu sua senha?
+                            Esqueceu sua senha?
                         </Typography>
                     </Fragment>
                 }

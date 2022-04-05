@@ -318,5 +318,16 @@ const getBrazilianHolidays = async (year) => {
     console.log(await response.json())
     
 }
+
+const accessVerification = async (accessType) => {
+    let accessVerificationFunction = functions.httpsCallable('verificadorDeAcesso');
+    try {
+        let result = await accessVerificationFunction({acesso: accessType});
+        return result.data;
+    } catch (error) {
+        console.log(error)
+        throw new Error(error.message)
+    }
+}
  
-export { calculateAge, checkCpf, getAddress, enrollStudent, handleSendClassData, formatBytes, generateClassCode, handleEnableDisableStudents, handleTransferStudents, handleAddTeacher, handleDeleteClass, handleRemoveTeacher, getRandomKey, handleClassOpen, handleCloseClass, capitalizeFirstLetter, getBrazilianHolidays };
+export { calculateAge, checkCpf, getAddress, enrollStudent, handleSendClassData, formatBytes, generateClassCode, handleEnableDisableStudents, handleTransferStudents, handleAddTeacher, handleDeleteClass, handleRemoveTeacher, getRandomKey, handleClassOpen, handleCloseClass, capitalizeFirstLetter, getBrazilianHolidays, accessVerification };

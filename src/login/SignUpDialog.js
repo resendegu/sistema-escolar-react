@@ -123,7 +123,6 @@ const SignUpDialog = (props) => {
                         <TextField
                             variant="outlined"
                             margin="normal"
-                            error={status === "auth/user-not-found"}
                             required
                             fullWidth
                             label="Nome e Sobrenome"
@@ -131,16 +130,6 @@ const SignUpDialog = (props) => {
                             autoFocus
                             autoComplete="off"
                             type="text"
-                            onChange={() => {
-                              if (status === "auth/user-not-found") {
-                                setStatus(null);
-                              }
-                            }}
-                            helperText={
-                              status === "auth/user-not-found" &&
-                              "Verifique o endereço de e-mail."
-                            }
-                            FormHelperTextProps={{ error: true }}
                         />
 
                         <TextField
@@ -222,13 +211,6 @@ const SignUpDialog = (props) => {
                         
                         />
 
-                        <DateTimePicker 
-                            format="dd/MM/yyyy"
-                            type="date"
-                            label="Data de Nascimento"
-                            width="100%"
-                        />
-
                     </Fragment>
                 }
 
@@ -264,7 +246,7 @@ const SignUpDialog = (props) => {
                                 }
                             }}
                             >
-                            Esqueçeu sua senha?
+                            Esqueceu sua senha?
                         </Typography>
                     </Fragment>
                 }

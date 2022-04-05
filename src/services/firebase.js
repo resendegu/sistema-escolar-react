@@ -13,6 +13,7 @@ const firebaseConfig = {
 
 var app = firebase.initializeApp(firebaseConfig);
 
+const authNormal = firebase.auth;
 const auth = firebase.auth();
 const database = firebase.database();
 const functions = firebase.functions();
@@ -54,4 +55,4 @@ const onMessageListener = () =>
     });
 });
 
-export { firebase, auth, database, functions, storage, getToken, onMessageListener };
+export { firebase, auth, authNormal, database, functions, storage, getToken, onMessageListener };

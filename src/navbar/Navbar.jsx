@@ -14,6 +14,7 @@ import { useAuth } from '../hooks/useAuth';
 import LoginDialog from '../login/LoginDialog';
 import SignUpDialog from '../login/SignUpDialog';
 import { Drafts, Notifications, PriorityHigh, Send } from '@material-ui/icons';
+import AccountCenter from '../login/AccountCenter';
 
 
 const useStyles = makeStyles((theme) => ({
@@ -61,7 +62,7 @@ export default function Navbar(props) {
   const [isDrawerOpen, setDrawerOpen] = useState(false);
   const [ showSignInDialog, setShowSignInDialog ] = useState(false);
   const [ showSignUpDialog, setShowSignUpDialog ] = useState(false);
-  
+  const [ showAccountCenter, setShowAccountCenter ] = useState(false)  
   const open = Boolean(anchorEl)
 
   const openMobileDrawer = useCallback(() => {
@@ -105,10 +106,14 @@ export default function Navbar(props) {
 
   }
 
+  const handleAccountCenter = () => {
+    setShowAccountCenter(true);
+  }
+
   const onClose = () => {
     setShowSignUpDialog(false);
     setShowSignInDialog(false);
-    console.log('closed')
+    setShowAccountCenter(false);
   }
 
   return (
@@ -121,6 +126,10 @@ export default function Navbar(props) {
       {showSignUpDialog ? (
           <SignUpDialog onClose={onClose} />
       ) : null}
+
+      {showAccountCenter && (
+        <AccountCenter onClose={onClose} />
+      )}
       <AppBar position="static">
         <Toolbar>
           <Grid
@@ -223,8 +232,7 @@ export default function Navbar(props) {
                     open={open}
                     onClose={handleClose}
                   >
-                    <MenuItem onClick={handleClose}>Perfil</MenuItem>
-                    <MenuItem onClick={handleClose}>Minha conta</MenuItem>
+                    <MenuItem onClick={handleAccountCenter}>Central da Conta</MenuItem>
                     <MenuItem onClick={handleSignOut}>Sair</MenuItem>
                   </Menu>
                 </>
