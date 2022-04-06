@@ -9,6 +9,7 @@ import EditStudentData from "./EditStudentData";
 import FollowUp from "./FollowUp";
 import FullScreenDialog from "./FullscreenDialog";
 import { handleEnableDisableStudents, handleTransferStudents } from "./FunctionsUse";
+import StudentContracts from "./StudentContracts";
 import StudentFiles from "./StudentFiles";
 import ViewParentsInfo from "./ViewParentsInfo";
 
@@ -79,6 +80,7 @@ const StudentInfo = (props) => {
     const [ openParentsDialog, setOpenParentsDialog ] = useState(false);
     const [ openEditStudentsInfo, setOpenEditStudentsInfo ] = useState(false);
     const [ openFollowUp, setOpenFollowUp ] = useState(false);
+    const [ openContractsDialog, setOpenContractsDialog ] = useState(false);
   
     const [ loading, setLoading ] = useState(false);
 
@@ -204,11 +206,16 @@ const handleOpenFollowUp = () => {
   console.log(`hey`)
 }
 
-
+const handleOpenContractsDialog = () => {
+  setOpenContractsDialog(true);
+}
 
     return ( 
         <Fragment>
-              
+              <StudentContracts studentId={studentId} isDisabled={disabledStudent} isOpen={openContractsDialog} onClose={() => {
+                  setOpenContractsDialog(false);
+              }}/>
+
               <ViewParentsInfo studentId={studentId} isDisabled={disabledStudent} isOpen={openParentsDialog} onClose={() => {
                   setOpenParentsDialog(false);
               }}/>
@@ -360,7 +367,7 @@ const handleOpenFollowUp = () => {
                         <Button fullWidth size="large" variant="contained" color="primary" startIcon={<DoneAll />}disabled={disabledStudent}>Checklist</Button>
                       </Box>
                       <Box m={1}>
-                        <Button fullWidth size="large" variant="contained" color="primary" startIcon={<Description />}>Contratos</Button>
+                        <Button fullWidth size="large" variant="contained" color="primary" onClick={handleOpenContractsDialog} startIcon={<Description />}>Contratos</Button>
                       </Box>
                       <Box m={1}>
                         <Button fullWidth size="large" variant="contained" color="primary" startIcon={<Print />}>Ficha de Matrícula</Button>

@@ -329,5 +329,17 @@ const accessVerification = async (accessType) => {
         throw new Error(error.message)
     }
 }
+
+const generateBillets = async (studentId, contractId) => {
+    let generateBilletsFunction = functions.httpsCallable('geraBoletos');
+    try {
+        let result = await generateBilletsFunction({matricula: studentId, codContrato: contractId});
+        console.log(result.data)
+        return result.data;
+    } catch (error) {
+        console.log(error)
+        throw new Error(error.message)
+    }
+}
  
-export { calculateAge, checkCpf, getAddress, enrollStudent, handleSendClassData, formatBytes, generateClassCode, handleEnableDisableStudents, handleTransferStudents, handleAddTeacher, handleDeleteClass, handleRemoveTeacher, getRandomKey, handleClassOpen, handleCloseClass, capitalizeFirstLetter, getBrazilianHolidays, accessVerification };
+export { calculateAge, checkCpf, getAddress, enrollStudent, handleSendClassData, formatBytes, generateClassCode, handleEnableDisableStudents, handleTransferStudents, handleAddTeacher, handleDeleteClass, handleRemoveTeacher, getRandomKey, handleClassOpen, handleCloseClass, capitalizeFirstLetter, getBrazilianHolidays, accessVerification, generateBillets };

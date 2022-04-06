@@ -645,15 +645,15 @@ exports.cadastraAluno = functions.https.onCall(async (data, context) => {
         }
     })
 
-    exports.timestamp = functions.https.onCall((data, context) => {
-        if (context.auth.token.master == true || context.auth.token.secretaria == true ||  context.auth.token.professores == true || context.auth.token.adm == true || context.auth.token.aluno == true) {
-            return {timestamp: admin.firestore.Timestamp.now()}
-        } else {
-            throw new functions.https.HttpsError('permission-denied', 'Você não tem permissão.')
-        }
-    })
+exports.timestamp = functions.https.onCall((data, context) => {
+    if (context.auth.token.master == true || context.auth.token.secretaria == true ||  context.auth.token.professores == true || context.auth.token.adm == true || context.auth.token.aluno == true) {
+        return {timestamp: admin.firestore.Timestamp.now()}
+    } else {
+        throw new functions.https.HttpsError('permission-denied', 'Você não tem permissão.')
+    }
+})
 
-    exports.transfereAlunos = functions.https.onCall((data, context) => {
+exports.transfereAlunos = functions.https.onCall((data, context) => {
         function formataNumMatricula(num) {
             let numero = num
             numero = "00000" + numero.replace(/\D/g, '');
@@ -1263,9 +1263,7 @@ exports.alteracaoDados = functions.database.ref('sistemaEscolar/alunos/{matricul
     functions.logger.log(snapshot.after.val())
 })
 
-exports.systemUpdate = functions.pubsub.schedule('0 2 * * 0')
-.timeZone('America/Sao_Paulo') // Users can choose timezone - default is America/Los_Angeles
-  .onRun((context) => {
+exports.systemUpdate = functions.pubsub.schedule('0 2 * * 0').timeZone('America/Sao_Paulo').onRun((context) => {
     // let aniversariantesRef = admin.database().ref('sistemaEscolar/aniversariantes')
     // let alunosRef = admin.database().ref('sistemaEscolar/alunos')
     // let alunosRef = admin.database().ref('sistemaEscolar/alunos')
@@ -1295,9 +1293,7 @@ exports.systemUpdate = functions.pubsub.schedule('0 2 * * 0')
     return null;
 });
 
-exports.newYear = functions.pubsub.schedule('0 2 1 1 *')
-    .timeZone('America/Sao_Paulo') // Users can choose timezone - default is America/Los_Angeles
-    .onRun((context) => {
+exports.newYear = functions.pubsub.schedule('0 2 1 1 *').timeZone('America/Sao_Paulo').onRun((context) => {
         const firestoreRef = admin.firestore().collection('mail');
 
         const calendarRef = admin.database().ref("sistemaEscolar/infoEscola/calendarioGeral");
@@ -1383,7 +1379,463 @@ exports.newYear = functions.pubsub.schedule('0 2 1 1 *')
         })
     
         return null;
-    })
+})
+
+    
+exports.geraBoletos = functions.https.onCall((data, context) => {
+        async function gera(matricula, codContrato) {
+            let alunoRef = admin.database().ref('sistemaEscolar/alunos/' + matricula + '/')
+            let alunosDesativadosRef = admin.database().ref('sistemaEscolar/alunosDesativados')
+            let contratoRef = admin.database().ref('sistemaEscolar/infoEscola/contratos').child(codContrato)
+            let infoEscola = await admin.database().ref('sistemaEscolar/infoEscola').once('value')
+            let docsSistemaVal = await admin.database().ref('sistemaEscolar/docsBoletos').once('value')
+            let dadosEscola = infoEscola.val()
+            console.log(dadosEscola)
+            let dadosAluno = await alunoRef.once('value')
+            dadosAluno = dadosAluno.exists() ? dadosAluno : await alunosDesativadosRef.child(matricula + '/dadosAluno').once('value')
+            let aluno = dadosAluno.val()
+            let contratos = aluno.contratos
+            let contrato = contratos[contratos.indexOf(codContrato)]
+            let data = dadosEscola.contratos[codContrato].contratoConfigurado
+            let plano = dadosEscola.contratos[codContrato].planoOriginal
+            let mesInicio = Number(data['ano-mes'].split('-')[1])
+            let anoInicio = Number(data['ano-mes'].split('-')[0])
+            console.log(codContrato)
+            let docsSistema = docsSistemaVal.val()
+            let qtdeDocs = 0
+
+            let timestamp = await admin.firestore.Timestamp.now()
+            console.log(timestamp)
+            var now = new Date(timestamp._seconds * 1000)
+            console.log(now)
+            var dataProcessamento = `${Number(now.getDate()) <= 9 ? '0' + now.getDate() : now.getDate()}/${Number(now.getMonth()) + 1 <= 9 ? '0' + (Number(now.getMonth()) + 1) : now.getMonth()}/${now.getFullYear()}`
+            
+            for (const key in docsSistema) {
+                if (Object.hasOwnProperty.call(docsSistema, key)) {
+                    qtdeDocs++
+                    
+                }
+            }
+            let pag = 1
+            let bol = 0
+
+            try {
+
+                let docsBoletosGerados = await contratoRef.child('docsBoletos').once('value')
+                var numerosDeDoc = docsBoletosGerados.val()
+                let continuar = true
+                // if (numerosDeDoc != null) {
+                //     continuar = window.confirm('O sistema identificou débitos ativos para este contrato. Deseja gerar novos débitos/boletos? (Para gerar, clique em OK)')
+                    
+                // }
+
+                if (continuar) {
+                    data.valorDesconto = (Number(data.valorCurso) * (data.descontoPlano/100)).toFixed(2)
+                    data.valorAcrescimo = (Number(data.valorCurso) * (data.acrescimoPlano/100)).toFixed(2)
+                    data.valorFinal = (Number(data.valorCurso) + (data.valorAcrescimo - data.valorDesconto)).toFixed(2)
+                    let saldo = data.valorCurso
+                    let saldoAcrescimo = data.valorAcrescimo
+                    let saldoDesconto = data.valorDesconto
+                    let contadorParcelas = data.numeroParcelas
+                    let somaParcelas = 0
+                    let valorParcelaGlobal = 0
+                    let mesParcela
+                    let numDoc = qtdeDocs + 1
+                    let numerosDeDoc = []
+
+                    for (let parcela = 0; parcela < data.numeroParcelas; parcela++) {
+                        let valorParcela
+                        let valorCobrado
+                        let acrescimoParcela = 0
+                        let descontoParcela = 0
+                        numerosDeDoc.push(numDoc)
+                        if (plano.distribuirAcrescimosEDescontos == 'on') {
+                            
+                            
+                            
+                            
+                            if (parcela == 0) { 
+                                valorParcelaGlobal = parseFloat(saldo / contadorParcelas).toFixed(2) 
+                            } 
+                            if (parcela >= plano.quandoAplicar) {
+                                // parcela == data.quandoAplicar ? saldo = data.valorFinal - somaParcelas : null
+                                if (parcela == plano.quandoAplicar) {
+                                    valorParcelaGlobal = parseFloat(saldo / contadorParcelas).toFixed(2)
+                                }
+                                
+                                valorParcela = valorParcelaGlobal
+                                acrescimoParcela = (saldoAcrescimo/contadorParcelas).toFixed(2)
+                                descontoParcela = (saldoDesconto/contadorParcelas).toFixed(2)
+                                // saldo = (Number(saldo) - valorParcela) - Number(acrescimoParcela - descontoParcela)
+                            } else {
+                                valorParcela = valorParcelaGlobal
+                                
+                                // saldo = saldo - valorParcela
+                                acrescimoParcela = 0
+                                descontoParcela = 0
+                            }
+                            
+                            saldoAcrescimo = saldoAcrescimo - acrescimoParcela
+                            saldoDesconto = saldoDesconto - descontoParcela
+                            
+                            valorCobrado = (Number(valorParcela) + (acrescimoParcela - descontoParcela)).toFixed(2)
+                            somaParcelas += (Number(valorParcela) + (acrescimoParcela - descontoParcela))
+                        } else {
+                            if (parcela == 0) {
+                                saldo = data.valorFinal
+                            }
+
+                            valorCobrado = parseFloat(data.valorFinal / data.numeroParcelas).toFixed(2)
+                            valorParcela = valorCobrado
+                            // saldo = saldo - parseFloat(data.valorFinal / data.numeroMaximoParcelasPlano).toFixed(2)
+                            somaParcelas += Number(parseFloat(data.valorFinal / data.numeroParcelas))
+                        }
+                        saldo = (parcela >= plano.quandoAplicar ? data.valorFinal : data.valorCurso) - somaParcelas
+                        console.log(saldo)
+                        mesParcela = mesInicio + parcela
+                        if ((mesInicio + parcela) > 12) {
+                            mesParcela = mesParcela - 12
+                        }
+                        if (mesParcela == 1 && parcela != 0) {
+                            anoInicio++
+                        }
+                        
+                        
+                        
+                        
+                        await addParcela(parcela + 1, data.numeroParcelas, `${data.vencimentoEscolhido <= 9 ? '0' + data.vencimentoEscolhido : data.vencimentoEscolhido}/${mesParcela <= 9 ? '0' + mesParcela : mesParcela}/${anoInicio}`, numDoc, valorParcela, descontoParcela, acrescimoParcela, valorCobrado, dataProcessamento, )
+                        // addParcela(`Saldo: R$${saldo}`)
+                        contadorParcelas--
+                        numDoc++
+                        
+                    }
+
+                    contratoRef.child('docsBoletos').set(numerosDeDoc).then(() => {
+                        console.log('Docs Cadastrados')
+                    }).catch(error => {
+                        console.log('Erro', error.message)
+                    })
+                } 
+                
+
+                
+
+            } catch (error) {
+                console.log(error)
+            }
+
+            
+            
+            async function addParcela(parcelaAtual, numDeParcelas, vencimento, numeroDoc, valorDoc, descontos, acrescimos, totalCobrado, dataProcessamento, informacoes) {
+                
+                bol++
+                if (bol > 3 && pag >= 1) {
+                    pag++
+                    bol = 0
+                    // document.getElementById('livro').innerHTML += `
+                    // <div class="page">
+                    //     <div class="subpage">
+                    //         <div id="boletos${pag}"></div>
+                    //     </div>
+                    // </div>
+                    // `
+                }
+                //let boletos = document.getElementById('boletos' + pag)
+                await admin.database().ref('sistemaEscolar').child('docsBoletos').push({
+                    numeroDoc: numeroDoc,
+                    valorDoc: valorDoc,
+                    vencimento: vencimento,
+                    parcelaAtual: parcelaAtual,
+                    numDeParcelas: numDeParcelas,
+                    descontos: descontos,
+                    acrescimos: acrescimos,
+                    totalCobrado: totalCobrado,
+                    dataProcessamento: dataProcessamento,
+                    informacoes: data.descricaoPlano,
+                    codContrato: codContrato,
+                    matricula: matricula  
+                })
+                
+                //let gera = firebase.functions().httpsCallable('geraPix')
+                // return gera({valor: totalCobrado, descricao: `DOC${numeroDoc}`}).then(function(lineCode) {
+                
+                    
+                //     //divQr.src = lineCode.data;
+                //     console.log(lineCode)
+                //     //const code = new QRCode(divQr, { text: lineCode.data, width: 100, height: 100 });
+                //     //qrCodesArray.push({qrcode: lineCode.data, numeroDoc: numeroDoc})
+                //     boletos.innerHTML += `
+                //     <table style="height: 241px; width: 100%; border-collapse: collapse; border-style: solid; margin-top: 18px;" border="1" >
+                //     <tbody>
+                //         <tr style="height: 10px; border-style: none;">
+                //             <td style="width: 4.97079%; height: 179px;" rowspan="9">&nbsp;</td>
+                //             <td style="width: 22.9045%; height: 20px; text-align: center;" rowspan="2">
+                //             <table style="height: 100%; width: 96.3454%; border-collapse: collapse; border-style: hidden;" border="1">
+                //             <tbody>
+                //             <tr style="height: 18px;">
+                //                 <td style="width: 38.8889%; height: 33px;" rowspan="2"><img src="${dadosEscola.logoEscola}" alt="Logo" width="30" height="30" /></td>
+                //                 <td style="width: 189.264%; height: 18px; border-left: hidden;">
+                //                     <section style="font-size: 8pt; text-align: center;">
+                //                         Parcela
+                //                     </section>
+                                    
+                //                     <section style="font-size: x-small; text-align: center;">
+                //                         ${parcelaAtual}/${numDeParcelas}
+                //                     </section>
+                //                 </td>
+                //             </tr>
+                //             <tr style="height: 15px;">
+                //             <td style="width: 189.264%; height: 15px; border-left: hidden;">
+                //                     <section style="font-size: 8pt; text-align: center;">
+                //                         Vencimento
+                //                     </section>
+                                    
+                //                     <section style="font-size: x-small; text-align: center;">
+                //                         ${vencimento}
+                //                     </section>
+                //             </td>
+                //         </tr>
+                //         </tbody>
+                //         </table>
+                //         </td>
+                //         <td style="width: 7.60226%; text-align: center; height: 20px; border-left: dotted;" rowspan="2"><img src="${dadosEscola.logoEscola}" alt="Logo" width="30" height="30" /></td>
+                //         <td style="height: 20px; width: 43.8475%;" colspan="3" rowspan="2">
+                //             <section style="font-size: 8pt;">
+                //                 &nbsp;<b>Cedente</b>
+                //             </section>
+                //             <section style="font-size: x-small;">
+                //                 &nbsp;${dadosEscola.dadosBasicos.nomeEscola}
+                //             </section>
+                //             <section style="font-size: x-small;">
+                //                 &nbsp;${dadosEscola.dadosBasicos.cnpjEscola}
+                //             </section>
+                //             <section style="font-size: x-small;">
+                //                 &nbsp;${dadosEscola.dadosBasicos.enderecoEscola}
+                //             </section>
+                //             <section style="font-size: x-small;">
+                //                 &nbsp;${dadosEscola.dadosBasicos.telefoneEscola}
+                //             </section>
+                //         </td>
+                //         <td style="width: 64.5223%; height: 10px; text-align: center;">
+                //             <section style="font-size: 8pt;">
+                //                 Parcela
+                //             </section>
+                            
+                //             <section style="font-size: x-small; text-align: center;">
+                //                 ${parcelaAtual}/${numDeParcelas}
+                //             </section>    
+                //         </td>
+                //         </tr>
+                //         <tr style="height: 10px;">
+                //         <td style="width: 64.5223%; height: 10px;">
+                //             <section style="font-size: 8pt; text-align: center;">
+                //                 Vencimento
+                //             </section>
+                            
+                //             <section style="font-size: x-small; text-align: center;">
+                //                 ${vencimento}
+                //             </section>    
+                //         </td>
+                //         </tr>
+                //         <tr style="height: 33px;">
+                //         <td style="width: 22.9045%; height: 33px; text-align: start;">
+                //             <section style="font-size: 8pt; text-align: center;">
+                //                 Documento
+                //             </section>
+                            
+                //             <section style="font-size: x-small; width: 100%; text-align: center;">
+                //                 ${numeroDoc}
+                //             </section>    
+                //         </td>
+                //         <td style="width: 19.286%; height: 33px; border-left: dotted;" colspan="2">
+                //             <section style="font-size: 8pt; text-align: center;">
+                //                 Documento
+                //             </section>
+                            
+                //             <section style="font-size: x-small; width: 100%; text-align: center;">
+                //                 ${numeroDoc}
+                //             </section>        
+                //         </td>
+                //         <td style="width: 14.2301%; height: 33px;">
+                //             <section style="font-size: 8pt; text-align: center;">
+                //                 Espécie
+                //             </section>
+                            
+                //             <section style="font-size: x-small; width: 100%; text-align: center;">
+                //                 R$
+                //             </section>        
+                //         </td>
+                //         <td style="width: 17.9337%; height: 33px;">
+                //             <section style="font-size: 8pt; text-align: center;">
+                //                 Processamento
+                //             </section>
+                            
+                //             <section style="font-size: x-small; text-align: center;">
+                //                 ${dataProcessamento}
+                //             </section>    
+                //         </td>
+                //         <td style="width: 64.5223%; height: 33px;">
+                //             <section style="font-size: 8pt; text-align: center;">
+                //                 (=) Valor do documento
+                //             </section>
+                            
+                //             <section style="font-size: x-small; width: 100%; text-align: center;">
+                //                 R$${valorDoc}
+                //             </section>        
+                //         </td>
+                //         </tr>
+                //         <tr style="height: 24px;">
+                //         <td style="width: 22.9045%; height: 24px;">
+                //             <section style="font-size: 8pt; text-align: center;">
+                //                 (=) Valor do documento
+                //             </section>
+                            
+                //             <section style="font-size: x-small; width: 100%; text-align: center;">
+                //                 R$${valorDoc}
+                //             </section>          
+                //         </td>
+                //         <td style="width: 51.4498%; height: 88px; border-left: dotted;" colspan="3" rowspan="4">
+                //             <section style="font-size: 8pt;">
+                //                 &nbsp;Informações
+                //             </section>
+                            
+                //             <section style="font-size: x-small;">
+                //                 &nbsp;${data.nomeCursoAdd}
+                //             </section>
+                            
+                            
+                //         <p style="font-size: x-small; width: 100%; text-align: start;">&nbsp;${data.descricaoPlano}</p>
+                //         </td>
+                //         <td style="width: 17.9337%; height: 88px;" rowspan="4" colspan="1">
+                //             <section style="font-size: 8pt; text-align: center;">
+                //                 Pague via PIX
+                //             </section>
+                //             <section style="font-size: 8pt; text-align: center;">
+                //                 <img id="qrcode${numeroDoc}" style="width: 80px;" src="${lineCode.data}">
+                //             </section>
+                            
+                               
+                //         </td>
+                //         <td style="width: 64.5223%; height: 24px;">
+                //             <section style="font-size: 8pt; text-align: center;">
+                //                 (-) Descontos
+                //             </section>
+                            
+                //             <section style="font-size: x-small; width: 100%; text-align: center;">
+                //                 ${descontos}
+                //             </section>          
+                //         </td>
+                //         </tr>
+                //         <tr style="height: 22px;">
+                //             <td style="width: 22.9045%; height: 22px;">
+                //                 <section style="font-size: 8pt; text-align: center;">
+                //                     (-) Descontos
+                //                 </section>
+                                
+                //                 <section style="font-size: x-small; width: 100%; text-align: center;">
+                //                     R$${descontos}
+                //                 </section>    
+                //             </td>
+                //             <td style="width: 64.5223%; height: 22px;">
+                //                 <section style="font-size: 8pt; text-align: center;">
+                //                     (+) Acréscimos
+                //                 </section>
+                                
+                //                 <section style="font-size: x-small; width: 100%; text-align: center;">
+                //                     R$${acrescimos}
+                //                 </section>    
+                //             </td>
+                //         </tr>
+                //         <tr style="height: 21px;">
+                //             <td style="width: 22.9045%; height: 21px;">
+                //                 <section style="font-size: 8pt; text-align: center;">
+                //                     (+) Acréscimos
+                //                 </section>
+                                
+                //                 <section style="font-size: x-small; width: 100%; text-align: center;">
+                //                     R$${acrescimos}
+                //                 </section>     
+                //             </td>
+                //             <td style="width: 64.5223%; height: 21px;">
+                //                 <section style="font-size: 8pt; text-align: center;">
+                //                     (=) Total Cobrado
+                //                 </section>
+                                
+                //                 <section style="font-size: x-small; width: 100%; text-align: center;">
+                //                     R$${totalCobrado}
+                //                 </section>     
+                //             </td>
+                //         </tr>
+                //         <tr style="height: 21px;">
+                //             <td style="width: 22.9045%; height: 21px;">
+                //                 <section style="font-size: 8pt; text-align: center;">
+                //                     (=) Total Cobrado
+                //                 </section>
+                                
+                //                 <section style="font-size: x-small; width: 100%; text-align: center;">
+                //                     R$${totalCobrado}
+                //                 </section>    
+                //             </td>
+                //             <td style="width: 64.5223%; height: 21px;">
+                //                 <section style="font-size: 8pt; text-align: center;">
+                //                     Data de Pagamento:
+                //                 </section>
+                                
+                //                 <section style="font-size: small; width: 100%; text-align: center;">
+                //                     ____/____/______
+                //                 </section>
+                //             </td>
+                //         </tr>
+                //         <tr style="height: 20px;">
+                //             <td style="width: 22.9045%; height: 20px;" rowspan="2">
+                //                 <section style="font-size: 8pt; text-align: center;">
+                //                     Data de Pagamento:
+                //                 </section>
+                                
+                //                 <section style="font-size: small; width: 100%; text-align: center;">
+                //                     ____/____/______
+                //                 </section>    
+                //             </td>
+                //             <td style="width: 51.4498%; height: 38px; border-left: dotted;" colspan="4" rowspan="2">
+                //                 <section style="font-size: 8pt;">
+                //                     &nbsp;<b>Sacado</b>
+                //                 </section>
+                                
+                //                 <section style="font-size: x-small;">
+                //                     &nbsp;${aluno.nomeAluno}&nbsp;&nbsp;&nbsp; CPF Nº: ${aluno.cpfAluno}<br>
+                //                     &nbsp;${aluno.enderecoAluno}, ${aluno.numeroAluno}, ${aluno.bairroAluno}, ${aluno.cidadeAluno}-${aluno.estadoAluno}
+                //                 </section>    
+                //             </td>
+                //             <td style="width: 64.5223%; height: 38px;" rowspan="2">
+                //                 <section style="font-size: 8pt; text-align: center;">
+                //                     Assinatura:
+                //                 </section>
+                                
+                //                 <section style="font-size: small; width: 100%; text-align: center;">
+                //                    &nbsp;
+                //                 </section>    
+                //             </td>
+                //         </tr>
+                //     </tbody>
+                //     </table>
+                //     ` 
+                //     return ;
+                // })
+                
+            }
+
+            return numerosDeDoc;
+
+        }
+
+        return gera(data.matricula, data.codContrato).then((numerosDeDoc) => {
+            return numerosDeDoc;
+        }).catch(error => {
+            throw new functions.https.HttpsError('unknown', error.message, error)
+        })
+})
+
+
 // exports.adicionaFotoAluno = functions.storage.object().onFinalize(async (object) => {
 //     const fileBucket = object.bucket; // The Storage bucket that contains the file.
 //     const filePath = object.name; // File path in the bucket.
@@ -1418,42 +1870,42 @@ exports.newYear = functions.pubsub.schedule('0 2 1 1 *')
 
 // Functions for chat app
 
-// exports.chatListener = functions.database.instance('chatchat-7d3bc').ref('chats').onCreate(async (snapshot, context) => {
+exports.chatListener = functions.database.instance('chatchat-7d3bc').ref('chats').onCreate(async (snapshot, context) => {
     
-//     const chat = snapshot.val();
-//     const chatKey = chat.chatKey;
+    const chat = snapshot.val();
+    const chatKey = chat.chatKey;
 
-//     await admin.database('https://chatchat-7d3bc.firebaseio.com/').ref('chats').child(chatKey + '/createdAt').set(context.timestamp)
-    
-
-    
-//     const settingsRef = admin.database('https://chatchat-7d3bc.firebaseio.com/').ref('settings')
-
-//     const settings = (await settingsRef.once('value')).val()
-
-//     if (settings.sendEmail) {
-//         const now = new Date(context.timestamp)
-//         const emailContent = {
-//             to: 'chat@grupoprox.com',
-//             cco: settings.emails,
-//             message: {
-//                 subject: `Novo Chat pendente`,
-//                 text: `${chat.name.split(' ')[0]} está esperando ser atendido.`,
-//                 html: `<h3>${chat.name.split(' ')[0]} está esperando ser atendido.</h3><p>Informações coletadas já coletadas:</p><p>Nome: ${chat.name}</p><p> Criado em: ${now.toLocaleDateString()}</p><p>Sistemas GrupoProX.</p>`
-//             }
-//         }
-
-//         const firestoreRef = admin.firestore().collection('mail');
-//         firestoreRef.add(emailContent).then(() => {
-//             console.log('Queued email for delivery to gustavo@resende.app')
-//         }).catch(error => {
-//             console.error(error)
-//             throw new Error(error.message)
-//         })
-//     }
-
+    await admin.database('https://chatchat-7d3bc.firebaseio.com/').ref('chats').child(chatKey + '/createdAt').set(context.timestamp)
     
 
     
+    const settingsRef = admin.database('https://chatchat-7d3bc.firebaseio.com/').ref('settings')
 
-// })
+    const settings = (await settingsRef.once('value')).val()
+
+    if (settings.sendEmail) {
+        const now = new Date(context.timestamp)
+        const emailContent = {
+            to: 'chat@grupoprox.com',
+            cco: settings.emails,
+            message: {
+                subject: `Novo Chat pendente`,
+                text: `${chat.name.split(' ')[0]} está esperando ser atendido.`,
+                html: `<h3>${chat.name.split(' ')[0]} está esperando ser atendido.</h3><p>Informações coletadas já coletadas:</p><p>Nome: ${chat.name}</p><p> Criado em: ${now.toLocaleDateString()}</p><p>Sistemas GrupoProX.</p>`
+            }
+        }
+
+        const firestoreRef = admin.firestore().collection('mail');
+        firestoreRef.add(emailContent).then(() => {
+            console.log('Queued email for delivery to gustavo@resende.app')
+        }).catch(error => {
+            console.error(error)
+            throw new Error(error.message)
+        })
+    }
+
+    
+
+    
+
+})
