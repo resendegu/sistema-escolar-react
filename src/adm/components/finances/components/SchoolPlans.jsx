@@ -114,7 +114,7 @@ const SchoolPlans = () => {
 
     const handleRowClick = async (e) => {
         console.log(e)
-        let planId = e.id
+        let planId = e.id.split(',')[0]
         let courseId = e.row.codCurso
         setCourse(courseId)
         setPlan(planId)
