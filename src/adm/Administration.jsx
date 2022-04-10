@@ -1,21 +1,21 @@
-import ProfessoresTabs from './components/Tabpanel'
+import AdministrationTabs from './components/Tabpanel'
 import { useHistory } from 'react-router-dom';
 
 import { FormEvent, Fragment, useEffect, useState } from 'react';
 import LoginDialog from '../login/LoginDialog';
 import { useAuth } from '../hooks/useAuth';
 
-const Professores = () => {
+const Administration = () => {
     const { user } = useAuth();
 
 
     return ( 
         <Fragment>
-            <ProfessoresTabs/>
+            <AdministrationTabs/>
             {!user && (<LoginDialog />)}
         </Fragment>
         
     );
 }
  
-export default Professores;
+export default Administration;

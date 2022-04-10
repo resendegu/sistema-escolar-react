@@ -16,6 +16,7 @@ import { notificationsRef } from './services/databaseRefs';
 
 import { ConfirmationServiceProvider } from './contexts/ConfirmContext';
 import Professores from './professores/Professores';
+import Administration from './adm/Administration';
 
 export const AuthContext = createContext({});
 
@@ -68,6 +69,7 @@ function App() {
               <Route path="/" exact component={Home} />
               <Route path="/secretaria" component={Secretaria} />
               <Route path="/professores" component={Professores} />
+              <Route path="/adm" component={Administration}/>
             </Switch>
             
           </AuthContextProvider>

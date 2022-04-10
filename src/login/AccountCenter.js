@@ -155,7 +155,7 @@ const AccountCenter = ({history, onClose, openChangePasswordDialog}) => {
                         <Avatar className={classes.avatar} onMouseOut={() => setPhotoBackdrop(false)} onMouseOver={() => setPhotoBackdrop(true)}>
                             <IconButton onClick={() => document.getElementById('alteraFoto').click()}>
                             {photoBackdrop && <CameraAlt />}
-                                {user !== undefined && user.photoURL ? (<img src={user.photoURL} style={{width: "150px", borderRadius: '50%',}} alt=""/>) : <AccountCircle />} 
+                                {user && 'photoURL' in user ? (<img src={user.photoURL} style={{width: "150px", borderRadius: '50%',}} alt=""/>) : <AccountCircle />} 
                             </IconButton>
                             
                         </Avatar>
@@ -168,7 +168,7 @@ const AccountCenter = ({history, onClose, openChangePasswordDialog}) => {
                                   <Save fontSize="small" />
                                 </IconButton>
                                 </>
-                              ) : user !== undefined && user.displayName} 
+                              ) : user && user.displayName} 
                               {/* <IconButton style={{float: 'right'}} onClick={}>
                                 {showUpdateName ? <Save fontSize="small" /> : <Edit fontSize="small" />}
                               </IconButton> */}
