@@ -54,13 +54,14 @@ const PlanEditor = ({ courseId, planId=undefined, isOpen, setOpenDialog }) => {
     const handleMountContractScreen = (courseInfo) => {
         console.log(courseInfo);
         setData(courseInfo);
-        if (planId) {
+        if (courseInfo.hasOwnProperty('planos')) {
+            contractHandler('', courseInfo.planos[planId] ?? null)
             setPlan(courseInfo.planos[planId])
         } else {
-
+            contractHandler('')
         }
         
-        contractHandler('', courseInfo.planos[planId])
+        
        
     }
 
@@ -118,9 +119,10 @@ const PlanEditor = ({ courseId, planId=undefined, isOpen, setOpenDialog }) => {
                 "valorCurso" : "0",
                 "valorDesconto" : "0",
                 "valorFinal" : "0",
-                "vencimento" : "false"
+                "vencimento" : ""
               }
             console.log(internData)
+            setPlan(internData)
         }
         
 
@@ -153,7 +155,6 @@ const PlanEditor = ({ courseId, planId=undefined, isOpen, setOpenDialog }) => {
                 document.getElementById('quandoAplicar').innerHTML = '';
                 console.log(Number(internData.numeroMaximoParcelasPlano))
                 for (let i = 0; i < Number(internData.numeroMaximoParcelasPlano); i++) {
-                    console.log(i, 'HAAAAAAATIMANHA')
                     document.getElementById('quandoAplicar').innerHTML += `<option value="${i}">Parcela ${i + 1}</option>`
                     
                 }
@@ -226,7 +227,7 @@ const PlanEditor = ({ courseId, planId=undefined, isOpen, setOpenDialog }) => {
             console.log(error)
         }
             
-            
+            internData.codCurso = courseId;
             console.log(internData)
             setCalculatedData(internData)
             try {
@@ -242,10 +243,10 @@ const PlanEditor = ({ courseId, planId=undefined, isOpen, setOpenDialog }) => {
             
             console.log(internData)
             
-            if (planChosen) {
-                console.log(planChosen)
-              document.getElementById('vencimento').value = planChosen.vencimento;
-            }
+            // if (planChosen) {
+            //     console.log(planChosen)
+            //   document.getElementById('vencimento').value = planChosen.vencimento;
+            // }
 
             if (save) {
                 
@@ -486,14 +487,14 @@ const PlanEditor = ({ courseId, planId=undefined, isOpen, setOpenDialog }) => {
                             alignItems="center"
                         >
                             <Grid item >
-                            <FormControl component="fieldset">
+                            {plan && <FormControl component="fieldset">
                             <FormLabel component="legend">Configuração do vencimento</FormLabel>
                             <RadioGroup name="vencimento" id="vencimento" onChange={() => contractHandler()} defaultValue={plan && plan.vencimento}>
                                 <FormControlLabel value="false" control={<Radio required />} label="Permitir escolha do dia no ato da matrícula" />
                                 <FormControlLabel value="true" control={<Radio required />} label="Definir dias específicos para o vencimento" />
                                 
                             </RadioGroup>
-                            </FormControl>
+                            </FormControl>}
                             
                             
                             </Grid>
@@ -545,6 +546,7 @@ const PlanEditor = ({ courseId, planId=undefined, isOpen, setOpenDialog }) => {
                                     </MenuItem>
                                 ))}
                                 </Select>
+                                <FormHelperText> Escolha os dias que deseja permitir o vencimento. </FormHelperText>
                                 </FormControl>
                                 </>
                             ) }
@@ -552,11 +554,12 @@ const PlanEditor = ({ courseId, planId=undefined, isOpen, setOpenDialog }) => {
                             
                             
                             <Grid item>
+                                {plan && (
                                 <FormControl className={classes.fields}> 
-                                    <TextField variant="filled" autoComplete="off"  required label="Informações e avisos"  type="text" id="descricaoPlano" name="descricaoPlano" aria-describedby="my-helper-text" />
+                                    <TextField variant="filled" autoComplete="off" required label="Informações e avisos" defaultValue={plan && plan.descricaoPlano} type="text" id="descricaoPlano" name="descricaoPlano" aria-describedby="my-helper-text" />
                                     <FormHelperText> Informações e avisos para serem gerados no boleto. </FormHelperText>
                                 </FormControl>
-                                
+                                )}
                             </Grid>
                             
                                 
