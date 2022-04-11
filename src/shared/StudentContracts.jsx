@@ -123,61 +123,61 @@ const StudentContracts = ({studentId, isOpen, onClose, isDisabled}) => {
 
     const handleSaveData = async (e) => {
         e.preventDefault();
-        try {
-            if (edit && Object.keys(contracts).length > 0) {
-                form.current.requestSubmit();
-                await studentsRef.child(studentId).child('contratos').set(contracts);
-                enqueueSnackbar("Responsáveis atualizados com sucesso.", {title: 'Sucesso', variant: 'success', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
-                setEdit(false)
-            }
+        // try {
+        //     if (edit && Object.keys(contracts).length > 0) {
+        //         form.current.requestSubmit();
+        //         await studentsRef.child(studentId).child('contratos').set(contracts);
+        //         enqueueSnackbar("Responsáveis atualizados com sucesso.", {title: 'Sucesso', variant: 'success', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
+        //         setEdit(false)
+        //     }
             
-        } catch (error) {
-            console.log(error);
-            enqueueSnackbar(error.message, {title: 'Erro', variant: 'error', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
-        }
+        // } catch (error) {
+        //     console.log(error);
+        //     enqueueSnackbar(error.message, {title: 'Erro', variant: 'error', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
+        // }
         
 
     }
 
 
     const handleAddParent = async () => {
-        const key = studentsRef.child(studentId).child('responsaveis').push().key
-        console.log(key)
-        let contractsCopy = contracts;
-        contractsCopy[key] = {
-            celular: "",
-            cpf: "",
-            email: "",
-            financeiro: false,
-            nome: "",
-            pedagogico: false,
-            relacao: "",
-            rg: ""
-        }
-        console.log(contractsCopy)
-        setContracts(contractsCopy)
-        setEdit(true)
+        // const key = studentsRef.child(studentId).child('responsaveis').push().key
+        // console.log(key)
+        // let contractsCopy = contracts;
+        // contractsCopy[key] = {
+        //     celular: "",
+        //     cpf: "",
+        //     email: "",
+        //     financeiro: false,
+        //     nome: "",
+        //     pedagogico: false,
+        //     relacao: "",
+        //     rg: ""
+        // }
+        // console.log(contractsCopy)
+        // setContracts(contractsCopy)
+        // setEdit(true)
     }
 
     const handleDeleteParent = async (i) => {
-        if (!isDisabled)
-            try {
-                await confirm({
-                    variant: "danger",
-                    catchOnCancel: true,
-                    title: "Confirmação",
-                    description: "Você deseja excluir este responsável? Esta ação não pode ser revertida."
-                })
-                const key = Object.keys(contracts)[i]
-                await studentsRef.child(studentId).child('responsaveis').child(key).remove()
-                enqueueSnackbar("Responsável excluído com sucesso.", {title: 'Sucesso', variant: 'success', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
-                getData()
-            } catch (error) {
-                console.log(error)
-                error && enqueueSnackbar(error.message, {title: 'Erro', variant: 'error', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
-            }
-        else
-            enqueueSnackbar('Não é possível apagar enquanto o aluno está desativado', {title: 'Erro', variant: 'info', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
+        // if (!isDisabled)
+        //     try {
+        //         await confirm({
+        //             variant: "danger",
+        //             catchOnCancel: true,
+        //             title: "Confirmação",
+        //             description: "Você deseja excluir este responsável? Esta ação não pode ser revertida."
+        //         })
+        //         const key = Object.keys(contracts)[i]
+        //         await studentsRef.child(studentId).child('responsaveis').child(key).remove()
+        //         enqueueSnackbar("Responsável excluído com sucesso.", {title: 'Sucesso', variant: 'success', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
+        //         getData()
+        //     } catch (error) {
+        //         console.log(error)
+        //         error && enqueueSnackbar(error.message, {title: 'Erro', variant: 'error', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
+        //     }
+        // else
+        //     enqueueSnackbar('Não é possível apagar enquanto o aluno está desativado', {title: 'Erro', variant: 'info', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
         
     }
 
@@ -353,7 +353,8 @@ const StudentContracts = ({studentId, isOpen, onClose, isDisabled}) => {
                 }}
                 title={"Contratos"}
                 saveButton={edit ? "Salvar" : "Editar"}
-                
+                saveButtonDisabled
+                hideSaveButton
               >
                 <Backdrop className={classes.backdrop} open={loading}>
                     <CircularProgress color="inherit" />
