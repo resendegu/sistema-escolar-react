@@ -9,12 +9,13 @@ import '../../App.css';
 import Typography from '@material-ui/core/Typography';
 
 import Box from '@material-ui/core/Box';
-import { AttachFile, AttachMoney, Home, } from '@material-ui/icons';
+import { AttachFile, AttachMoney, Gavel, Home, } from '@material-ui/icons';
 
 import Contracts from './contracts/Contracts';
 
 import Dashboard from '../../muiDashboard/Dashboard';
 import Finances from './finances/Finances';
+import WriteOffBillets from '../../shared/WriteOffBillets';
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -80,6 +81,7 @@ export default function AdministrationTabs() {
           <Tab label="Dashboard" icon={<Home />} {...a11yProps(0)} />
           <Tab label="Contratos" icon={<AttachFile />} {...a11yProps(1)} />
           <Tab label="Financeiro" icon={<AttachMoney />} {...a11yProps(2)} />
+          <Tab label="Boletos" icon={<Gavel />} {...a11yProps(3)} />
         </Tabs>
       </AppBar>
       <TabPanel value={value} index={0}>
@@ -91,6 +93,9 @@ export default function AdministrationTabs() {
       <TabPanel value={value} index={2}>
         <Finances />
       </TabPanel>
-    </div>
+      <TabPanel value={value} index={3}>
+        <WriteOffBillets />
+      </TabPanel>
+      </div>
   );
 }

@@ -24,6 +24,7 @@ const notificationsPath = 'notifications/';
 const teachersListPath = 'listaDeProfessores/';
 const followUpPath = 'followUp/'
 const performanceGradesPath = 'notasDesempenho/referencia'
+const billetsDocsPath = 'docsBoletos/'
 
 
 // Setting the root ref
@@ -46,6 +47,7 @@ const calendarRef = rootRef.child(calendarPath);
 const followUpRef = rootRef.child(followUpPath);
 const performanceGradesRef = rootRef.child(performanceGradesPath);
 const usersRef = rootRef.child(usersPath);
+const billetsDocsRef = rootRef.child(billetsDocsPath);
 
 // Export the refs created
-export { schoolInfoRef, classesRef, booksRef, coursesRef, contractRef, daysCodesRef, additionalFieldsRef, basicDataRef, notificationsRef, studentsRef, disabledStudentsRef, teachersListRef, calendarRef, followUpRef, performanceGradesRef, usersRef };
+export { schoolInfoRef, classesRef, booksRef, coursesRef, contractRef, daysCodesRef, additionalFieldsRef, basicDataRef, notificationsRef, studentsRef, disabledStudentsRef, teachersListRef, calendarRef, followUpRef, performanceGradesRef, usersRef, billetsDocsRef };
