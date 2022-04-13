@@ -10,6 +10,7 @@ import FollowUp from "./FollowUp";
 import FullScreenDialog from "./FullscreenDialog";
 import { handleEnableDisableStudents, handleTransferStudents } from "./FunctionsUse";
 import StudentContracts from "./StudentContracts";
+import StudentDataCard from "./StudentDataCard";
 import StudentFiles from "./StudentFiles";
 import ViewParentsInfo from "./ViewParentsInfo";
 
@@ -256,81 +257,7 @@ const handleOpenContractsDialog = () => {
             </Dialog>
               <Backdrop open={loading} className={classes.backdrop}><CircularProgress color="inherit" /></Backdrop>
               <div className={classes.container}>
-                <Card className={classes.smallCards} variant="outlined" >
-                  <CardContent>
-                  <Grid 
-                      justifyContent="flex-start"
-                      direction="row"
-                      container
-                      spacing={1}
-                    >
-                      <Grid item>
-                        <Avatar className={classes.orange}>
-                          <AccountBox />
-                        </Avatar>
-                      </Grid>
-
-                      <Grid item>
-                        <Typography variant="h5" component="h2">
-                          Dados do Aluno
-                        </Typography>
-                        
-                        
-                      </Grid>
-                    </Grid>
-                    <hr />
-                    <Typography className={classes.title} color="textPrimary" gutterBottom>
-                      {studentData.nomeAluno}
-                    </Typography>
-                    <Grid 
-                      justifyContent="flex-start"
-                      direction="row"
-                      container
-                      spacing={1}
-                    >
-                      <Grid item>
-                        <Avatar alt={studentData.nomeAluno} variant="rounded" src={studentData.fotoAluno} style={{width: '3cm', height: '4cm',}} className={classes.orange} />
-                      </Grid>
-
-                      <Grid item>
-                        <Typography className={classes.pos} color="textSecondary">
-                          Matrícula: {studentData.matriculaAluno}
-                        </Typography>
-                        <Typography className={classes.pos} color="textSecondary">
-                          Nascimento: {studentData.hasOwnProperty('dataNascimentoAluno') && studentData.dataNascimentoAluno.split('-').reverse().join('/')}
-                        </Typography>
-                        <Typography className={classes.pos} color="textSecondary">
-                          CPF: {studentData.cpfAluno}
-                        </Typography>
-                        <Typography className={classes.pos} color="textSecondary">
-                          RG: {studentData.rgAluno}
-                        </Typography>
-                        
-                      </Grid>
-                    </Grid>
-                    
-             
-                    <List component="nav" aria-label="informações adicionais do aluno">
-                      <ListItem>
-                        <ListItemText className={classes.list}>Email: {studentData.emailAluno} </ListItemText>
-                      </ListItem>
-                      <Divider />
-                      <ListItem divider>
-                        <ListItemText>Telefone: {studentData.telefoneAluno}</ListItemText>
-                      </ListItem>
-                      <ListItem>
-                        <ListItemText>Celular: {studentData.celularAluno}</ListItemText>
-                      </ListItem>
-                      <Divider light />
-                      <ListItem>
-                        <ListItemText> Endereço: {studentData.enderecoAluno}, {studentData.numeroAluno}, {studentData.bairroAluno}, {studentData.cidadeAluno}, {studentData.estadoAluno}, CEP: {studentData.cepAluno} </ListItemText>
-                      </ListItem>
-                    </List>
-
-                    
-                  </CardContent>
-                  
-                </Card>
+                <StudentDataCard studentData={studentData} />
              
                 
                   
