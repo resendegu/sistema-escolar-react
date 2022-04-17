@@ -9,7 +9,7 @@ import '../../App.css';
 import Typography from '@material-ui/core/Typography';
 
 import Box from '@material-ui/core/Box';
-import { AttachFile, AttachMoney, Gavel, Home, } from '@material-ui/icons';
+import { AttachFile, AttachMoney, CallToAction, Gavel, Home, } from '@material-ui/icons';
 
 import Contracts from './contracts/Contracts';
 
@@ -81,7 +81,7 @@ export default function AdministrationTabs() {
           <Tab label="Dashboard" icon={<Home />} {...a11yProps(0)} />
           <Tab label="Contratos" icon={<AttachFile />} {...a11yProps(1)} />
           <Tab label="Financeiro" icon={<AttachMoney />} {...a11yProps(2)} />
-          <Tab label="Boletos" icon={<Gavel />} {...a11yProps(3)} />
+          <Tab label="Boletos" icon={<CallToAction />} {...a11yProps(3)} />
         </Tabs>
       </AppBar>
       <TabPanel value={value} index={0}>

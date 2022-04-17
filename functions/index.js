@@ -37,7 +37,9 @@ exports.liberaERemoveAcessos = functions.https.onCall((data, context) => {
     if (context.auth.token.master == true) {
         return admin.database().ref(`sistemaEscolar/listaDeUsuarios/${data.uid}/acessos/${data.acesso}`).set(data.checked).then(() => {
                 return admin.database().ref(`sistemaEscolar/listaDeUsuarios/${data.uid}/acessos/`).once('value').then((snapshot) => {
+                    admin.auth().revokeRefreshTokens(data.uid)
                     return admin.auth().setCustomUserClaims(data.uid, snapshot.val())
+                    
                     .then(() => {
                         return admin.database().ref(`sistemaEscolar/registroGeral`).push({operacao: 'Concessão e remoção de acessos aos usuários', timestamp: admin.firestore.Timestamp.now(), userCreator: context.auth.uid, dados: data}).then(() => {
                             if (data.checked) {
@@ -1833,6 +1835,71 @@ exports.geraBoletos = functions.https.onCall((data, context) => {
         }).catch(error => {
             throw new functions.https.HttpsError('unknown', error.message, error)
         })
+})
+
+exports.escutaBoletos = functions.database.ref('sistemaEscolar/docsBoletos/{docKey}').onCreate((snapshot, context) => {
+    console.log(context.params)
+    console.log(snapshot.after)
+    console.log(context.timestamp)
+    const docKey = context.params.docKey
+    const doc = snapshot.val();
+    if (doc.status !== undefined) {
+        admin.database().ref('sistemaEscolar/docsBoletos').child(docKey).child('status').set(0)
+        console.log(`Doc ${doc.numeroDoc} key ${docKey}. Status setado para 0`)
+    }
+
+    
+})
+
+exports.escutaHistoricoBoletos = functions.database.ref('sistemaEscolar/docsBoletos/{docKey}/historico/{histKey}').onCreate((snapshot, context) => {
+    /**
+     * For the WriteOff, 0 = Pending, 1 = Waiting approval, 2 = Written Off, 3 = Challenge, 4 = Canceled
+     * 0 means that the billet has not been paid or has not received a write off. In other words, is pending a write off.
+     * 1 means that some user with less privilegies in the system changed the status of the billet, then it needs to be approved by one that has the required privilegies
+     * 2 means that the billet have been paid, and the Write Off is approved and effective.
+     * 3 means that some user has encountered some inconsistency related to that billet and needs review.
+     * 4 means that this billet has been canceled for some reason and will not be charged.
+     */
+     const billetStatus = [
+        'Pendente',
+        'Aguardando aprovação',
+        'Baixa efetuada',
+        'Contestado',
+        'Cancelado'
+    ];
+    const docKey = context.params.docKey
+    const histKey = context.params.histKey
+    const hist = snapshot.val()
+    const userRequester = hist.userCreator
+
+    console.log(hist)
+
+    const start = async () => {
+        if (hist.status !== undefined) {
+            const user = await admin.auth().getUser(userRequester)
+            const userAccess = user.customClaims
+            
+            if (userAccess.master === true || userAccess.adm === true) {
+                admin.database().ref('sistemaEscolar/docsBoletos').child(docKey).child('status').set(hist.status)
+                admin.database().ref('sistemaEscolar/docsBoletos').child(docKey).child('historico').child(histKey).child('approver').set(userRequester)
+                admin.database().ref('sistemaEscolar/docsBoletos').child(docKey).child('historico').child(histKey).child('comments').push({text: `(Comentário automático do sistema) O usuário ${user.displayName} (${user.email}) modificou o status deste documento para "${billetStatus[hist.status]}".`, timestamp: context.timestamp})
+                admin.database().ref('sistemaEscolar/docsBoletos').child(docKey).child('valorPago').set(hist.paidValue)
+                admin.database().ref('sistemaEscolar/docsBoletos').child(docKey).child('dataDePagamento').set(hist.paidPaymentDay)
+                admin.database().ref('sistemaEscolar/billetsNotifications').push({title: 'Mudança de status no boleto', text: 'O boleto abaixo teve seu status modificado', docKey: docKey, histKey: histKey, userCreator: userRequester, timestamp: context.timestamp})
+            } else {
+                admin.database().ref('sistemaEscolar/docsBoletos').child(docKey).child('status').set(1)
+                
+                admin.database().ref('sistemaEscolar/docsBoletos').child(docKey).child('historico').child(histKey).child('comments').push({text: `(Comentário automático do sistema) O usuário ${user.displayName} (${user.email}) deseja modificar o status deste documento para "${billetStatus[hist.status]}" e necessita de aprovação.`, timestamp: context.timestamp})
+                admin.database().ref('sistemaEscolar/billetsNotifications').push({title: 'Mudança de status boleto', text: 'O boleto abaixo teve seu status modificado', docKey: docKey, histKey: histKey, userCreator: userRequester, timestamp: context.timestamp})
+            }
+        }
+        
+        
+    }
+    
+
+    //admin.database().ref('sistemaEscolar/billetsNotifications').child(docKey).child()
+    start()
 })
 
 

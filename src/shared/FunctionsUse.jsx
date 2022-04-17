@@ -361,7 +361,7 @@ async function createBilletView(parcelaAtual, numDeParcelas, vencimento, numeroD
     //let boletos = document.getElementById('boletos')
     billetElem.innerHTML = ""
     let gera = functions.httpsCallable('geraPix')
-    await  gera({valor: totalCobrado, descricao: `DOC${numeroDoc}`}).then(function(lineCode) {
+    await gera({valor: totalCobrado, descricao: `DOC${numeroDoc}`}).then(function(lineCode) {
 
         
         //divQr.src = lineCode.data;
@@ -627,5 +627,17 @@ async function createBilletView(parcelaAtual, numDeParcelas, vencimento, numeroD
     })
     return ;
 }
+
+const grantAndRevokeAccess = async (access, uid, checked) => {
+    let grantAndRevokeAccessFunction = functions.httpsCallable('liberaERemoveAcessos');
+    try {
+        let result = await grantAndRevokeAccessFunction({acesso: access, checked: checked, uid: uid});
+        console.log(result.data)
+        return result.data;
+    } catch (error) {
+        console.log(error)
+        throw new Error(error.message)
+    }
+}
  
-export { calculateAge, checkCpf, getAddress, enrollStudent, handleSendClassData, formatBytes, generateClassCode, handleEnableDisableStudents, handleTransferStudents, handleAddTeacher, handleDeleteClass, handleRemoveTeacher, getRandomKey, handleClassOpen, handleCloseClass, capitalizeFirstLetter, getBrazilianHolidays, accessVerification, generateBillets, createBilletView };
+export { calculateAge, checkCpf, getAddress, enrollStudent, handleSendClassData, formatBytes, generateClassCode, handleEnableDisableStudents, handleTransferStudents, handleAddTeacher, handleDeleteClass, handleRemoveTeacher, getRandomKey, handleClassOpen, handleCloseClass, capitalizeFirstLetter, getBrazilianHolidays, accessVerification, generateBillets, createBilletView, grantAndRevokeAccess };

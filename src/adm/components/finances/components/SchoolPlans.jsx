@@ -33,6 +33,12 @@ const SchoolPlans = () => {
         
     }, [])
 
+    useEffect(() => {
+        
+        console.log(course)
+        
+    }, [course])
+
     async function getAdditionalFields() {
         let localPlans = []
         setLoading(true)
@@ -148,7 +154,7 @@ const SchoolPlans = () => {
                         onChange={(e) => setCourse(e.target.value)}
                         fullWidth
                         >
-                            {courses.map((localCourse, i) => <MenuItem value={localCourse.codSistema} selected={i === 0}>{localCourse.nomeCurso}</MenuItem>)}
+                            {courses.map((localCourse, i) => <MenuItem value={localCourse.codSistema}>{localCourse.nomeCurso}</MenuItem>)}
                         </Select>
                     </FormControl>
                     </DialogContent>
@@ -156,7 +162,7 @@ const SchoolPlans = () => {
                     <Button onClick={() => setDialog(false)} color="primary">
                         Fechar
                     </Button>
-                    <Button onClick={handleAddRow} disabled={!course} color="primary">
+                    <Button onClick={handleAddRow} disabled={course === undefined} color="primary">
                         Continuar
                     </Button>
                     </DialogActions>

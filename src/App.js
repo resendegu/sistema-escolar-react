@@ -1,6 +1,6 @@
 import { createContext, Fragment, useEffect, useState } from 'react';
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
-import { auth, onMessageListener } from './services/firebase';
+import { auth, functions, onMessageListener } from './services/firebase';
 import Notifications from './shared/Notifications';
 import ReactNotificationComponent from './shared/ReactNotifications';
 import { useSnackbar } from 'notistack';
@@ -24,9 +24,12 @@ function App() {
   const [ show, setShow ] = useState(false);
   const [ notification, setNotification ] = useState({ title: "", body: "" });
 
+  
+
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
   useEffect(() => {
+    
     if (show) {
       enqueueSnackbar(notification.body, {title: notification.title, variant: 'info', anchorOrigin: {horizontal: 'right', vertical: 'bottom'}})
       

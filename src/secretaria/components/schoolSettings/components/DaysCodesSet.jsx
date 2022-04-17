@@ -12,7 +12,7 @@ const DaysCodeSet = () => {
     useEffect(() => {
         async function getData() {
             let valuesArray = (await daysCodesRef.once('value')).val()
-            setValues(valuesArray);
+            valuesArray && setValues(valuesArray);
         }
         getData()
     }, [])

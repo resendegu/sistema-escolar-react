@@ -27,3 +27,10 @@ yarn-error.log*
 *.cache
 
 .firebase
+firebase-export*
+.emulators
+database-debug.log
+firebase-debug.log
+firestore-debug.log
+pubsub-debug.log
+ui-debug.log

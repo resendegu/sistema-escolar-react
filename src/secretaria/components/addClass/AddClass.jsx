@@ -191,6 +191,7 @@ const AddClass = ({dataForEditing, onClose}) => {
 
     const getCourses = async () => {
         const allCourses = (await coursesRef.once('value')).val();
+        console.log(allCourses)
         setCourses(allCourses);
     }
 
@@ -203,7 +204,7 @@ const AddClass = ({dataForEditing, onClose}) => {
                 teachersArray.push(teacher)
             }
         }
-        setTeachers(teachersArray);
+        allTeachers ? setTeachers(teachersArray) : setTeachers()
     }
 
     const handleFormChange = async (e) => {
@@ -336,7 +337,7 @@ const AddClass = ({dataForEditing, onClose}) => {
                             </Box>
                             
                             <Box m={1}>
-                                <TextField
+                                {courses ? <TextField
                                     id="curso"
                                     select
                                     label="Curso"
@@ -358,10 +359,10 @@ const AddClass = ({dataForEditing, onClose}) => {
                                         {option.codCurso + ' - ' + option.nomeCurso}
                                         </option>
                                     ))}
-                                </TextField>
+                                </TextField> : <label style={{color: 'red'}}>Nenhum curso cadastrado no sistema</label>}
                             </Box>
                             <Box m={1}>
-                                <TextField
+                                {teachers ? <TextField
                                     id="professor"
                                     select
                                     label="Professor(a) Referência"
@@ -382,7 +383,7 @@ const AddClass = ({dataForEditing, onClose}) => {
                                         {`${teacher.nome} (${teacher.email})`}
                                         </option>
                                     ))}
-                                </TextField>
+                                </TextField> : <label style={{color: 'red'}}>Nenhum professor cadastrado no sistema</label>}
                             </Box>
                             <Box m={1}>
                                 <TextField
@@ -439,7 +440,7 @@ const AddClass = ({dataForEditing, onClose}) => {
                         </Grid>
                         <hr />
                         <Box m={1}>
-                        <FormControl className={classes.formControl}>
+                        {days ? <FormControl className={classes.formControl}>
                             <InputLabel id="demo-mutiple-chip-label">Dias da semana</InputLabel>
                             <Select
                             labelId="demo-mutiple-chip-label"
@@ -465,7 +466,7 @@ const AddClass = ({dataForEditing, onClose}) => {
                                 </MenuItem>
                             ))}
                             </Select>
-                        </FormControl>
+                        </FormControl> : <label style={{color: 'red'}}>Códigos de dias da semana não configurados no sistema</label>}
                         </Box>
                         <Box m={1}>
                         <div style={{ height: 250, width: '100%' }}>
@@ -504,7 +505,7 @@ const AddClass = ({dataForEditing, onClose}) => {
                 </Card>
             </div>
             <div>
-                <Fab onClick={handleSubmit} style={fabStyle} variant="extended" color='primary'>
+                <Fab onClick={handleSubmit} disabled={!courses || !teachers || !rows || !days} style={fabStyle} variant="extended" color='primary'>
                 <Add className={classes.extendedIcon} />
                     Cadastrar turma
                 </Fab>

@@ -27,6 +27,7 @@ import { usersRef } from "../services/storageRefs";
 import { auth } from "../services/firebase";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { accessVerification } from "../shared/FunctionsUse";
+import AdminCenter from "../shared/AdminCenter";
 
 const useStyles = makeStyles((theme) => ({
     paper: {
@@ -69,6 +70,7 @@ const AccountCenter = ({history, onClose, openChangePasswordDialog}) => {
     const [ photoBackdrop, setPhotoBackdrop ] = useState(false);
     const [ isAdmin, setIsAdmin ] = useState(false);
     const {enqueueSnackbar, closeSnackbar} = useSnackbar();
+    const [ openAdmin, setOpenAdmin ] = useState(false);
 
     const [user, loading, error] = useAuthState(auth);
 
@@ -144,11 +146,16 @@ const AccountCenter = ({history, onClose, openChangePasswordDialog}) => {
       setIsLoading(false);
     }
 
+    const handleOpenAdminCenter = () => {
+      setOpenAdmin(true);
+    }
+    
     return (
         <Fragment>
             <Backdrop className={classes.backdrop} open={isLoading}>
               <CircularProgress color="inherit" />
             </Backdrop>
+            <AdminCenter isOpen={openAdmin}/>
             <Dialog open={open} onClose={onClose}>
                 <Container component="main" maxWidth="xs">
                     <div className={classes.paper}>
@@ -188,7 +195,7 @@ const AccountCenter = ({history, onClose, openChangePasswordDialog}) => {
                         <input type="file" accept="image/*" name="foto" id="alteraFoto" style={{visibility: 'hidden'}} onChange={(e) => handleChangePhoto(e.target.files)} />
                         <Button fullWidth className={classes.button} onClick={handlePasswordRecover}>Alterar minha senha</Button>
                         <Button fullWidth className={classes.button} onClick={() => signOut()} color="secondary" variant="contained">Sair</Button>
-                        <Button fullWidth className={classes.button} variant="contained" color="primary" disabled={!isAdmin}>Central do administrador {verifyingAccess && <CircularProgress color="secondary" style={{float: 'right'}} size={20} />}</Button>
+                        <Button fullWidth className={classes.button} variant="contained" color="primary" disabled={!isAdmin} onChange={handleOpenAdminCenter}>Central do administrador {verifyingAccess && <CircularProgress color="secondary" style={{float: 'right'}} size={20} />}</Button>
                         
                         
                     </div>
