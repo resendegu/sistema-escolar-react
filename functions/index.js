@@ -1880,17 +1880,20 @@ exports.escutaHistoricoBoletos = functions.database.ref('sistemaEscolar/docsBole
             const userAccess = user.customClaims
             
             if (userAccess.master === true || userAccess.adm === true) {
-                admin.database().ref('sistemaEscolar/docsBoletos').child(docKey).child('status').set(hist.status)
-                admin.database().ref('sistemaEscolar/docsBoletos').child(docKey).child('historico').child(histKey).child('approver').set(userRequester)
-                admin.database().ref('sistemaEscolar/docsBoletos').child(docKey).child('historico').child(histKey).child('comments').push({text: `(Comentário automático do sistema) O usuário ${user.displayName} (${user.email}) modificou o status deste documento para "${billetStatus[hist.status]}".`, timestamp: context.timestamp})
-                admin.database().ref('sistemaEscolar/docsBoletos').child(docKey).child('valorPago').set(hist.paidValue)
-                admin.database().ref('sistemaEscolar/docsBoletos').child(docKey).child('dataDePagamento').set(hist.paidPaymentDay)
-                admin.database().ref('sistemaEscolar/billetsNotifications').push({title: 'Mudança de status no boleto', text: 'O boleto abaixo teve seu status modificado', docKey: docKey, histKey: histKey, userCreator: userRequester, timestamp: context.timestamp})
-            } else {
-                admin.database().ref('sistemaEscolar/docsBoletos').child(docKey).child('status').set(1)
+                await admin.database().ref('sistemaEscolar/docsBoletos').child(docKey).child('status').set(hist.status)
+                await admin.database().ref('sistemaEscolar/docsBoletos').child(docKey).child('historico').child(histKey).child('approver').set(userRequester)
+                await admin.database().ref('sistemaEscolar/docsBoletos').child(docKey).child('historico').child(histKey).child('comments').push({text: `(Comentário automático do sistema) O usuário ${user.displayName} (${user.email}) modificou o status deste documento para "${billetStatus[hist.status]}".`, timestamp: context.timestamp})
+                if (hist.paidValue !== undefined && hist.paymentDay !== undefined) {
+                    await admin.database().ref('sistemaEscolar/docsBoletos').child(docKey).child('valorPago').set(hist.paidValue)
+                    await admin.database().ref('sistemaEscolar/docsBoletos').child(docKey).child('dataDePagamento').set(hist.paymentDay)
+                }
                 
-                admin.database().ref('sistemaEscolar/docsBoletos').child(docKey).child('historico').child(histKey).child('comments').push({text: `(Comentário automático do sistema) O usuário ${user.displayName} (${user.email}) deseja modificar o status deste documento para "${billetStatus[hist.status]}" e necessita de aprovação.`, timestamp: context.timestamp})
-                admin.database().ref('sistemaEscolar/billetsNotifications').push({title: 'Mudança de status boleto', text: 'O boleto abaixo teve seu status modificado', docKey: docKey, histKey: histKey, userCreator: userRequester, timestamp: context.timestamp})
+                await admin.database().ref('sistemaEscolar/billetsNotifications').push({title: 'Mudança de status no boleto', text: 'O boleto abaixo teve seu status modificado', docKey: docKey, histKey: histKey, userCreator: userRequester, timestamp: context.timestamp})
+            } else {
+                await admin.database().ref('sistemaEscolar/docsBoletos').child(docKey).child('status').set(1)
+                
+                await admin.database().ref('sistemaEscolar/docsBoletos').child(docKey).child('historico').child(histKey).child('comments').push({text: `(Comentário automático do sistema) O usuário ${user.displayName} (${user.email}) deseja modificar o status deste documento para "${billetStatus[hist.status]}" e necessita de aprovação.`, timestamp: context.timestamp})
+                await admin.database().ref('sistemaEscolar/billetsNotifications').push({title: 'Mudança de status boleto', text: 'O boleto abaixo teve seu status modificado', docKey: docKey, histKey: histKey, userCreator: userRequester, timestamp: context.timestamp})
             }
         }
         
@@ -1937,42 +1940,42 @@ exports.escutaHistoricoBoletos = functions.database.ref('sistemaEscolar/docsBole
 
 // Functions for chat app
 
-exports.chatListener = functions.database.instance('chatchat-7d3bc').ref('chats').onCreate(async (snapshot, context) => {
+// exports.chatListener = functions.database.instance('chatchat-7d3bc').ref('chats').onCreate(async (snapshot, context) => {
     
-    const chat = snapshot.val();
-    const chatKey = chat.chatKey;
+//     const chat = snapshot.val();
+//     const chatKey = chat.chatKey;
 
-    await admin.database('https://chatchat-7d3bc.firebaseio.com/').ref('chats').child(chatKey + '/createdAt').set(context.timestamp)
-    
-
-    
-    const settingsRef = admin.database('https://chatchat-7d3bc.firebaseio.com/').ref('settings')
-
-    const settings = (await settingsRef.once('value')).val()
-
-    if (settings.sendEmail) {
-        const now = new Date(context.timestamp)
-        const emailContent = {
-            to: 'chat@grupoprox.com',
-            cco: settings.emails,
-            message: {
-                subject: `Novo Chat pendente`,
-                text: `${chat.name.split(' ')[0]} está esperando ser atendido.`,
-                html: `<h3>${chat.name.split(' ')[0]} está esperando ser atendido.</h3><p>Informações coletadas já coletadas:</p><p>Nome: ${chat.name}</p><p> Criado em: ${now.toLocaleDateString()}</p><p>Sistemas GrupoProX.</p>`
-            }
-        }
-
-        const firestoreRef = admin.firestore().collection('mail');
-        firestoreRef.add(emailContent).then(() => {
-            console.log('Queued email for delivery to gustavo@resende.app')
-        }).catch(error => {
-            console.error(error)
-            throw new Error(error.message)
-        })
-    }
-
+//     await admin.database('https://chatchat-7d3bc.firebaseio.com/').ref('chats').child(chatKey + '/createdAt').set(context.timestamp)
     
 
     
+//     const settingsRef = admin.database('https://chatchat-7d3bc.firebaseio.com/').ref('settings')
 
-})
+//     const settings = (await settingsRef.once('value')).val()
+
+//     if (settings.sendEmail) {
+//         const now = new Date(context.timestamp)
+//         const emailContent = {
+//             to: 'chat@grupoprox.com',
+//             cco: settings.emails,
+//             message: {
+//                 subject: `Novo Chat pendente`,
+//                 text: `${chat.name.split(' ')[0]} está esperando ser atendido.`,
+//                 html: `<h3>${chat.name.split(' ')[0]} está esperando ser atendido.</h3><p>Informações coletadas já coletadas:</p><p>Nome: ${chat.name}</p><p> Criado em: ${now.toLocaleDateString()}</p><p>Sistemas GrupoProX.</p>`
+//             }
+//         }
+
+//         const firestoreRef = admin.firestore().collection('mail');
+//         firestoreRef.add(emailContent).then(() => {
+//             console.log('Queued email for delivery to gustavo@resende.app')
+//         }).catch(error => {
+//             console.error(error)
+//             throw new Error(error.message)
+//         })
+//     }
+
+    
+
+    
+
+// })

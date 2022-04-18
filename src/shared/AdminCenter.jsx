@@ -1,20 +1,108 @@
-import { Button, Checkbox, Dialog, DialogActions, DialogContent, Select, TextField } from "@material-ui/core";
+import { Button, Checkbox, createTheme, darken, Dialog, DialogActions, DialogContent, DialogTitle, lighten, makeStyles, Select, TextField } from "@material-ui/core";
+import { DataGrid, GridToolbar } from "@mui/x-data-grid";
+import { useSnackbar } from "notistack";
 import { Fragment, useEffect, useState } from "react";
 import { usersListRef } from "../services/databaseRefs";
+import { LocaleText } from "./DataGridLocaleText";
 import { grantAndRevokeAccess } from "./FunctionsUse";
 
-const AdminCenter = ({isOpen}) => {
-    const [ open, setOpen ] = useState(false);
+function getThemePaletteMode(palette) {
+    return palette.type || palette.mode;
+  }
+
+  
+  
+  const defaultTheme = createTheme();
+  const useStyles = makeStyles(
+    (theme) => {
+      const getBackgroundColor = (color) =>
+        getThemePaletteMode(theme.palette) === 'dark'
+          ? darken(color, 0.6)
+          : lighten(color, 0.6);
+  
+      const getHoverBackgroundColor = (color) =>
+        getThemePaletteMode(theme.palette) === 'dark'
+          ? darken(color, 0.5)
+          : lighten(color, 0.5);
+  
+      return {
+        root: {
+          '& .super-app-theme--Open': {
+            backgroundColor: getBackgroundColor(theme.palette.info.main),
+            '&:hover': {
+              backgroundColor: getHoverBackgroundColor(theme.palette.info.main),
+            },
+          },
+          '& .super-app-theme--Filled': {
+            backgroundColor: getBackgroundColor(theme.palette.success.main),
+            '&:hover': {
+              backgroundColor: getHoverBackgroundColor(theme.palette.success.main),
+            },
+          },
+          '& .super-app-theme--PartiallyFilled': {
+            backgroundColor: getBackgroundColor(theme.palette.warning.main),
+            '&:hover': {
+              backgroundColor: getHoverBackgroundColor(theme.palette.warning.main),
+            },
+          },
+          '& .super-app-theme--true': {
+            backgroundColor: getBackgroundColor(theme.palette.error.main),
+            '&:hover': {
+              backgroundColor: getHoverBackgroundColor(theme.palette.error.main),
+            },
+          },
+        },
+      };
+    },
+    { defaultTheme },
+  );
+
+const AdminCenter = ({isOpen, onClose}) => {
+
+    const classes = useStyles();
+
+    const {enqueueSnackbar, closeSnackbar} = useSnackbar();
+    
     const [ userUid, setUserUid ] = useState();
     const [ access, setAccess ] = useState();
     const [ checked, setChecked ] = useState(false);
     const [ users, setUsers ] = useState();
+    const [ filterModel, setFilterModel ] = useState({
+        items: [],
+    });
+    const [ loading, setLoading ] = useState(false);
 
     useEffect(() => {
-        setOpen(true)
-        usersListRef.once('value').then((snap) => {
-            setUsers(snap.val())
-        })
+        if (isOpen) {
+            setLoading(true)
+            let usersArray = []
+            usersListRef.on('value', (snap) => {
+                for (const uid in snap.val()) {
+                    if (Object.hasOwnProperty.call(snap.val(), uid)) {
+                        let user = snap.val()[uid];
+                        user.id = uid
+                        const accesses = user.acessos
+                        for (const access in accesses) {
+                            if (Object.hasOwnProperty.call(accesses, access)) {
+                                const status = accesses[access];
+                                user[access] = status
+                            }
+                        }
+                        usersArray.push(user)
+                        
+                    }
+                }
+                setUsers([...usersArray])
+                setLoading(false)
+            }, (error) => {
+                console.log(error)
+            })
+
+            return () => {
+                usersListRef.off();
+            }
+        }
+        
     }, [isOpen])
 
     const handleGrantAccess = async () => {
@@ -27,28 +115,76 @@ const AdminCenter = ({isOpen}) => {
         }
     }
 
+    const handleRowEdit = async (e) => {
+        console.log(e);
+        setLoading(true)
+        const access = e.field
+        const uid = e.id
+        const checked = e.value
+        try {
+            const result = await grantAndRevokeAccess(access, uid, checked)
+            console.log(result)
+            enqueueSnackbar(result.acesso, {title: 'Sucesso', variant: 'success', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
+        } catch (error) {
+            console.log(error)
+            enqueueSnackbar(error.message, {title: 'Erro', variant: 'error', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
+        }
+        setLoading(false)
+    }
+
+    const handleRowSelection = async (e) => {
+        console.log(e);
+    }
+
+    const handleRowClick = async (e) => {
+        console.log(e);
+    }
+
     return (
         <Fragment>
-            <Dialog fullScreen open={open}>
+            <Dialog fullScreen open={isOpen} onClose={onClose}>
+                <DialogTitle>Controle de acessos e privilégios</DialogTitle>
                 <DialogContent>
-                    { users && <Select
-                        native
-                        value={userUid}
-                        onChange={(e) => setUserUid(e.target.value)}
-                    >
-                        <option hidden selected>Escolha...</option>
-                        {Object.keys(users).map((uid, i) => <option value={uid}>{users[uid].email}</option>)}
-                    </Select>}
-                    <TextField label="Acesso" value={access} onChange={(e) => setAccess(e.target.value)}/>
-                    <Checkbox value={checked} onChange={(e) => setChecked(e.target.checked)} />
-                    Conceder acesso
+                <div style={{ height: "75vh", width: '100%' }} className={classes.root}>
+                        {users && <DataGrid 
+                            filterModel={filterModel}
+                            onFilterModelChange={(model) => setFilterModel(model)}
+                            rows={users} 
+                            columns={
+                                [
+                                    {field: 'email', headerName: 'Email', width: 300},
+                                    {field: 'master', headerName: 'Master', type: 'boolean', width: 180, editable: true},
+                                    {field: 'adm', headerName: 'Administração', type: 'boolean', width: 180, editable: true},
+                                    {field: 'professores', headerName: 'Professores', type: 'boolean', width: 180, editable: true},
+                                    {field: 'secretaria', headerName: 'Secretaria', type: 'boolean', width: 180, editable: true},
+                                    {field: 'aluno', headerName: 'Aluno', type: 'boolean', width: 180, editable: true}
+                                ]
+                            } 
+                            disableSelectionOnClick 
+                            checkboxSelection
+                            components={{
+                                Toolbar: GridToolbar
 
-                    <Button onClick={handleGrantAccess}>Conceder acesso</Button>
+                            }}
+                            onCellEditCommit={handleRowEdit}
+                            loading={loading}
+                            localeText={LocaleText}
+                            onSelectionModelChange={handleRowSelection}
+                            onRowClick={handleRowClick}
+                            getRowClassName={(params) => {
+                                console.log(`super-app-theme--${params.getValue(params.id, 'disabled')}`)
+                                return `super-app-theme--${params.getValue(params.id, 'disabled')}`
+                            }
+                            }
 
-                    <DialogActions>
-                        <Button onClick={() => setOpen(false)}>Fechar</Button>
-                    </DialogActions>
+                        />}
+                    </div>
+
+                    
                 </DialogContent>
+                <DialogActions>
+                    <Button onClick={onClose}>Fechar</Button>
+                </DialogActions>
             </Dialog>
         </Fragment>
     );

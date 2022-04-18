@@ -155,7 +155,7 @@ const AccountCenter = ({history, onClose, openChangePasswordDialog}) => {
             <Backdrop className={classes.backdrop} open={isLoading}>
               <CircularProgress color="inherit" />
             </Backdrop>
-            <AdminCenter isOpen={openAdmin}/>
+            <AdminCenter isOpen={openAdmin} onClose={() => setOpenAdmin(false)}/>
             <Dialog open={open} onClose={onClose}>
                 <Container component="main" maxWidth="xs">
                     <div className={classes.paper}>
@@ -195,7 +195,7 @@ const AccountCenter = ({history, onClose, openChangePasswordDialog}) => {
                         <input type="file" accept="image/*" name="foto" id="alteraFoto" style={{visibility: 'hidden'}} onChange={(e) => handleChangePhoto(e.target.files)} />
                         <Button fullWidth className={classes.button} onClick={handlePasswordRecover}>Alterar minha senha</Button>
                         <Button fullWidth className={classes.button} onClick={() => signOut()} color="secondary" variant="contained">Sair</Button>
-                        <Button fullWidth className={classes.button} variant="contained" color="primary" disabled={!isAdmin} onChange={handleOpenAdminCenter}>Central do administrador {verifyingAccess && <CircularProgress color="secondary" style={{float: 'right'}} size={20} />}</Button>
+                        <Button fullWidth className={classes.button} variant="contained" color="primary" disabled={!isAdmin} onClick={handleOpenAdminCenter}>Central do administrador {verifyingAccess && <CircularProgress color="secondary" style={{float: 'right'}} size={20} />}</Button>
                         
                         
                     </div>
