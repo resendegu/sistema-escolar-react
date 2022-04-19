@@ -31,7 +31,7 @@ const useStyles = makeStyles((theme) => ({
     }
   }));
 
-function BasicDataFields({ shrink, handleOptionalSteps, setParentsRequired, setLoader, editMode=false }) {
+function BasicDataFields({ shrink, handleOptionalSteps, setParentsRequired, setLoader, editMode=false, external=false }) {
     
     const classes = useStyles();
 
@@ -39,15 +39,18 @@ function BasicDataFields({ shrink, handleOptionalSteps, setParentsRequired, setL
     
 
     const [ validCpf, setValidCpf ] = useState(false);
-    const [ enrollType, setEnrollType ] = useState({checked: false, value: 'matricula'});
+    const [ enrollType, setEnrollType ] = useState(external ? {checked: true, value: 'preMatricula'} : {checked: false, value: 'matricula'});
 
 
     useEffect(() => {
+        if (external) {
+            setEnrollType({checked: true, value: 'preMatricula'})
+        }
         let basicData = JSON.parse(sessionStorage.getItem(0))
         try {
             if (basicData.tipoMatricula === 'preMatricula') {
                 setEnrollType({checked: true, value: 'preMatricula'})
-                handleOptionalSteps(1)
+                !external && handleOptionalSteps(1)
             } else {
                 setEnrollType({checked: false, value: 'matricula'})
                 
@@ -113,14 +116,14 @@ function BasicDataFields({ shrink, handleOptionalSteps, setParentsRequired, setL
                 <FormGroup>
                     <FormControlLabel
                     control={<Switch checked={enrollType.checked} onChange={handleChangeEnrollType} id="tipoMatricula" name="tipoMatricula" value="preMatricula" color="primary"/>}
-                    label={'Pré-matrícula'}
+                    label={'Pré-matrícula'} disabled={external}
                     />
                     
                 </FormGroup>
-                <FormHelperText>Escolha se será uma matrícula ou pré-matrícula.</FormHelperText>
+                {!external && <FormHelperText>Escolha se será uma matrícula ou pré-matrícula.</FormHelperText>}
             </FormControl>}
               <Grid 
-              justifyContent="flex-start"   
+              justifyContent="center"   
               container
               direction="row"
               spacing={0}

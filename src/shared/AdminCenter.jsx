@@ -5,6 +5,7 @@ import { Fragment, useEffect, useState } from "react";
 import { usersListRef } from "../services/databaseRefs";
 import { LocaleText } from "./DataGridLocaleText";
 import { grantAndRevokeAccess } from "./FunctionsUse";
+import { useConfirmation } from "../contexts/ConfirmContext";
 
 function getThemePaletteMode(palette) {
     return palette.type || palette.mode;
@@ -61,6 +62,8 @@ const AdminCenter = ({isOpen, onClose}) => {
 
     const classes = useStyles();
 
+    const confirm = useConfirmation();
+
     const {enqueueSnackbar, closeSnackbar} = useSnackbar();
     
     const [ userUid, setUserUid ] = useState();
@@ -105,29 +108,26 @@ const AdminCenter = ({isOpen, onClose}) => {
         
     }, [isOpen])
 
-    const handleGrantAccess = async () => {
-        try {
-            console.log(userUid, access, checked)
-            let result = await grantAndRevokeAccess(access, userUid, checked);
-            console.log(result)
-        } catch (error) {
-            console.log(error)
-        }
-    }
-
     const handleRowEdit = async (e) => {
         console.log(e);
         setLoading(true)
         const access = e.field
+        
         const uid = e.id
         const checked = e.value
         try {
+            await confirm({
+              variant: "danger",
+              catchOnCancel: true,
+              title: "Confirmação",
+              description: `Cuidado. Você está editando o acesso MASTER do usuário. Deseja alterar o acesso MASTER deste usuário?`,
+            });
             const result = await grantAndRevokeAccess(access, uid, checked)
             console.log(result)
             enqueueSnackbar(result.acesso, {title: 'Sucesso', variant: 'success', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
         } catch (error) {
             console.log(error)
-            enqueueSnackbar(error.message, {title: 'Erro', variant: 'error', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
+            error && enqueueSnackbar(error.message, {title: 'Erro', variant: 'error', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
         }
         setLoading(false)
     }

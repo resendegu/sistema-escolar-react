@@ -17,6 +17,7 @@ import { notificationsRef } from './services/databaseRefs';
 import { ConfirmationServiceProvider } from './contexts/ConfirmContext';
 import Professores from './professores/Professores';
 import Administration from './adm/Administration';
+import ExternalEnroll from './estudante/matricula/ExternalEnroll';
 
 export const AuthContext = createContext({});
 
@@ -29,7 +30,6 @@ function App() {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
   useEffect(() => {
-    
     if (show) {
       enqueueSnackbar(notification.body, {title: notification.title, variant: 'info', anchorOrigin: {horizontal: 'right', vertical: 'bottom'}})
       
@@ -67,12 +67,13 @@ function App() {
       <Router>
         <ConfirmationServiceProvider>
           <AuthContextProvider>
-            <Navbar />
+            {window.location.pathname !== '/estudante/matricula' && <Navbar />}
             <Switch>
               <Route path="/" exact component={Home} />
               <Route path="/secretaria" component={Secretaria} />
               <Route path="/professores" component={Professores} />
               <Route path="/adm" component={Administration}/>
+              <Route path="/estudante/matricula" exact component={ExternalEnroll}/>
             </Switch>
             
           </AuthContextProvider>

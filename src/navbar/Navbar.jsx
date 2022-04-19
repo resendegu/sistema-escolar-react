@@ -139,7 +139,7 @@ export default function Navbar(props) {
             alignItems="center"
           >
             <Grid item>
-              <IconButton edge="start" className={classes.menuButton} onClick={openDrawer} color="inherit" aria-label="menu">
+              <IconButton edge="start" className={classes.menuButton} onClick={openDrawer} color="inherit" aria-label="menu" disabled={!user || user === 'Searching user...'}>
                 <MenuIcon />
               </IconButton>
               

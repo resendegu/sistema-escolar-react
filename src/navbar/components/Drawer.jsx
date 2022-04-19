@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import AppBar from '@material-ui/core/AppBar';
 import CssBaseline from '@material-ui/core/CssBaseline';
@@ -23,11 +23,14 @@ import {
     ImportContacts,
     AllInbox,
     Apartment,
+    School,
 } from '@material-ui/icons'
 import MenuItem from '@material-ui/core/MenuItem';
 import Menu from '@material-ui/core/Menu';
 import { Box, SwipeableDrawer } from '@material-ui/core';
 import SimpleContainer from '../../Container';
+import { useAuth } from '../../hooks/useAuth';
+import { usersListRef } from '../../services/databaseRefs';
 
 
 const drawerWidth = 240;
@@ -76,14 +79,39 @@ function ResponsiveDrawer(props) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [auth, setAuth] = useState(true);
   const [anchorEl, setAnchorEl] = useState(null);
+  const { user } = useAuth();
+  const [ areas, setAreas ] = useState([]);
+
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
   };
 
-  
+  useEffect(() => {
+    console.log(user)
+    if (user && user !== 'Searching user...') {
+      usersListRef.child(user.id).once('value').then((snapshot) => {
+        let userAccess = snapshot.val().acessos
+        let localAreas = []
+        
+        userAccess.professores === true && localAreas.push({text: 'Professores', to: 'professores', icon: 1})
 
-  const firstIcons = [<AllInbox/>, <ImportContacts/>, <Apartment/>];
+        if (userAccess.master === true) {
+          localAreas.push({text: 'Administração', to: 'adm', icon: 2})
+          localAreas.push({text: 'Secretaria', to: 'secretaria', icon: 0})
+        } else {
+          userAccess.adm === true && localAreas.push({text: 'Administração', to: 'adm', icon: 2})
+          userAccess.secretaria === true && localAreas.push({text: 'Secretaria', to: 'secretaria', icon: 0})
+          userAccess.aluno === true && localAreas.push({text: 'Estudante', to: 'estudante', icon: 3})
+        }
+        setAreas([...localAreas])
+      })
+    } else {
+
+    }
+  }, [user])
+
+  const firstIcons = [<AllInbox/>, <ImportContacts/>, <Apartment/>, <School />];
   const drawer = (
     <div>
         <div className={classes.toolbar}>
@@ -107,10 +135,10 @@ function ResponsiveDrawer(props) {
         </List>
         <Divider />
         <List>
-            {[{text: 'Secretaria', to: 'secretaria'}, {text: 'Professores', to: 'professores'}, {text: 'Administração', to: 'adm'}].map((elem, index) => (
+            {areas.map((elem, index) => (
                 <Link to={'/' + elem.to} style={{textDecoration: 'none', color: 'black'}}>
                     <ListItem button key={elem.text}>
-                        <ListItemIcon>{firstIcons[index]}</ListItemIcon>
+                        <ListItemIcon>{firstIcons[elem.icon]}</ListItemIcon>
                         <ListItemText primary={elem.text} />
                     </ListItem>
                 </Link>

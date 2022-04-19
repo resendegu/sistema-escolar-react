@@ -531,7 +531,7 @@ exports.cadastraAluno = functions.https.onCall(async (data, context) => {
         numero = numero.slice(-5,-1) + numero.slice(-1);
         return numero
     }
-    if (context.auth.token.master == true || context.auth.token.secretaria == true) {
+    if (data.dados.tipoMatricula === 'preMatricula' || context.auth.token.master == true || context.auth.token.secretaria == true) {
         let dadosAluno = data.dados
         if (dadosAluno.tipoMatricula == 'preMatricula') {
             delete dadosAluno.tipoMatricula
@@ -549,7 +549,7 @@ exports.cadastraAluno = functions.https.onCall(async (data, context) => {
             
 
             dadosAluno.timestamp = admin.firestore.Timestamp.now()
-            dadosAluno.userCreator = context.auth.uid
+            dadosAluno.userCreator = !context.auth ? 'Anonymous' : context.auth.uid
 
             return admin.database().ref('/sistemaEscolar/preMatriculas').push(dadosAluno).then(() => {
                 
@@ -648,11 +648,11 @@ exports.cadastraAluno = functions.https.onCall(async (data, context) => {
     })
 
 exports.timestamp = functions.https.onCall((data, context) => {
-    if (context.auth.token.master == true || context.auth.token.secretaria == true ||  context.auth.token.professores == true || context.auth.token.adm == true || context.auth.token.aluno == true) {
-        return {timestamp: admin.firestore.Timestamp.now()}
-    } else {
-        throw new functions.https.HttpsError('permission-denied', 'Você não tem permissão.')
-    }
+    console.log(context.auth ?? 'yes')
+    
+
+    return {timestamp: admin.firestore.Timestamp.now()}
+    
 })
 
 exports.transfereAlunos = functions.https.onCall((data, context) => {
