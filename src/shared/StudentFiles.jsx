@@ -15,13 +15,15 @@ import Grid from '@material-ui/core/Grid';
 import Typography from '@material-ui/core/Typography';
 import FolderIcon from '@material-ui/icons/Folder';
 import DeleteIcon from '@material-ui/icons/Delete';
-import { studentsRef } from '../services/storageRefs';
+import { studentFilesRef } from '../services/storageRefs';
 import { formatBytes } from './FunctionsUse';
 import { storage } from '../services/firebase';
 import { Box, Button } from '@material-ui/core';
 import ShowFiles from './ShowFiles';
 import { CloudUpload, Refresh } from '@material-ui/icons';
 import { useSnackbar } from 'notistack';
+import { disabledStudentsRef, studentsRef } from '../services/databaseRefs';
+import { useConfirmation } from '../contexts/ConfirmContext';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -43,39 +45,59 @@ const useStyles = makeStyles((theme) => ({
 
 
 
-export default function StudentFiles(props) {
+export default function StudentFiles({ studentId, disabledStudent }) {
   const classes = useStyles();
-  const { studentId } = props;
-  const [dense, setDense] = useState(false);
+
+  const confirm = useConfirmation();
+  
+  const [dense, setDense] = useState(true);
   const [secondary, setSecondary] = useState(true);
   const [studentFiles, setStudentFiles] = useState([]);
   const [ filesList, setFilesList ] = useState()
   const [ openFile, setOpenFile ] = useState(false)
   const [ url, setUrl ] = useState()
   const [ totalFilesSize, setTotalFilesSize ] = useState('0 B')
+  const [ filesKey, setFilesKey ] = useState();
 
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
 
   const getData = async () => {
-    let filesArray = []
-    return studentsRef.child(studentId).child('arquivos').listAll().then(res => {
+    
+    const snapshot = disabledStudent ? await disabledStudentsRef.child(studentId).child('dadosAluno').child('studentFilesKey').once('value') : await studentsRef.child(studentId).child('studentFilesKey').once('value')
+
+    if (snapshot.exists()) {
+      setStudentFiles()
+      const studentFilesKey = snapshot.val();
+      setFilesKey(studentFilesKey);
+      let filesArray = []
+      const res = await studentFilesRef.child(studentFilesKey).listAll()
+      console.log(res)
       res.items.forEach(async (item) => {
         let metadata = await item.getMetadata()
         filesArray.push({name: item.name, fullPath: item.fullPath, metadata: metadata})
-        
+        setStudentFiles([...filesArray])
       })
-      return filesArray
-    })
-    // setStudentFiles(res.items)
+      
+      
+    } else {
+      const newKey = await studentsRef.push().key
+      disabledStudent ? disabledStudentsRef.child(studentId).child('dadosAluno').child('studentFilesKey').set(newKey) : studentsRef.child(studentId).child('studentFilesKey').set(newKey)
+      getData()
+    }
+    
 
   }
   useEffect(() => {
     
-    getData().then(filesArray => {
-      setStudentFiles(filesArray)
-    })
+    getData()
+      
+    
   }, [studentId])
+
+  useEffect(() => {
+    calculateTotalSize()
+  }, [studentFiles])
 
   const handleOpenFile = async (fullPath) => {
     let url = await storage.ref(fullPath).getDownloadURL();
@@ -91,6 +113,12 @@ export default function StudentFiles(props) {
 
   const handleDeleteFile = async (filePath) => {
     try {
+      await confirm({
+        variant: "danger",
+        catchOnCancel: true,
+        title: "Confirmação",
+        description: `Você deseja deletar esse arquivo? Esta ação não pode ser desfeita.`,
+      });
       await storage.ref(filePath).delete()
       enqueueSnackbar('Arquivo deletado', {variant: 'success'})
       getData().then(filesArray => {
@@ -98,7 +126,7 @@ export default function StudentFiles(props) {
         
       })
     } catch (error) {
-      enqueueSnackbar(error.message, {variant: 'error'})
+      error && enqueueSnackbar(error.message, {variant: 'error'})
     }
     
   }
@@ -131,7 +159,7 @@ export default function StudentFiles(props) {
     
     function putStorageItem(item) {
       // the return value will be a Promise
-      return studentsRef.child(studentId).child('arquivos').child(item.name).put(item)
+      return studentFilesRef.child(filesKey).child(item.name).put(item)
       .then((snapshot) => {
         console.log('One success:', item)
         enqueueSnackbar(`${item.name} enviado com sucesso`, {variant: 'info'})
@@ -215,14 +243,13 @@ export default function StudentFiles(props) {
           <Button onClick={() => {
             document.getElementById('uploadFiles').click()
             
-          }} variant="outlined" size="small" color="primary" fullWidth startIcon={<CloudUpload />}>Enviar arquivos</Button>
+          }} variant="outlined" size="small" color="primary" fullWidth startIcon={<CloudUpload />}>Upload</Button>
         </Box>
         <Box m={1}>
           <Button onClick={() => {
-            calculateTotalSize()
-            setDense(!dense)
+            getData()
             
-          }} variant="outlined" size="small" color="primary" fullWidth startIcon={<Refresh />}>Carregar arquivos</Button>
+          }} variant="outlined" size="small" color="primary" fullWidth startIcon={<Refresh />}>Atualizar</Button>
           <input type="file" name="uploadFiles" id="uploadFiles" multiple style={{display: 'none'}} onInput={handleUploadFile} />
         </Box>
       {/* <FormGroup row>

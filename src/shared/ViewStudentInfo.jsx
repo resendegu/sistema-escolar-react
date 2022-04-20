@@ -112,6 +112,7 @@ const StudentInfo = (props) => {
         console.log(disabledStudent)
         let data = await classesRef.child(classCode).child('alunos').child(studentId).once('value');
         let studentData = !disabledStudent ? (await studentsRef.child(studentId).once('value')).val() : (await disabledStudentsRef.child(studentId + '/dadosAluno').once('value')).val()
+    
         console.log(studentData);
         studentData && setStudentData(studentData)
         data.exists() && setAcademicData(data.val());
@@ -401,7 +402,7 @@ const handleOpenContractsDialog = () => {
                       </Grid>
                       <hr />
                       
-                        <StudentFiles studentId={studentId} />
+                        <StudentFiles studentId={studentId} disabledStudent={disabledStudent} />
                         
                       </CardContent>
                       <CardActions>
