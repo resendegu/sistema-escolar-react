@@ -6,7 +6,8 @@ const schoolPath = 'sistemaEscolar/';
 
 // School paths
 const studentsPath = schoolPath + 'alunos/';
-const billetAttachmentsPath = schoolPath + 'billetAttachments/'
+const billetAttachmentsPath = schoolPath + 'billetAttachments/';
+const studentFilesPath = schoolPath + 'studentFiles/';
 
 // More paths
 const usersPath = 'users/'
@@ -19,5 +20,6 @@ const rootRef = storage.ref(rootPath);
 const studentsRef = rootRef.child(studentsPath);
 const usersRef = rootRef.child(usersPath);
 const billetAttachmentsRef = rootRef.child(billetAttachmentsPath);
+const studentFilesRef = rootRef.child(studentFilesPath);
 
-export { studentsRef, usersRef, billetAttachmentsRef };
+export { studentsRef, usersRef, billetAttachmentsRef, studentFilesRef };

@@ -15,6 +15,7 @@ import { classesRef } from '../../services/databaseRefs';
 import { AddressAndParentsFields, BasicDataFields } from '../../shared/StudentFields';
 import { enrollStudent } from '../../shared/FunctionsUse';
 import ErrorDialog from '../../shared/ErrorDialog';
+import ExternalFilesUpload from './ExternalFilesUpload';
 
 
 const useStyles = makeStyles((theme) => ({
@@ -56,6 +57,7 @@ export default function ExternalEnroll() {
   const [errorMessage, setErrorMessage] = useState('Error')
   const [ courseTable, setCourseTable ] = useState({rows: [{ id: 1, col1: 'Hello', col2: 'World' }], columns: [{ field: 'col1', headerName: 'Column 1', width: 150 }, { field: 'col2', headerName: 'Column 2', width: 150 }]});
   const [ openFinalDialog, setOpenFinalDialog ] = useState(false);
+  const [ canSend, setCanSend ] = useState(false);
   
   
 
@@ -90,7 +92,7 @@ export default function ExternalEnroll() {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
   function getSteps() {
-    return ['Dados básicos', 'Endereço, Responsáveis e dados adicionais'];
+    return ['Dados básicos', 'Endereço, Responsáveis e dados adicionais', 'Envio de arquivos'];
   }
 
   const handleOptionalSteps = (step, remove=false) => {
@@ -113,6 +115,9 @@ export default function ExternalEnroll() {
       
     case 1:
       return <AddressAndParentsFields shrink={shrink} parentsRequired={parentsRequired}/>;
+
+    case 2: 
+        return <ExternalFilesUpload hasFile={setCanSend} />
     default:
       return 'Unknown step';
   }
@@ -260,8 +265,10 @@ export default function ExternalEnroll() {
 
         handleComplete();
 
-        if (isLastStep()) {
+        if (isLastStep() && canSend) {
           setOpenFinalDialog(true);
+        } else if (isLastStep() && !canSend) {
+            enqueueSnackbar('Você deve primeiro fazer o upload dos arquivos', {variant: 'error'})
         }
 
         
@@ -282,6 +289,7 @@ export default function ExternalEnroll() {
     for (let i = 0; i < totalSteps(); i++) {
       storedData[i] = (JSON.parse(sessionStorage.getItem(i)))
     }
+    storedData[1].studentFilesKey = storedData[2] 
     console.log(storedData)
     enrollStudent(storedData[0], 
       "", 
@@ -294,6 +302,7 @@ export default function ExternalEnroll() {
             sessionStorage.removeItem(index)  
           }
           sessionStorage.removeItem('responsaveis')
+          sessionStorage.removeItem('studentKey')
           setLoader(false);
           handleReset()
       }).catch(error => {

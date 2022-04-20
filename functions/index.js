@@ -549,11 +549,28 @@ exports.cadastraAluno = functions.https.onCall(async (data, context) => {
             
 
             dadosAluno.timestamp = admin.firestore.Timestamp.now()
-            dadosAluno.userCreator = !context.auth ? 'Anonymous' : context.auth.uid
+            dadosAluno.userCreator = 'Anonymous'
+
+            let emailContent = {
+                to: dadosAluno.emailAluno,
+                cc: dadosAluno.emailResponsavelPedagogico || null,
+                message: {
+                    subject: `${dadosEscola.nomeEscola}`,
+                    text: `Olá ${dadosAluno.nomeAluno.split(' ')[0]}, sua pré matrícula foi cadastrada. Sistemas GrupoProX.`,
+                    html: `<h3>Olá ${dadosAluno.nomeAluno.split(' ')[0]}!</h3><p>Sua Pré-Matrícula foi cadastrada com sucesso. Fique atento aos e-mails. Nós poderemos utilizar este meio para entrar em contato e passar informações importantes.</p><p>Em caso de dúvidas ou dificuldades <b>entre em contato com a escola para maiores informações</b>.</p><p><b>Dados de contato da escola:</b><br>Telefone: ${dadosEscola.telefoneEscola}<br>E-mail: ${dadosEscola.emailEscola}<br>Endereço: ${dadosEscola.enderecoEscola}</p><p>Sistemas GrupoProX.</p>`
+                }
+            }
 
             return admin.database().ref('/sistemaEscolar/preMatriculas').push(dadosAluno).then(() => {
+                return firestoreRef.add(emailContent).then(() => {
+                    console.log('Queued email for delivery to ' + dadosAluno.emailAluno)
+                    return {answer: 'Pré-matrícula enviada com sucesso! Um e-mail será enviado para o aluno, informando sobre este cadastro.'}
+                    
+                }).catch(error => {
+                    console.error(error)
+                    throw new Error(error.message)
+                })
                 
-                return {answer: 'Aluno cadastrado em pré-matrícula com sucesso! Um e-mail será enviado para o aluno e seu responsável pedagógico, informando-os sobre este cadastro.'}
             }).catch(error => {
                 throw new functions.https.HttpsError('unknown', error.message, error)
             })
@@ -575,7 +592,7 @@ exports.cadastraAluno = functions.https.onCall(async (data, context) => {
                 cc: dadosAluno.emailResponsavelPedagogico || null,
                 message: {
                     subject: `${dadosEscola.nomeEscola}`,
-                    text: `Olá ${dadosAluno.nomeAluno.split(' ')[0]}, você foi corretamente cadastrado(a) em nosso sistema e está pronto(a) para iniciar essa jornada conosco. Sistemas ProjetoX.`,
+                    text: `Olá ${dadosAluno.nomeAluno.split(' ')[0]}, você foi corretamente cadastrado(a) em nosso sistema e está pronto(a) para iniciar essa jornada conosco. Sistemas GrupoProX.`,
                     html: `<h3>Olá ${dadosAluno.nomeAluno.split(' ')[0]}!</h3><p>Você está matriculado(a) no nº de matrícula <b>${dadosAluno.matriculaAluno}</b>, e está pronto(a) para iniciar os estudos conosco. Use seu e-mail e senha cadastrados para acessar o sistema. Só lembrando, sua senha é: <b>${dadosAluno.senhaAluno}</b>. Fique atento aos e-mails, pois sua escola pode utilizar este canal para comunicação com você.</p><p>Em caso de dificuldades <b>entre em contato com a escola para maiores informações</b>.</p><p><b>Dados de contato da escola:</b><br>Telefone: ${dadosEscola.telefoneEscola}<br>E-mail: ${dadosEscola.emailEscola}<br>Endereço: ${dadosEscola.enderecoEscola}</p><p>Sistemas GrupoProX.</p>`
                 }
             }
@@ -648,9 +665,6 @@ exports.cadastraAluno = functions.https.onCall(async (data, context) => {
     })
 
 exports.timestamp = functions.https.onCall((data, context) => {
-    console.log(context.auth ?? 'yes')
-    
-
     return {timestamp: admin.firestore.Timestamp.now()}
     
 })
