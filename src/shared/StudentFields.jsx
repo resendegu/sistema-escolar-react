@@ -188,8 +188,8 @@ function BasicDataFields({ shrink, handleOptionalSteps, setParentsRequired, setL
 }
 
 
-function ContractConfigure(props) {
-    const { activeStep, isOpen, setOpenDialog } = props;
+function ContractConfigure({ activeStep, isOpen, setOpenDialog }) {
+    
     const courseChosen = JSON.parse(sessionStorage.getItem(activeStep))
 
     const [ saveDisabled, setSaveDisabled ] = useState(true);
@@ -326,7 +326,7 @@ function ContractConfigure(props) {
                             saldoAcrescimo = saldoAcrescimo - acrescimoParcela
                             saldoDesconto = saldoDesconto - descontoParcela
                             
-                            row = internPlan.quandoAplicar !== undefined ? {id: parcela, col1: parcela + 1, col2: `R$${valorParcela}`, col3: ` ${acrescimoParcela !== 0 || acrescimoParcela !== '' ? '+ R$' + acrescimoParcela : ''}`, col4: ` ${descontoParcela !== 0 || descontoParcela !== '' ? '- R$' + descontoParcela : ''}`, col5: `R$${(Number(valorParcela) + (acrescimoParcela - descontoParcela)).toFixed(2)}`} : row 
+                            row = internPlan.quandoAplicar !== undefined ? {id: parcela, col1: parcela + 1, col2: `R$${valorParcela}`, col3: ` ${acrescimoParcela !== 0 || acrescimoParcela !== '' ? '+ R$' + acrescimoParcela : ''}`, col4: ` ${descontoParcela !== 0 || descontoParcela !== '' ? '- R$' + descontoParcela : ''}`, col5: `R$${(Number(valorParcela) + (acrescimoParcela - descontoParcela)).toFixed(2)}`} : {id: parcela} 
                             console.log(row)
                             somaParcelas += (Number(valorParcela) + (acrescimoParcela - descontoParcela))
                         } else {

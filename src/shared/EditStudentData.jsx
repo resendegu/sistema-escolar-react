@@ -1,7 +1,7 @@
 import { Backdrop, Button, CircularProgress, Container, makeStyles, Paper } from "@material-ui/core";
 import { useEffect, useRef, useState } from "react";
 import { Fragment } from "react";
-import { studentsRef } from "../services/databaseRefs";
+import { preEnrollmentsRef, studentsRef } from "../services/databaseRefs";
 import FullScreenDialog from "./FullscreenDialog";
 import $ from 'jquery';
 import { AddressAndParentsFields, BasicDataFields } from "./StudentFields";
@@ -31,7 +31,7 @@ const useStyles = makeStyles((theme) => ({
     },
   }));
 
-const EditStudentData = ({studentId, isOpen, onClose}) => {
+const EditStudentData = ({studentId, isOpen, onClose, preEnrollment}) => {
 
     const classes = useStyles();
 
@@ -53,7 +53,7 @@ const EditStudentData = ({studentId, isOpen, onClose}) => {
 
     const getData = async () => {
         
-        const data = (await studentsRef.child(studentId).once("value")).val()
+        const data = preEnrollment ? (await preEnrollmentsRef.child(studentId).once("value")).val() : (await studentsRef.child(studentId).once("value")).val()
         function putData() {
             for (const field in data) {
                 if (Object.hasOwnProperty.call(data, field)) {
@@ -95,7 +95,7 @@ const EditStudentData = ({studentId, isOpen, onClose}) => {
                 title: "Confirmação",
                 description: "Você deseja editar os dados deste Aluno? Esta ação não pode ser revertida."
             });
-            await studentsRef.child(studentId).update(studentObj);
+            preEnrollment ? preEnrollmentsRef.child(studentId).update(studentObj) : await studentsRef.child(studentId).update(studentObj);
             enqueueSnackbar("Dados salvos com sucesso.", {title: 'Sucesso', variant: 'success', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
             setLoader(false)
             onClose()

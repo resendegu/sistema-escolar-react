@@ -116,7 +116,8 @@ const AdminCenter = ({isOpen, onClose}) => {
         const uid = e.id
         const checked = e.value
         try {
-            await confirm({
+
+            access === 'master' && await confirm({
               variant: "danger",
               catchOnCancel: true,
               title: "Confirmação",

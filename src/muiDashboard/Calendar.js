@@ -59,7 +59,12 @@ const CalendarComponent = ({sourceId, isFromClassCode}) => {
             calendarRef.orderByChild('id').equalTo(sourceId).on('value', (snapshot) => {
                 const sources = snapshot.val()
                 console.log(sources)
-                setEventsSources(sources)
+                if (snapshot.exists()) {
+                    setEventsSources([...sources])
+                } else {
+                    setEventsSources([])
+                }
+                
                 if (sources && sources.hasOwnProperty('length')) {
                     setViewSources(sources)
                 } else {
@@ -78,11 +83,15 @@ const CalendarComponent = ({sourceId, isFromClassCode}) => {
             calendarRef.on('value', (snapshot) => {
                 const sources = snapshot.val()
                 console.log(sources)
-                setEventsSources(sources)
+                if (snapshot.exists()) {
+                    setEventsSources([...sources])
+                } else {
+                    setEventsSources([])
+                }
                 if (sources && sources.hasOwnProperty('length')) {
                     setViewSources(sources)
                 } else {
-                    sources !== null && setViewSources([sources])
+                    sources !== null && setViewSources([...sources])
                 }
             }, (error) => {
                 enqueueSnackbar(error.message, {title: 'Error', variant: 'error', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button>})
@@ -348,7 +357,7 @@ const CalendarComponent = ({sourceId, isFromClassCode}) => {
                     onClose={handleCloseCreate}
                     title='Visualização'
                 >
-                        <MenuItem onClick={(e) => setAnchorElCal(e.currentTarget)}><ListItemIcon><Event fontSize='small' /></ListItemIcon>Novo evento</MenuItem>
+                        <MenuItem onClick={(e) => setAnchorElCal(e.currentTarget)} disabled={eventsSources.length === 0}><ListItemIcon><Event fontSize='small' /></ListItemIcon>Novo evento</MenuItem>
                         {!isFromClassCode && 
                             <MenuItem onClick={() => handleOpenNewCalendarDialog()}><ListItemIcon><CalendarToday fontSize='small' /></ListItemIcon>Criar calendário</MenuItem>
                         }

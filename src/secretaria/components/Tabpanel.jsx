@@ -9,13 +9,14 @@ import '../../App.css';
 import Typography from '@material-ui/core/Typography';
 
 import Box from '@material-ui/core/Box';
-import { AddBox, Build, Email, GroupWork, Home, PeopleAlt, PersonAdd } from '@material-ui/icons';
+import { AddBox, AssignmentInd, Build, Email, GroupWork, Home, PeopleAlt, PersonAdd } from '@material-ui/icons';
 import AddStudent from './addStudent/AddStudent';
 import SchoolSettings from './schoolSettings/SchoolSettings';
 import Students from './students/Students';
 import AddClass from './addClass/AddClass';
 import Classes from './classes/Classes';
 import Dashboard from '../../muiDashboard/Dashboard';
+import PreEnrollments from './preMatriculas/PreEnrollments';
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -83,7 +84,7 @@ export default function SecretariaTabs() {
           <Tab label="Turmas" icon={<GroupWork />} {...a11yProps(2)} />
           <Tab label="Novo Aluno" icon={<PersonAdd />} {...a11yProps(3)} />
           <Tab label="Nova Turma" icon={<AddBox />} {...a11yProps(4)} />
-          <Tab label="E-mails" icon={<Email />} {...a11yProps(5)} />
+          <Tab label="Pré-Matrículas" icon={<AssignmentInd />} {...a11yProps(5)} />
           <Tab label="Conf. da Escola" icon={<Build />} {...a11yProps(6)} />
         </Tabs>
       </AppBar>
@@ -103,7 +104,7 @@ export default function SecretariaTabs() {
         <AddClass />
       </TabPanel>
       <TabPanel value={value} index={5}>
-        Item Six
+        <PreEnrollments />
       </TabPanel>
       <TabPanel value={value} index={6}>
         <SchoolSettings />

@@ -1,14 +1,15 @@
-import { Avatar, Backdrop, Box, Button, Card, CardContent, Checkbox, CircularProgress, Fab, FormControl, FormControlLabel, Grid, IconButton, InputLabel, makeStyles, Select, TextField, Tooltip, Typography } from "@material-ui/core";
+import { Avatar, Backdrop, Box, Button, Card, CardContent, Checkbox, CircularProgress, Fab, FormControl, FormControlLabel, Grid, IconButton, InputLabel, Dialog, DialogActions, DialogTitle, DialogContent, DialogContentText, makeStyles, Select, TextField, Tooltip, Typography, MenuItem } from "@material-ui/core";
 import { Add, Delete, Receipt, Save, SupervisedUserCircle } from "@material-ui/icons";
 import { useEffect, useState, useRef } from "react";
 import { Fragment } from "react";
-import { contractRef, disabledStudentsRef, studentsRef } from "../services/databaseRefs";
+import { classesRef, contractRef, disabledStudentsRef, studentsRef } from "../services/databaseRefs";
 import { useSnackbar } from "notistack";
 import { getDateMeta } from "@fullcalendar/react";
 import FullScreenDialog from "./FullscreenDialog";
 import { useConfirmation } from "../contexts/ConfirmContext";
 import { generateBillets } from "./FunctionsUse";
 import PrintBillets from "./PrintBillets";
+import { ContractConfigure } from "./StudentFields";
 
 
 const useStyles = makeStyles((theme) => ({
@@ -93,6 +94,10 @@ const StudentContracts = ({studentId, isOpen, onClose, isDisabled}) => {
     const [loading, setLoading] = useState(false);
     const [contractSelected, setContractSelected] = useState('');
     const [showBillets, setShowBillets] = useState(false);
+    const [classChosen, setClassChosen] = useState();
+    const [schoolClasses, setSchoolClasses] = useState();
+    const [openDialog, setOpenDialog] = useState(false);
+    const [newContract, setNewContract] = useState(false);
 
     const {enqueueSnackbar, closeSnackbar} = useSnackbar();
     
@@ -110,14 +115,50 @@ const StudentContracts = ({studentId, isOpen, onClose, isDisabled}) => {
         
         
         console.log(contractsArray);
-        setContracts(contractsArray);
-        setSystemContracts(systemContractsArray)
+        setContracts([...contractsArray]);
+        setSystemContracts([...systemContractsArray])
+
+        let localClassesArray = []
+        const snap = await classesRef.once('value')
+        if (snap.exists()) {
+            const localClasses = snap.val()
+            for (const id in localClasses) {
+                if (Object.hasOwnProperty.call(localClasses, id)) {
+                    let localClass = localClasses[id];
+                    localClass.id = id;
+                    localClassesArray.push(localClass);
+                }
+            }
+            console.log(localClassesArray)
+            setSchoolClasses([...localClassesArray]);
+        }
         setLoading(false);
     }
 
     useEffect(() => {
         getData();
     }, [studentId])
+
+    useEffect(() => {
+        sessionStorage.setItem('newContract', classChosen)
+        sessionStorage.removeItem('codContrato')
+        sessionStorage.removeItem('contratoConfigurado')
+        sessionStorage.removeItem('planoOriginal')
+    }, [classChosen])
+
+    useEffect(() => {
+        let contractCode = sessionStorage.getItem('codContrato');
+        let storedCourse = sessionStorage.getItem('newContract');
+        let configuredContract = sessionStorage.getItem('contratoConfigurado')
+        let originalPlan = sessionStorage.getItem('planoOriginal')
+        console.log(contractCode, storedCourse);
+        if (contractCode && storedCourse && configuredContract && originalPlan) {
+            contractRef.child()
+        } else {
+            //setContractState(null);
+            
+        }
+    }, [newContract])
 
     
 
@@ -140,23 +181,9 @@ const StudentContracts = ({studentId, isOpen, onClose, isDisabled}) => {
     }
 
 
-    const handleAddParent = async () => {
-        // const key = studentsRef.child(studentId).child('responsaveis').push().key
-        // console.log(key)
-        // let contractsCopy = contracts;
-        // contractsCopy[key] = {
-        //     celular: "",
-        //     cpf: "",
-        //     email: "",
-        //     financeiro: false,
-        //     nome: "",
-        //     pedagogico: false,
-        //     relacao: "",
-        //     rg: ""
-        // }
-        // console.log(contractsCopy)
-        // setContracts(contractsCopy)
-        // setEdit(true)
+    const handleAdd = async () => {
+        setNewContract(true)
+        setOpenDialog(false)
     }
 
     const handleDeleteParent = async (i) => {
@@ -340,7 +367,36 @@ const StudentContracts = ({studentId, isOpen, onClose, isDisabled}) => {
 
     return (
         <Fragment>
+            <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
+                <DialogTitle>Escolha uma turma</DialogTitle>
+                <DialogContent>
+                <DialogContentText>
+                    Selecione uma turma em que o aluno será matriculado
+                </DialogContentText>
+                <FormControl fullWidth>
+                    <InputLabel id="demo-simple-select-label">Curso</InputLabel>
+                    <Select
+                    labelId="demo-simple-select-label"
+                    id="demo-simple-select"
+                    value={classChosen}
+                    onChange={(e) => setClassChosen(e.target.value)}
+                    fullWidth
+                    >
+                        {schoolClasses && schoolClasses.map((localClass, i) => <MenuItem value={JSON.stringify({dadosTurma: {turmaAluno: localClass.id, horaAluno: localClass.hora, courseId: localClass.curso, profAluno: localClass.professor[0]}})}>{localClass.id}</MenuItem>)}
+                    </Select>
+                </FormControl>
+                </DialogContent>
+                <DialogActions>
+                <Button color="primary" onClick={() => setOpenDialog(false)}>
+                    Fechar
+                </Button>
+                <Button onClick={handleAdd} disabled={classChosen === undefined} color="primary">
+                    Continuar
+                </Button>
+                </DialogActions>
+            </Dialog>
             {showBillets && <PrintBillets open={showBillets} onClose={setShowBillets} studentId={studentId} contractId={contractSelected}/>}
+            {newContract && <ContractConfigure activeStep={'newContract'} isOpen={newContract} setOpenDialog={setNewContract} />}
             <FullScreenDialog
                 isOpen={isOpen}
                 onClose={onClose}
@@ -391,7 +447,7 @@ const StudentContracts = ({studentId, isOpen, onClose, isDisabled}) => {
                             <div className={classes.center}>
                                 <Tooltip title="Novo contrato">
                                     {isDisabled ? (<p>Reative o estudante para criar contratos</p>) :( 
-                                    <IconButton color="primary" disabled={edit} aria-label="upload picture" component="span" onClick={handleAddParent}>
+                                    <IconButton color="primary" disabled={edit} aria-label="upload picture" component="span" onClick={() => setOpenDialog(true)}>
                                         <Add fontSize="large" />
                                     </IconButton>)}
                                 </Tooltip>

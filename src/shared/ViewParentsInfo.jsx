@@ -2,7 +2,7 @@ import { Avatar, Box, Button, Card, CardContent, Checkbox, Fab, FormControl, For
 import { Add, Delete, Save, SupervisedUserCircle } from "@material-ui/icons";
 import { useEffect, useState, useRef } from "react";
 import { Fragment } from "react";
-import { disabledStudentsRef, studentsRef } from "../services/databaseRefs";
+import { disabledStudentsRef, preEnrollmentsRef, studentsRef } from "../services/databaseRefs";
 import { useSnackbar } from "notistack";
 import { getDateMeta } from "@fullcalendar/react";
 import FullScreenDialog from "./FullscreenDialog";
@@ -74,7 +74,7 @@ const useStyles = makeStyles((theme) => ({
   }));
 
 
-const ViewParentsInfo = ({studentId, isOpen, onClose, isDisabled}) => {
+const ViewParentsInfo = ({studentId, isOpen, onClose, isDisabled, preEnrollment}) => {
 
     const classes = useStyles();
 
@@ -89,10 +89,18 @@ const ViewParentsInfo = ({studentId, isOpen, onClose, isDisabled}) => {
     const form = useRef();
 
     const getData = async () => {
-        const snapshot = !isDisabled ? (await studentsRef.child(studentId).child('responsaveis').once("value")) : (await disabledStudentsRef.child(studentId + '/dadosAluno').child('responsaveis').once('value'));
-        const parentsArray = snapshot.exists() ? snapshot.val() : [];
-        console.log(parentsArray);
-        setParents(parentsArray);
+        if (preEnrollment) {
+            const snapshot = await preEnrollmentsRef.child(studentId).child('responsaveis').once("value")
+            const parentsArray = snapshot.exists() ? snapshot.val() : [];
+            console.log(parentsArray);
+            setParents(parentsArray);
+        } else {
+            const snapshot = !isDisabled ? (await studentsRef.child(studentId).child('responsaveis').once("value")) : (await disabledStudentsRef.child(studentId + '/dadosAluno').child('responsaveis').once('value'));
+            const parentsArray = snapshot.exists() ? snapshot.val() : [];
+            console.log(parentsArray);
+            setParents(parentsArray);
+        }
+        
     }
 
     useEffect(() => {
@@ -106,7 +114,7 @@ const ViewParentsInfo = ({studentId, isOpen, onClose, isDisabled}) => {
         try {
             if (edit && Object.keys(parents).length > 0) {
                 form.current.requestSubmit();
-                await studentsRef.child(studentId).child('responsaveis').set(parents);
+                preEnrollment ? await preEnrollmentsRef.child(studentId).child('responsaveis').set(parents) : await studentsRef.child(studentId).child('responsaveis').set(parents);
                 enqueueSnackbar("Responsáveis atualizados com sucesso.", {title: 'Sucesso', variant: 'success', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
                 setEdit(false)
             }
@@ -149,7 +157,7 @@ const ViewParentsInfo = ({studentId, isOpen, onClose, isDisabled}) => {
                     description: "Você deseja excluir este responsável? Esta ação não pode ser revertida."
                 })
                 const key = Object.keys(parents)[i]
-                await studentsRef.child(studentId).child('responsaveis').child(key).remove()
+                preEnrollment ? await preEnrollmentsRef.child(studentId).child('responsaveis').child(key).remove() : await studentsRef.child(studentId).child('responsaveis').child(key).remove()
                 enqueueSnackbar("Responsável excluído com sucesso.", {title: 'Sucesso', variant: 'success', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
                 getData()
             } catch (error) {

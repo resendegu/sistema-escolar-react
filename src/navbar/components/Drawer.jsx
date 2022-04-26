@@ -91,20 +91,25 @@ function ResponsiveDrawer(props) {
     console.log(user)
     if (user && user !== 'Searching user...') {
       usersListRef.child(user.id).once('value').then((snapshot) => {
-        let userAccess = snapshot.val().acessos
-        let localAreas = []
-        
-        userAccess.professores === true && localAreas.push({text: 'Professores', to: 'professores', icon: 1})
+        try {
+          let userAccess = snapshot.val().acessos
+          let localAreas = []
+          
+          userAccess.professores === true && localAreas.push({text: 'Professores', to: 'professores', icon: 1})
 
-        if (userAccess.master === true) {
-          localAreas.push({text: 'Administração', to: 'adm', icon: 2})
-          localAreas.push({text: 'Secretaria', to: 'secretaria', icon: 0})
-        } else {
-          userAccess.adm === true && localAreas.push({text: 'Administração', to: 'adm', icon: 2})
-          userAccess.secretaria === true && localAreas.push({text: 'Secretaria', to: 'secretaria', icon: 0})
-          userAccess.aluno === true && localAreas.push({text: 'Estudante', to: 'estudante', icon: 3})
+          if (userAccess.master === true) {
+            localAreas.push({text: 'Administração', to: 'adm', icon: 2})
+            localAreas.push({text: 'Secretaria', to: 'secretaria', icon: 0})
+          } else {
+            userAccess.adm === true && localAreas.push({text: 'Administração', to: 'adm', icon: 2})
+            userAccess.secretaria === true && localAreas.push({text: 'Secretaria', to: 'secretaria', icon: 0})
+            userAccess.aluno === true && localAreas.push({text: 'Estudante', to: 'estudante', icon: 3})
+          }
+          setAreas([...localAreas])
+        } catch (error) {
+          console.log(error)
         }
-        setAreas([...localAreas])
+        
       })
     } else {
 

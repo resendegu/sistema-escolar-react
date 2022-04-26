@@ -12,6 +12,7 @@ import FormGroup from '@material-ui/core/FormGroup';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Checkbox from '@material-ui/core/Checkbox';
 import Grid from '@material-ui/core/Grid';
+import Backdrop from '@material-ui/core/Backdrop'
 import Typography from '@material-ui/core/Typography';
 import FolderIcon from '@material-ui/icons/Folder';
 import DeleteIcon from '@material-ui/icons/Delete';
@@ -19,10 +20,11 @@ import { studentFilesRef } from '../services/storageRefs';
 import { formatBytes } from './FunctionsUse';
 import { storage } from '../services/firebase';
 import { Box, Button } from '@material-ui/core';
+import LinearProgress from '@material-ui/core/LinearProgress'
 import ShowFiles from './ShowFiles';
 import { CloudUpload, Refresh } from '@material-ui/icons';
 import { useSnackbar } from 'notistack';
-import { disabledStudentsRef, studentsRef } from '../services/databaseRefs';
+import { disabledStudentsRef, preEnrollmentsRef, studentsRef } from '../services/databaseRefs';
 import { useConfirmation } from '../contexts/ConfirmContext';
 
 const useStyles = makeStyles((theme) => ({
@@ -41,11 +43,15 @@ const useStyles = makeStyles((theme) => ({
     height: "55vh",
     overflow: 'auto',
   },
+  backdrop: {
+    zIndex: theme.zIndex.drawer + 1,
+    color: '#fff',
+  },
 }));
 
 
 
-export default function StudentFiles({ studentId, disabledStudent }) {
+export default function StudentFiles({ studentId, disabledStudent, preEnrollment }) {
   const classes = useStyles();
 
   const confirm = useConfirmation();
@@ -58,34 +64,58 @@ export default function StudentFiles({ studentId, disabledStudent }) {
   const [ url, setUrl ] = useState()
   const [ totalFilesSize, setTotalFilesSize ] = useState('0 B')
   const [ filesKey, setFilesKey ] = useState();
-
+  const [ loading, setLoading ] = useState(false);
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
 
   const getData = async () => {
-    
-    const snapshot = disabledStudent ? await disabledStudentsRef.child(studentId).child('dadosAluno').child('studentFilesKey').once('value') : await studentsRef.child(studentId).child('studentFilesKey').once('value')
-
-    if (snapshot.exists()) {
-      setStudentFiles()
-      const studentFilesKey = snapshot.val();
-      setFilesKey(studentFilesKey);
-      let filesArray = []
-      const res = await studentFilesRef.child(studentFilesKey).listAll()
-      console.log(res)
-      res.items.forEach(async (item) => {
-        let metadata = await item.getMetadata()
-        filesArray.push({name: item.name, fullPath: item.fullPath, metadata: metadata})
-        setStudentFiles([...filesArray])
-      })
-      
-      
+    setLoading(true)
+    if (preEnrollment) {
+      const snapshot = await preEnrollmentsRef.child(studentId).child('studentFilesKey').once('value')
+      if (snapshot.exists()) {
+        setStudentFiles()
+        const studentFilesKey = snapshot.val();
+        setFilesKey(studentFilesKey);
+        let filesArray = []
+        const res = await studentFilesRef.child(studentFilesKey).listAll()
+        console.log(res)
+        res.items.forEach(async (item) => {
+          let metadata = await item.getMetadata()
+          filesArray.push({name: item.name, fullPath: item.fullPath, metadata: metadata})
+          setStudentFiles([...filesArray])
+        })
+        
+        
+      } else {
+        const newKey = await studentsRef.push().key
+        disabledStudent ? disabledStudentsRef.child(studentId).child('dadosAluno').child('studentFilesKey').set(newKey) : studentsRef.child(studentId).child('studentFilesKey').set(newKey)
+        getData()
+      }
     } else {
-      const newKey = await studentsRef.push().key
-      disabledStudent ? disabledStudentsRef.child(studentId).child('dadosAluno').child('studentFilesKey').set(newKey) : studentsRef.child(studentId).child('studentFilesKey').set(newKey)
-      getData()
+      const snapshot = disabledStudent ? await disabledStudentsRef.child(studentId).child('dadosAluno').child('studentFilesKey').once('value') : await studentsRef.child(studentId).child('studentFilesKey').once('value')
+
+      if (snapshot.exists()) {
+        setStudentFiles()
+        const studentFilesKey = snapshot.val();
+        setFilesKey(studentFilesKey);
+        let filesArray = []
+        const res = await studentFilesRef.child(studentFilesKey).listAll()
+        console.log(res)
+        res.items.forEach(async (item) => {
+          let metadata = await item.getMetadata()
+          filesArray.push({name: item.name, fullPath: item.fullPath, metadata: metadata})
+          setStudentFiles([...filesArray])
+        })
+        
+        
+      } else {
+        const newKey = await studentsRef.push().key
+        disabledStudent ? disabledStudentsRef.child(studentId).child('dadosAluno').child('studentFilesKey').set(newKey) : studentsRef.child(studentId).child('studentFilesKey').set(newKey)
+        getData()
+      }
     }
     
+    setLoading(false)
 
   }
   useEffect(() => {
@@ -119,6 +149,7 @@ export default function StudentFiles({ studentId, disabledStudent }) {
         title: "Confirmação",
         description: `Você deseja deletar esse arquivo? Esta ação não pode ser desfeita.`,
       });
+      setLoading(true);
       await storage.ref(filePath).delete()
       enqueueSnackbar('Arquivo deletado', {variant: 'success'})
       getData().then(filesArray => {
@@ -128,10 +159,11 @@ export default function StudentFiles({ studentId, disabledStudent }) {
     } catch (error) {
       error && enqueueSnackbar(error.message, {variant: 'error'})
     }
-    
+    setLoading(false)
   }
 
   const handleUploadFile = async (e) => {
+    setLoading(true);
     const files = e.target.files
     console.log(files)
     let filesArray = []
@@ -148,6 +180,7 @@ export default function StudentFiles({ studentId, disabledStudent }) {
         
       })
       enqueueSnackbar('Upload concluído com sucesso', {variant: 'success'})
+      setLoading(false)
     })
     .catch((error) => {
       console.log(`Some failed: `, error.message)
@@ -218,11 +251,7 @@ export default function StudentFiles({ studentId, disabledStudent }) {
     return (
       
       <ListItem button={button} onClick={onClick}>
-        <ListItemAvatar>
-          <Avatar>
-            <FolderIcon />
-          </Avatar>
-        </ListItemAvatar>
+        
         <ListItemText
           primary={name}
           secondary={secondary ? formatBytes(size) : null}
@@ -269,6 +298,7 @@ export default function StudentFiles({ studentId, disabledStudent }) {
           <div className={classes.demo}>
              
             <List dense={dense} className={classes.list}>
+              {loading && <LinearProgress />}
               {generate(
                 <ListItemElem />
               )}
