@@ -204,7 +204,7 @@ const AddClass = ({dataForEditing, onClose}) => {
                 teachersArray.push(teacher)
             }
         }
-        allTeachers ? setTeachers(teachersArray) : setTeachers()
+        allTeachers ? setTeachers([...teachersArray]) : setTeachers()
     }
 
     const handleFormChange = async (e) => {

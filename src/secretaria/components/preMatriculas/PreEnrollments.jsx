@@ -60,7 +60,7 @@ function getThemePaletteMode(palette) {
     { defaultTheme },
   );
 
-const PreEnrollments = () => {
+const PreEnrollments = ({changeTab}) => {
 
     const classes = useStyles();
 
@@ -176,7 +176,7 @@ const PreEnrollments = () => {
                 saveButton={"Salvar"}
                 saveButtonDisabled={true}
             > 
-                <ViewPreEnrollment studentInfo={studentInfo} />
+                <ViewPreEnrollment studentInfo={studentInfo} changeTab={changeTab} />
             </FullScreenDialog>
             <Grid
             justifyContent="flex-start"   

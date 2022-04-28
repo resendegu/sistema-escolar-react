@@ -104,7 +104,7 @@ export default function SecretariaTabs() {
         <AddClass />
       </TabPanel>
       <TabPanel value={value} index={5}>
-        <PreEnrollments />
+        <PreEnrollments changeTab={handleChange}/>
       </TabPanel>
       <TabPanel value={value} index={6}>
         <SchoolSettings />

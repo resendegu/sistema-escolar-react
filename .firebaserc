@@ -1,6 +1,6 @@
 {
   "projects": {
-    "default": "learnupschool",
+    "default": "projetoxagencia",
     "learnup-prod": "learnupschool",
     "prox-prod": "projetoxagencia"
   },

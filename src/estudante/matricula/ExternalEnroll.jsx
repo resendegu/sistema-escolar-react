@@ -6,7 +6,7 @@ import Step from '@material-ui/core/Step';
 import StepButton from '@material-ui/core/StepButton';
 import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
-import { Backdrop, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Paper, useMediaQuery, Container } from '@material-ui/core';
+import { Backdrop, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Paper, useMediaQuery, Container, Fab } from '@material-ui/core';
 
 import $ from 'jquery';
 
@@ -16,6 +16,7 @@ import { AddressAndParentsFields, BasicDataFields } from '../../shared/StudentFi
 import { enrollStudent } from '../../shared/FunctionsUse';
 import ErrorDialog from '../../shared/ErrorDialog';
 import ExternalFilesUpload from './ExternalFilesUpload';
+import { ArrowForward } from '@material-ui/icons';
 
 
 const useStyles = makeStyles((theme) => ({
@@ -38,6 +39,9 @@ const useStyles = makeStyles((theme) => ({
   backdrop: {
     zIndex: theme.zIndex.drawer + 1,
     color: '#fff',
+  },
+  extendedIcon: {
+    marginLeft: theme.spacing(1),
   },
 }));
 
@@ -310,7 +314,14 @@ export default function ExternalEnroll() {
         setLoader(false);
       })
   }
-
+  const fabStyle = {
+    margin: 0,
+    top: 'auto',
+    right: 20,
+    bottom: 20,
+    left: 'auto',
+    position: 'fixed',
+};
 
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
@@ -386,6 +397,12 @@ export default function ExternalEnroll() {
                 
                     <div>
                     {allStepsCompleted() && <Button onClick={handleReset}>Resetar</Button>}
+
+                    <Fab type="submit" style={fabStyle} variant="extended" color='primary'>
+                  
+                      {completedSteps() === totalSteps() - 1 ? 'Enviar pré-matrícula' : 'Próximo'}
+                      <ArrowForward className={classes.extendedIcon} />
+                    </Fab>
                     <Button
                         variant="contained"
                         color="primary"

@@ -6,13 +6,14 @@ import Step from '@material-ui/core/Step';
 import StepButton from '@material-ui/core/StepButton';
 import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
-import { Backdrop, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Paper, useMediaQuery } from '@material-ui/core';
+import { Backdrop, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Fab, Paper, useMediaQuery } from '@material-ui/core';
 import { enrollStudent } from '../../../shared/FunctionsUse';
 import { AddressAndParentsFields, BasicDataFields, CourseDataFields } from '../../../shared/StudentFields';
 import $ from 'jquery';
 import { classesRef } from '../../../services/databaseRefs';
 import ErrorDialog from '../../../shared/ErrorDialog';
 import { useSnackbar } from 'notistack';
+import { ArrowForward, Save } from '@material-ui/icons';
 
 
 const useStyles = makeStyles((theme) => ({
@@ -35,6 +36,9 @@ const useStyles = makeStyles((theme) => ({
   backdrop: {
     zIndex: theme.zIndex.drawer + 1,
     color: '#fff',
+  },
+  extendedIcon: {
+    marginLeft: theme.spacing(1),
   },
 }));
 
@@ -85,7 +89,14 @@ export default function AddStudent() {
     console.log(sessionStorage.getItem('0'))
   }
 
-  
+  const fabStyle = {
+    margin: 0,
+    top: 'auto',
+    right: 20,
+    bottom: 20,
+    left: 'auto',
+    position: 'fixed',
+};
 
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
@@ -441,14 +452,22 @@ export default function AddStudent() {
             
                 <div>
                 {allStepsCompleted() && <Button onClick={handleReset}>Resetar</Button>}
-                <Button
+                
+                <Fab type="submit" style={fabStyle} variant="extended" color='primary'>
+                  
+                  {completedSteps() === totalSteps() - 1 ? 'Cadastrar Aluno' : 'Próximo'}
+                  <ArrowForward className={classes.extendedIcon} />
+                </Fab>
+          
+
+                {/* <Button
                     variant="contained"
                     color="primary"
                     type="submit"
                     className={classes.button}
                 >
-                    {completedSteps() === totalSteps() - 1 ? 'Cadastrar Aluno' : 'Salvar e próximo passo'}
-                </Button>
+                    {completedSteps() === totalSteps() - 1 ? 'Cadastrar Aluno' : 'Próximo'}
+                </Button> */}
                 {isStepOptional(activeStep) && !completed.has(activeStep) && (
                     <Button
                     variant="contained"

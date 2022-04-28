@@ -1,6 +1,6 @@
 import { Avatar, Backdrop, Box, Button, Card, CardActions, CardContent, CircularProgress, Container, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, Grid, List, ListItem, ListItemText, makeStyles, MenuItem, Select, Typography } from "@material-ui/core";
 import { green } from "@material-ui/core/colors";
-import { AccountBox, Assignment, Assistant, AttachFile, Check, ChromeReaderMode, Description, DoneAll, Edit, NotInterested, Person, Print, School, SupervisedUserCircle, TransferWithinAStation } from "@material-ui/icons";
+import { AccountBox, Assignment, Assistant, AttachFile, Check, CheckCircle, ChromeReaderMode, Description, DoneAll, Edit, NotInterested, Person, Print, School, SupervisedUserCircle, TransferWithinAStation } from "@material-ui/icons";
 import { useSnackbar } from "notistack";
 import { Fragment, useEffect, useState } from "react";
 import { preEnrollmentsRef } from "../../../services/databaseRefs";
@@ -66,9 +66,8 @@ const useStyles = makeStyles((theme) => ({
     },
   }));
 
-const ViewPreEnrollment = (props) => {
+const ViewPreEnrollment = ({ studentInfo, changeTab }) => {
 
-    const { studentInfo } = props;
     const classes = useStyles();
 
     const classCode = studentInfo.classCode
@@ -126,6 +125,13 @@ const ViewPreEnrollment = (props) => {
     setOpenContractsDialog(true);
     }
 
+    const handleEnrollStudent = async () => {
+      sessionStorage.setItem(0, JSON.stringify(studentData))
+      sessionStorage.setItem(2, JSON.stringify(studentData))
+      changeTab('', 3)
+      enqueueSnackbar("Dados da pré matrícula carregados. Prossiga com a matrícula.", {title: 'Info', variant: 'info', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
+    }
+
     return ( 
         <Fragment>
               {openContractsDialog && <StudentContracts studentId={studentId} isDisabled={disabledStudent} isOpen={openContractsDialog} onClose={() => {
@@ -173,9 +179,7 @@ const ViewPreEnrollment = (props) => {
                         <Button fullWidth size="large" variant="contained" color="primary" startIcon={<Edit />} onClick={handleOpenEditStudentInfo}>Editar dados</Button>
                       </Box>
                       
-                      <Box m={1}>
-                        <Button fullWidth size="large" variant="contained" color="primary" onClick={handleOpenContractsDialog} startIcon={<Description />}>Contratos</Button>
-                      </Box>
+                      
                       <Box m={1}>
                         <Button fullWidth size="large" variant="contained" color="primary" startIcon={<Print />}>Ficha de Matrícula</Button>
                       </Box>
@@ -183,7 +187,9 @@ const ViewPreEnrollment = (props) => {
                       <Box m={1}>
                         <Button fullWidth size="large" variant="contained" color="primary" startIcon={<SupervisedUserCircle />} onClick={handleOpenParentsDialog}>Responsáveis</Button>
                       </Box>
-                      
+                      <Box m={1}>
+                        <Button fullWidth size="large" variant="contained" color="primary" onClick={handleEnrollStudent} startIcon={<CheckCircle />}>Efetivar matrícula</Button>
+                      </Box>
                       
                       </CardContent>
                       

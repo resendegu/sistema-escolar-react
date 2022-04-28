@@ -88,7 +88,7 @@ export default function StudentFiles({ studentId, disabledStudent, preEnrollment
         
       } else {
         const newKey = await studentsRef.push().key
-        disabledStudent ? disabledStudentsRef.child(studentId).child('dadosAluno').child('studentFilesKey').set(newKey) : studentsRef.child(studentId).child('studentFilesKey').set(newKey)
+        preEnrollmentsRef.child(studentId).child('studentFilesKey').set(newKey)
         getData()
       }
     } else {

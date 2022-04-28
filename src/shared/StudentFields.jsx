@@ -690,11 +690,11 @@ function CourseDataFields(props) {
                 </Grid>
                 <Grid item xs sm={3}>
                     <Paper style={{padding: '10px', alignItems: 'center'}} elevation={5}>
-                        <h4>{courseChosen.turmaAluno !== '' ? <label>Turma escolhida: {courseChosen.turmaAluno}</label> : <label>Turma não escolhida</label>}</h4>
+                        <h4>{courseChosen && courseChosen.turmaAluno !== '' ? <label>Turma escolhida: {courseChosen.turmaAluno}</label> : <label>Turma não escolhida</label>}</h4>
                         <hr />
                     <h4>{contractState ? 'Contrato configurado' : 'Contrato não configurado'}</h4>
                         {contractState && (
-                            <Box >
+                            <Box>
                                 <FormControl className={classes.fields}> 
                                     <TextField variant="filled" autoComplete="off" InputLabelProps={{shrink: shrink,}} required label="Cód. do Contrato" InputProps={{readOnly: true}} type="text" value={contractState} id="contractCode" name="contractCode" aria-describedby="my-helper-text" />
                                     <FormHelperText> Código gerado pelo sistema para o contrato. Não é necessário guardá-lo ou alterá-lo. </FormHelperText>

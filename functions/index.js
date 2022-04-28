@@ -122,7 +122,7 @@ exports.deletaUsersAutomatico = functions.auth.user().onDelete((user) => {
     })
 })
 
-exports.criaContaAluno = functions.database.ref('sistemaEscolar/alunos/{registro}').onWrite((snapshot, context) => {
+exports.criaContaAluno = functions.database.ref('sistemaEscolar/alunos/{registro}').onCreate((snapshot, context) => {
     var aluno = snapshot.after.val()
     admin.auth().createUser({
         uid: aluno.matriculaAluno,
