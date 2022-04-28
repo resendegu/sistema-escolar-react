@@ -202,7 +202,7 @@ const GradeDefinition = ({open, onClose, classCode}) => {
                                     name="checkedB"
                                     color="primary"
                                     onChange={handleChangePerformanceGrade}
-                                    defaultChecked={(true && grades.filter(grade => grade.readonly === true)) ?? false}
+                                    defaultChecked={grades.length !== 0 && (grades.filter(grade => grade.readonly === true))[0]}
                                 />
                                 }
                                 label="Incluir desempenho"
