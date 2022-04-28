@@ -23,6 +23,7 @@
     "firebase": "^8.10.0",
     "fullcalendar": "^5.10.1",
     "jquery": "^3.6.0",
+    "jquery-mask-plugin": "^1.14.16",
     "material-ui-dropzone": "^3.5.0",
     "notistack": "^1.0.10",
     "react": "^17.0.2",

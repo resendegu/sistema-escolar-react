@@ -1,4 +1,4 @@
-import { Button, createTheme, darken, Dialog, Grid, lighten, makeStyles } from "@material-ui/core";
+import { Button, createTheme, darken, Dialog, Fab, Grid, lighten, makeStyles } from "@material-ui/core";
 import { PlusOneRounded, Refresh } from "@material-ui/icons";
 import { DataGrid, GridToolbar, GridToolbarContainer, GridToolbarExport } from "@mui/x-data-grid";
 import { Fragment, useEffect, useState } from "react";
@@ -6,6 +6,7 @@ import { classesRef } from "../../../services/databaseRefs";
 import { LocaleText } from "../../../shared/DataGridLocaleText";
 import FullScreenDialog from "../../../shared/FullscreenDialog";
 import { capitalizeFirstLetter } from "../../../shared/FunctionsUse";
+import PerformanceDistribuition from "../../../shared/PerformanceDistribuition";
 import ClassInfo from "../../../shared/ViewClassInfo";
 import StudentInfo from "../../../shared/ViewStudentInfo";
 
@@ -64,6 +65,7 @@ const Classes = () => {
 
     const [ loading, setLoading ] = useState(false);
     const [ open, setOpen ] = useState(false)
+    const [openPerfDist, setOpenPerfDist] = useState(false);
 
     const [filterModel, setFilterModel] = useState({
         items: [],
@@ -172,6 +174,10 @@ const Classes = () => {
 
     }
 
+    const handleOpenPerformanceGrades = () => {
+        setOpenPerfDist(true)
+    }
+
     return (
         <Fragment>
             <FullScreenDialog 
@@ -189,6 +195,7 @@ const Classes = () => {
             > 
                 <ClassInfo classDataRows={classData} onClose={() => setOpen(false)}/>
             </FullScreenDialog>
+            <PerformanceDistribuition open={openPerfDist} onClose={setOpenPerfDist} />
             <Grid
             justifyContent="flex-start"   
             container
@@ -241,7 +248,7 @@ const Classes = () => {
                     
                 </Grid>
                 <Grid item>
-                    {selectedRows.length > 0 && (<Button variant="contained" color="secondary" onClick={() => {handleDeleteRows()}}>Botão de ações</Button>)}
+                    <Button variant="contained" color="secondary" onClick={() => {handleOpenPerformanceGrades()}}>Definir notas de desempenho</Button>
                 </Grid>
             </Grid>
         </Fragment>

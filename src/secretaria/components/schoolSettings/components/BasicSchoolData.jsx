@@ -2,6 +2,7 @@ import { Button, Checkbox, CircularProgress, FormControl, FormControlLabel, Form
 import { Fragment, useEffect, useState } from "react";
 
 import $ from 'jquery'
+import 'jquery-mask-plugin/dist/jquery.mask.min'; 
 import { basicDataRef } from "../../../../services/databaseRefs";
 import { useSnackbar } from "notistack";
 
@@ -124,7 +125,7 @@ const BasicSchoolData = () => {
 
                 <Grid item>
                     <FormControl className={classes.fields} style={{width: '100%'}}> 
-                        <TextField placeholder={"CNPJ da Escola"} autoComplete="off" InputLabelProps={{shrink: shrink,}} variant="filled" label={"CNPJ da Escola"} type="text" id={"cnpjEscola"} name={"cnpjEscola"} aria-describedby={"CNPJ da Escola"} />
+                        <TextField placeholder={"CNPJ da Escola"} autoComplete="off" InputLabelProps={{shrink: shrink,}} variant="filled" label={"CNPJ da Escola"} type="text" id={"cnpjEscola"} name={"cnpjEscola"} aria-describedby={"CNPJ da Escola"} onKeyPress={(e) => $(e.target).mask("99.999.999/9999-99")} />
                     </FormControl>
                 </Grid>
                 <Grid item>
@@ -139,7 +140,7 @@ const BasicSchoolData = () => {
                 </Grid>
                 <Grid item>
                     <FormControl className={classes.fields} style={{width: '100%'}}> 
-                        <TextField placeholder={"Telefone da Escola"} autoComplete="off" InputLabelProps={{shrink: shrink,}} variant="filled" label={"Telefone da Escola"} type="text" id={"telefoneEscola"} name={"telefoneEscola"} aria-describedby={"Telefone da Escola"} />
+                        <TextField placeholder={"Telefone da Escola"} autoComplete="off" InputLabelProps={{shrink: shrink,}} variant="filled" label={"Telefone da Escola"} type="text" id={"telefoneEscola"} name={"telefoneEscola"} aria-describedby={"Telefone da Escola"} onKeyPress={(e) => $(e.target).mask("(99) 999999999")} />
                     </FormControl>
                 </Grid>
                 <Grid item>

@@ -403,14 +403,14 @@ export default function ExternalEnroll() {
                       {completedSteps() === totalSteps() - 1 ? 'Enviar pré-matrícula' : 'Próximo'}
                       <ArrowForward className={classes.extendedIcon} />
                     </Fab>
-                    <Button
+                    {/* <Button
                         variant="contained"
                         color="primary"
                         type="submit"
                         className={classes.button}
                     >
                         {completedSteps() === totalSteps() - 1 ? 'Enviar pré-matrícula' : 'Próximo'}
-                    </Button>
+                    </Button> */}
                     {isStepOptional(activeStep) && !completed.has(activeStep) && (
                         <Button
                         variant="contained"
