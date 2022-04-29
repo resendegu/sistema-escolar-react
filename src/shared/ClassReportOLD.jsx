@@ -68,7 +68,7 @@ function infoDoc(info, curso) {
         <td class="tg-sg5v" colspan="4">
             ${curso}<br>
             ${info.professor[0].nome}<br>
-            ${info.status.inicio.split('-').reverse().join('/')} - ${info.status.fim.split('-').reverse().join('/')}
+            ${info.status.inicio.split('-').reverse().join('/')} - ${info.status.fim.split('T')[0].split('-').reverse().join('/')}
         </td>
         <td class="tg-sg5v" style="text-align: end;" colspan="6">
             <b>Turma:</b><br>
@@ -78,7 +78,7 @@ function infoDoc(info, curso) {
         <td class="tg-sg5v" colspan="2">
             ${info.codigoSala}<br>
             ${info.status.nomePeriodo}<br>
-            ${info.hora}h
+            ${info.hora.split('_').join(':')}h
         </td>
     `
 }
@@ -151,7 +151,8 @@ async function geraDiario(turma, codHistorico) {
     infoDoc(infoTurma, nomeCurso)
     // the sizes for info topics must sum 16 mandatorily
     const notas = infoTurma.notas
-    let qtdeNotas = Object.keys(notas).length
+    
+    let qtdeNotas = notas !== undefined ? Object.keys(notas).length : 0
     let topicsArray = [
         {text: 'Nº', size: 1, width: '10%'},
         {text: 'Aluno', size: 13 - qtdeNotas, width: '37%'},

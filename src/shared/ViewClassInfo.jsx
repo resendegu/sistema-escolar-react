@@ -952,7 +952,7 @@ const handleConfirmCloseClass = async () => {
                       </Box>
                       
                       <Box m={1}>
-                        <Button fullWidth size="large" variant="contained" color="primary" startIcon={<Print />}onClick={handleClassReport}>Diário de classe</Button>
+                        <Button fullWidth size="large" variant="contained" disabled={classData.hasOwnProperty('status') ? classData.status.turma !== 'aberta' : true} color="primary" startIcon={<Print />}onClick={handleClassReport}>Diário de classe</Button>
                       </Box>
                       <Box m={1}>
                         <Button fullWidth size="large" variant="contained" color="primary" onClick={(classData.hasOwnProperty('status') && classData.status.turma === 'aberta') ? handleConfirmCloseClass : handleConfirmOpenClass} startIcon={(classData.hasOwnProperty('status') && classData.status.turma === 'aberta') ? <Lock /> : <LockOpen />}>{(classData.hasOwnProperty('status') && classData.status.turma === 'aberta') ? 'Fechar ' : 'Abrir '}turma</Button>
