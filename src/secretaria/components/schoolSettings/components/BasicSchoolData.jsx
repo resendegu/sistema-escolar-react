@@ -195,15 +195,16 @@ const BasicSchoolData = () => {
 
             </Grid>
             <FormControl component="fieldset">
-                <FormLabel component="legend">Controles de permissões do sistema:</FormLabel>
-                <FormGroup>
-                    
-                    <FormControlLabel
-                    control={<Switch checked={checked} value={"permitirDistribuiNotas"} onChange={(e) => setChecked(e.target.checked)} name="permitirDistribuiNotas" id="permitirDistribuiNotas" />}
-                    label="Permitir os professores distribuírem as notas nas turmas"
-                    />
-                </FormGroup>
-                <FormHelperText>Caso você não permita, a secretaria será a responsável por definir as pontuações máximas de atividades da turma, ou seja, será responsável por distribuir as notas.</FormHelperText>
+                    <FormLabel component="legend">Autonomia dos professores:</FormLabel>
+                        <FormGroup>
+                            
+                            <FormControlLabel
+                            control={<Switch checked={checked} value={"permitirDistribuiNotas"} onChange={(e) => setChecked(e.target.checked)} name="permitirDistribuiNotas" id="permitirDistribuiNotas" />}
+                            label="Permitir os professores distribuírem as notas nas turmas"
+                            />
+                            
+                        </FormGroup>
+                    <FormHelperText>Caso você não permita, a secretaria será a responsável por definir as pontuações máximas de atividades da turma, ou seja, será responsável por distribuir as notas.</FormHelperText>
             </FormControl>
             <h4>Configurações da Chave PIX</h4>
             <Grid
@@ -254,8 +255,39 @@ const BasicSchoolData = () => {
                     </FormControl>
                     
                 </Grid>
-
+                
+                
+                
             </Grid>
+            <h4>Configurações financeiras</h4>
+            <Grid
+                justifyContent="flex-start"   
+                container
+                direction="row"
+                spacing={1}
+            >
+                <Grid item xl={6}>
+                    <FormControl variant="filled">
+                        <InputLabel htmlFor="filled-age-native-simple">Quando o dia do vencimento da parcela não existir...:</InputLabel>
+                        <Select
+                            InputLabelProps={{shrink: false,}}
+                            native
+                            inputProps={{
+                                name: 'proximoDiaVencimento',
+                                id: 'proximoDiaVencimento',
+                                
+                            }}
+                            required
+                        >
+                            <option value="true">...postergar vencimento para o dia 1 do próximo mês.</option>
+                            <option value={"false"}>...adiantar o vencimento para último dia do mesmo mês.</option>
+                            
+                        </Select>
+                        <FormHelperText>Usado na geração de boletos para decidir nos dias que não existirem em certos meses</FormHelperText>
+                    </FormControl>
+                </Grid>
+            </Grid>
+            
             <br /><br />
             <Button type="submit" variant="contained" color="primary" fullWidth>Salvar dados básicos  </Button>
             {loading &&<LinearProgress color="secondary" />}

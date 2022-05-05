@@ -59,7 +59,9 @@ export default function AddStudent() {
   const [ courseTable, setCourseTable ] = useState({rows: [{ id: 1, col1: 'Hello', col2: 'World' }], columns: [{ field: 'col1', headerName: 'Column 1', width: 150 }, { field: 'col2', headerName: 'Column 2', width: 150 }]});
   const [ openFinalDialog, setOpenFinalDialog ] = useState(false);
   
-  
+  useEffect(() => {
+    
+  }, [])
 
   useEffect(() => {
     let index = activeStep;  

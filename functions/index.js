@@ -1399,6 +1399,14 @@ exports.newYear = functions.pubsub.schedule('0 2 1 1 *').timeZone('America/Sao_P
 
     
 exports.geraBoletos = functions.https.onCall((data, context) => {
+        const getDaysInMonth = (month, year) => {
+            // Here January is 1 based
+            //Day 0 is the last day in the previous month
+            return new Date(year, month, 0).getDate();
+            // Here January is 0 based
+            // return new Date(year, month+1, 0).getDate();
+        };
+
         async function gera(matricula, codContrato) {
             let alunoRef = admin.database().ref('sistemaEscolar/alunos/' + matricula + '/')
             let alunosDesativadosRef = admin.database().ref('sistemaEscolar/alunosDesativados')
@@ -1497,7 +1505,7 @@ exports.geraBoletos = functions.https.onCall((data, context) => {
                             valorCobrado = (Number(valorParcela) + (acrescimoParcela - descontoParcela)).toFixed(2)
                             somaParcelas += (Number(valorParcela) + (acrescimoParcela - descontoParcela))
                         } else {
-                            if (parcela == 0) {
+                            if (parcela === 0) {
                                 saldo = data.valorFinal
                             }
 
@@ -1512,14 +1520,25 @@ exports.geraBoletos = functions.https.onCall((data, context) => {
                         if ((mesInicio + parcela) > 12) {
                             mesParcela = mesParcela - 12
                         }
-                        if (mesParcela == 1 && parcela != 0) {
+                        if (mesParcela === 1 && parcela !== 0) {
                             anoInicio++
+                        }
+                        let proximoDiaVencimento = dadosEscola.dadosBasicos.proximoDiaVencimento === 'true' ? true : false
+                        let diaVencimento = data.vencimentoEscolhido
+                        let mesVencimento = mesParcela
+                        let anoVencimento = anoInicio
+                        if (getDaysInMonth(mesParcela, anoInicio) < data.vencimentoEscolhido) {
+                            if (proximoDiaVencimento) {
+                                diaVencimento = 1
+                                mesVencimento = mesParcela === 12 ? 1 : mesParcela + 1
+                                anoVencimento = mesVencimento === 1 && parcela !== 0 ? anoInicio + 1 : anoInicio
+                            } else {
+                                diaVencimento = getDaysInMonth(mesParcela, anoInicio)
+                            }
                         }
                         
                         
-                        
-                        
-                        await addParcela(parcela + 1, data.numeroParcelas, `${data.vencimentoEscolhido <= 9 ? '0' + data.vencimentoEscolhido : data.vencimentoEscolhido}/${mesParcela <= 9 ? '0' + mesParcela : mesParcela}/${anoInicio}`, numDoc, valorParcela, descontoParcela, acrescimoParcela, valorCobrado, dataProcessamento, )
+                        await addParcela(parcela + 1, data.numeroParcelas, `${diaVencimento <= 9 ? '0' + diaVencimento : diaVencimento}/${mesVencimento <= 9 ? '0' + mesVencimento : mesVencimento}/${anoVencimento}`, numDoc, valorParcela, descontoParcela, acrescimoParcela, valorCobrado, dataProcessamento, )
                         // addParcela(`Saldo: R$${saldo}`)
                         contadorParcelas--
                         numDoc++
@@ -1917,6 +1936,25 @@ exports.escutaHistoricoBoletos = functions.database.ref('sistemaEscolar/docsBole
 
     //admin.database().ref('sistemaEscolar/billetsNotifications').child(docKey).child()
     start()
+})
+
+exports.escutaContratos = functions.database.ref('sistemaEscolar/infoEscola/contratos/{key}').onCreate((snapshot, context) => {
+    const key = context.params.key
+    const studentId = snapshot.child('matricula').val()
+    console.log(studentId)
+    admin.database().ref('sistemaEscolar/infoEscola/contratos').child(key).child('status').set(0)
+    admin.database().ref('sistemaEscolar/infoEscola/contratos').child(key).child('timestamp').set(admin.firestore.Timestamp.now())
+    return admin.database().ref('sistemaEscolar/alunos').child(studentId).child('contratos').once('value').then((snap) => {
+        if (snap.exists()) {
+            let contracts = snap.val()
+            contracts.push(key)
+            return contracts.indexOf(key) === -1 && admin.database().ref('sistemaEscolar/alunos').child(studentId).child('contratos').set(contracts)
+        } else {
+            return admin.database().ref('sistemaEscolar/alunos').child(studentId).child('contratos').set([key])
+        }
+        
+
+    })
 })
 
 

@@ -653,7 +653,7 @@ function CourseDataFields(props) {
         let contractCode = sessionStorage.getItem('codContrato');
         let storedCourse = JSON.parse(sessionStorage.getItem(activeStep))
         console.log(contractCode);
-        if (contractCode || storedCourse) {
+        if (contractCode && storedCourse) {
             setContractState(contractCode);
             setCourseChosen(storedCourse.dadosTurma)
         } else {

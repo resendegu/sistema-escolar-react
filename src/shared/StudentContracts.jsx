@@ -2,7 +2,7 @@ import { Avatar, Backdrop, Box, Button, Card, CardContent, Checkbox, CircularPro
 import { Add, Delete, Receipt, Save, SupervisedUserCircle } from "@material-ui/icons";
 import { useEffect, useState, useRef } from "react";
 import { Fragment } from "react";
-import { classesRef, contractRef, disabledStudentsRef, studentsRef } from "../services/databaseRefs";
+import { classesRef, contractRef, coursesRef, disabledStudentsRef, studentsRef } from "../services/databaseRefs";
 import { useSnackbar } from "notistack";
 import { getDateMeta } from "@fullcalendar/react";
 import FullScreenDialog from "./FullscreenDialog";
@@ -94,8 +94,8 @@ const StudentContracts = ({studentId, isOpen, onClose, isDisabled}) => {
     const [loading, setLoading] = useState(false);
     const [contractSelected, setContractSelected] = useState('');
     const [showBillets, setShowBillets] = useState(false);
-    const [classChosen, setClassChosen] = useState();
-    const [schoolClasses, setSchoolClasses] = useState();
+    const [courseChosen, setCourseChosen] = useState();
+    const [schoolCourses, setSchoolCourses] = useState();
     const [openDialog, setOpenDialog] = useState(false);
     const [newContract, setNewContract] = useState(false);
 
@@ -107,30 +107,27 @@ const StudentContracts = ({studentId, isOpen, onClose, isDisabled}) => {
         setLoading(true);
         const snapshot = !isDisabled ? (await studentsRef.child(studentId).child('contratos').once("value")) : (await disabledStudentsRef.child(studentId + '/dadosAluno').child('contratos').once('value'));
         const contractsArray = snapshot.exists() ? snapshot.val() : [];
+        console.log(contractsArray);
         let systemContractsArray = []
         contractsArray.map(async (contractId, i) => {
             let localContract = (await contractRef.child(contractId).once('value')).val()
             systemContractsArray.push(localContract)
+            setSystemContracts([...systemContractsArray])
         })
         
         
         console.log(contractsArray);
         setContracts([...contractsArray]);
-        setSystemContracts([...systemContractsArray])
+        
+        console.log(systemContractsArray)
 
-        let localClassesArray = []
-        const snap = await classesRef.once('value')
+        
+        const snap = await coursesRef.once('value')
         if (snap.exists()) {
-            const localClasses = snap.val()
-            for (const id in localClasses) {
-                if (Object.hasOwnProperty.call(localClasses, id)) {
-                    let localClass = localClasses[id];
-                    localClass.id = id;
-                    localClassesArray.push(localClass);
-                }
-            }
-            console.log(localClassesArray)
-            setSchoolClasses([...localClassesArray]);
+            const localCourses = snap.val()
+            
+            
+            setSchoolCourses([...localCourses]);
         }
         setLoading(false);
     }
@@ -140,23 +137,33 @@ const StudentContracts = ({studentId, isOpen, onClose, isDisabled}) => {
     }, [studentId])
 
     useEffect(() => {
-        sessionStorage.setItem('newContract', classChosen)
+        sessionStorage.setItem('newContract', courseChosen)
         sessionStorage.removeItem('codContrato')
         sessionStorage.removeItem('contratoConfigurado')
         sessionStorage.removeItem('planoOriginal')
-    }, [classChosen])
+    }, [courseChosen])
 
     useEffect(() => {
         let contractCode = sessionStorage.getItem('codContrato');
-        let storedCourse = sessionStorage.getItem('newContract');
-        let configuredContract = sessionStorage.getItem('contratoConfigurado')
-        let originalPlan = sessionStorage.getItem('planoOriginal')
-        console.log(contractCode, storedCourse);
-        if (contractCode && storedCourse && configuredContract && originalPlan) {
-            contractRef.child()
+        let configuredContract = JSON.parse(sessionStorage.getItem('contratoConfigurado'));
+        let originalPlan = JSON.parse(sessionStorage.getItem('planoOriginal'))
+        console.log(contractCode);
+        if (contractCode && configuredContract && originalPlan) {
+           
+            contractRef.child(contractCode).set({codContrato: contractCode, contratoConfigurado: configuredContract, matricula: studentId, planoOriginal: originalPlan, status: "Vigente"}).then(() => {
+                setLoading(true)
+                enqueueSnackbar('Contrato criado com sucesso! Recarregue a página.', {title: 'Sucesso', variant: 'success', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
+                setLoading(false)
+            }).catch(error => {
+                enqueueSnackbar(error.message, {title: 'Erro', variant: 'error', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
+                console.log(error)
+                setLoading(false)
+            })
+            
+            
         } else {
             //setContractState(null);
-            
+            console.log('test')
         }
     }, [newContract])
 
@@ -187,24 +194,25 @@ const StudentContracts = ({studentId, isOpen, onClose, isDisabled}) => {
     }
 
     const handleDeleteParent = async (i) => {
-        // if (!isDisabled)
-        //     try {
-        //         await confirm({
-        //             variant: "danger",
-        //             catchOnCancel: true,
-        //             title: "Confirmação",
-        //             description: "Você deseja excluir este responsável? Esta ação não pode ser revertida."
-        //         })
-        //         const key = Object.keys(contracts)[i]
-        //         await studentsRef.child(studentId).child('responsaveis').child(key).remove()
-        //         enqueueSnackbar("Responsável excluído com sucesso.", {title: 'Sucesso', variant: 'success', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
-        //         getData()
-        //     } catch (error) {
-        //         console.log(error)
-        //         error && enqueueSnackbar(error.message, {title: 'Erro', variant: 'error', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
-        //     }
-        // else
-        //     enqueueSnackbar('Não é possível apagar enquanto o aluno está desativado', {title: 'Erro', variant: 'info', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
+        if (!isDisabled)
+            try {
+                await confirm({
+                    variant: "danger",
+                    catchOnCancel: true,
+                    title: "Confirmação",
+                    description: "Você deseja deletar e cancelar este contrato. Ao deletar este contrato ele automaticamente será cancelado, e se houver boletos com status 'Pendente' os mesmos serão mudados para o status cancelado."
+                })
+                // const key = Object.keys(contracts)[i]
+                // await contractRef.child(cont).child('responsaveis').child(key).remove()
+                // enqueueSnackbar("Responsável excluído com sucesso.", {title: 'Sucesso', variant: 'success', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
+                // getData()
+                enqueueSnackbar('Função em desenvolvimento! :)', {title: 'Erro', variant: 'error', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
+            } catch (error) {
+                console.log(error)
+                error && enqueueSnackbar(error.message, {title: 'Erro', variant: 'error', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
+            }
+        else
+            enqueueSnackbar('Não é possível deletar enquanto o aluno está desativado', {title: 'Erro', variant: 'info', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
         
     }
 
@@ -248,7 +256,7 @@ const StudentContracts = ({studentId, isOpen, onClose, isDisabled}) => {
 
     const ContractsCards = ({contractsCopy}) => {
 
-        useEffect(() => {}, [contractsCopy])
+        useEffect(() => {console.log(contractsCopy)}, [contractsCopy])
         
         const BuiltCards = contractsCopy.map((contract, i) => {
             
@@ -368,21 +376,21 @@ const StudentContracts = ({studentId, isOpen, onClose, isDisabled}) => {
     return (
         <Fragment>
             <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
-                <DialogTitle>Escolha uma turma</DialogTitle>
+                <DialogTitle>Escolha um curso</DialogTitle>
                 <DialogContent>
                 <DialogContentText>
-                    Selecione uma turma em que o aluno será matriculado
+                    Selecione o curso que o aluno irá fazer:
                 </DialogContentText>
                 <FormControl fullWidth>
                     <InputLabel id="demo-simple-select-label">Curso</InputLabel>
                     <Select
                     labelId="demo-simple-select-label"
                     id="demo-simple-select"
-                    value={classChosen}
-                    onChange={(e) => setClassChosen(e.target.value)}
+                    value={courseChosen}
+                    onChange={(e) => setCourseChosen(e.target.value)}
                     fullWidth
                     >
-                        {schoolClasses && schoolClasses.map((localClass, i) => <MenuItem value={JSON.stringify({dadosTurma: {turmaAluno: localClass.id, horaAluno: localClass.hora, courseId: localClass.curso, profAluno: localClass.professor[0]}})}>{localClass.id}</MenuItem>)}
+                        {schoolCourses && schoolCourses.map((localCourse, i) => <MenuItem value={JSON.stringify({dadosTurma: {courseId: localCourse.id}})}>{localCourse.nomeCurso}</MenuItem>)}
                     </Select>
                 </FormControl>
                 </DialogContent>
@@ -390,7 +398,7 @@ const StudentContracts = ({studentId, isOpen, onClose, isDisabled}) => {
                 <Button color="primary" onClick={() => setOpenDialog(false)}>
                     Fechar
                 </Button>
-                <Button onClick={handleAdd} disabled={classChosen === undefined} color="primary">
+                <Button onClick={handleAdd} disabled={courseChosen === undefined} color="primary">
                     Continuar
                 </Button>
                 </DialogActions>
