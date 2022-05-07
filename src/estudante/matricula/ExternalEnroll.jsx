@@ -269,10 +269,8 @@ export default function ExternalEnroll() {
 
         handleComplete();
 
-        if (isLastStep() && canSend) {
+        if (isLastStep()) {
           setOpenFinalDialog(true);
-        } else if (isLastStep() && !canSend) {
-            enqueueSnackbar('Você deve primeiro fazer o upload dos arquivos', {variant: 'error'})
         }
 
         
