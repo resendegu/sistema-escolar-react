@@ -309,7 +309,10 @@ export default function AddStudent() {
               let configuredContract = JSON.parse(sessionStorage.getItem('contratoConfigurado'));
               let originalPlan = JSON.parse(sessionStorage.getItem('planoOriginal'));
               let classStoredData = JSON.parse(sessionStorage.getItem(activeStep));
-              if (!classStoredData.dadosTurma) {
+              try {
+                let test = classStoredData.dadosTurma
+
+              } catch {
                 throw Error('Turma não escolhida.')
               }
               let contractCode = sessionStorage.getItem('codContrato');

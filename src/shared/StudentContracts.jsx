@@ -1,5 +1,5 @@
 import { Avatar, Backdrop, Box, Button, Card, CardContent, Checkbox, CircularProgress, Fab, FormControl, FormControlLabel, Grid, IconButton, InputLabel, Dialog, DialogActions, DialogTitle, DialogContent, DialogContentText, makeStyles, Select, TextField, Tooltip, Typography, MenuItem } from "@material-ui/core";
-import { Add, Delete, Receipt, Save, SupervisedUserCircle } from "@material-ui/icons";
+import { Add, Delete, Receipt, Refresh, Save, SupervisedUserCircle } from "@material-ui/icons";
 import { useEffect, useState, useRef } from "react";
 import { Fragment } from "react";
 import { classesRef, contractRef, coursesRef, disabledStudentsRef, studentsRef } from "../services/databaseRefs";
@@ -134,7 +134,7 @@ const StudentContracts = ({studentId, isOpen, onClose, isDisabled}) => {
 
     useEffect(() => {
         getData();
-    }, [studentId])
+    }, [studentId, newContract])
 
     useEffect(() => {
         sessionStorage.setItem('newContract', courseChosen)
@@ -152,8 +152,9 @@ const StudentContracts = ({studentId, isOpen, onClose, isDisabled}) => {
            
             contractRef.child(contractCode).set({codContrato: contractCode, contratoConfigurado: configuredContract, matricula: studentId, planoOriginal: originalPlan, status: "Vigente"}).then(() => {
                 setLoading(true)
-                enqueueSnackbar('Contrato criado com sucesso! Recarregue a página.', {title: 'Sucesso', variant: 'success', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
+                enqueueSnackbar('Contrato criado com sucesso! Aguarde um pouco, e clique em atualizar.', {title: 'Sucesso', variant: 'success', key:"0", persist: true, action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
                 setLoading(false)
+                getData()
             }).catch(error => {
                 enqueueSnackbar(error.message, {title: 'Erro', variant: 'error', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
                 console.log(error)
@@ -183,7 +184,7 @@ const StudentContracts = ({studentId, isOpen, onClose, isDisabled}) => {
         //     console.log(error);
         //     enqueueSnackbar(error.message, {title: 'Erro', variant: 'error', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
         // }
-        
+        getData()
 
     }
 
@@ -193,9 +194,10 @@ const StudentContracts = ({studentId, isOpen, onClose, isDisabled}) => {
         setOpenDialog(false)
     }
 
-    const handleDeleteParent = async (i) => {
+    const handleDeleteContract = async (i) => {
         if (!isDisabled)
             try {
+                console.log(i)
                 await confirm({
                     variant: "danger",
                     catchOnCancel: true,
@@ -203,10 +205,11 @@ const StudentContracts = ({studentId, isOpen, onClose, isDisabled}) => {
                     description: "Você deseja deletar e cancelar este contrato. Ao deletar este contrato ele automaticamente será cancelado, e se houver boletos com status 'Pendente' os mesmos serão mudados para o status cancelado."
                 })
                 // const key = Object.keys(contracts)[i]
-                // await contractRef.child(cont).child('responsaveis').child(key).remove()
-                // enqueueSnackbar("Responsável excluído com sucesso.", {title: 'Sucesso', variant: 'success', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
-                // getData()
-                enqueueSnackbar('Função em desenvolvimento! :)', {title: 'Erro', variant: 'error', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
+                
+                await studentsRef.child(studentId).child('contratos').child(i).remove()
+                
+                enqueueSnackbar("Exclusão de contrato solicitada. O sistema está cancelando e deletando o contrato em background.", {title: 'Sucesso', variant: 'info', persist: true, key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
+                getData()
             } catch (error) {
                 console.log(error)
                 error && enqueueSnackbar(error.message, {title: 'Erro', variant: 'error', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
@@ -264,22 +267,18 @@ const StudentContracts = ({studentId, isOpen, onClose, isDisabled}) => {
                 <Card className={classes.smallCards} variant="outlined">
                     <CardContent>
                         <Grid
-                            justifyContent="flex-start"
+                            justifyContent="space-between"
                             direction="row"
                             container
                             spacing={1}
                         >
                             <Grid item>
-                            <div onMouseEnter={() => setMouseOver(i)} onMouseLeave={() => setMouseOver(false)}>
-                                {mouseOver === i ? (
-                                    <IconButton color="primary"  disabled={Object.keys(contracts).length === 1} aria-label="delete parent" component="span" onClick={() => handleDeleteParent(i)}>
-                                        <Delete />
-                                    </IconButton>
-                                ) : ( 
+                            <div>
+                                
                                 <Avatar className={classes.avatar}>
                                     
                                     <Receipt />
-                                </Avatar>)}
+                                </Avatar>
                             </div>
                                 
                             </Grid>
@@ -287,11 +286,19 @@ const StudentContracts = ({studentId, isOpen, onClose, isDisabled}) => {
                             <Grid item>
                                 <Typography variant="h5" component="h2">
                                     Contrato {i + 1}
+                                    
                                 </Typography>
                         
-                        
+                                
+                            </Grid>
+                            <Grid item>
+                                <IconButton color="secondary" style={{float: 'right'}}  disabled={Object.keys(contracts).length === 1} aria-label="delete contract" component="div" onClick={() => handleDeleteContract(i)}>
+                                    <Delete fontSize="small" />
+                                </IconButton>
                             </Grid>
                         </Grid>
+                        
+                        
                         <hr />
                         <Box m={1}>
                             <TextField 
@@ -371,7 +378,14 @@ const StudentContracts = ({studentId, isOpen, onClose, isDisabled}) => {
         return BuiltCards;
     }
 
-
+    const fabStyle = {
+        margin: 0,
+        top: 'auto',
+        right: 20,
+        bottom: 20,
+        left: 'auto',
+        position: 'fixed',
+    };
 
     return (
         <Fragment>
@@ -409,15 +423,8 @@ const StudentContracts = ({studentId, isOpen, onClose, isDisabled}) => {
                 isOpen={isOpen}
                 onClose={onClose}
                 
-                onSave={() => {
-                    if (!isDisabled)
-                        edit ? form.current.requestSubmit() : setEdit(true)
-                    else
-                        enqueueSnackbar('Não é possível editar enquanto o aluno está desativado', {title: 'Erro', variant: 'info', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
-                }}
+                
                 title={"Contratos"}
-                saveButton={edit ? "Salvar" : "Editar"}
-                saveButtonDisabled
                 hideSaveButton
               >
                 <Backdrop className={classes.backdrop} open={loading}>
@@ -467,6 +474,12 @@ const StudentContracts = ({studentId, isOpen, onClose, isDisabled}) => {
                     </Card>
 
                 </form>
+                <div>
+                    <Fab onClick={() => getData()} style={fabStyle} variant="extended" color='primary'>
+                    <Refresh className={classes.extendedIcon} />
+                        Atualizar
+                    </Fab>
+                </div>
               </FullScreenDialog>
             
             

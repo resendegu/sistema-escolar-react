@@ -164,6 +164,15 @@ const WriteOffBillets = ({docId}) => {
          * 4 means that this billet has been canceled for some reason and will not be charged.
          */
 
+         const text = await confirm({
+            variant: "danger",
+            catchOnCancel: true,
+            title: "Confirmação",
+            description: "Você deseja dar baixa neste boleto? (Após dar baixa, pode ser que o status do boleto não mude de imediato. Fique tranquilo, o sistema está processando a baixa em background, você não precisa esperar.)",
+            promptText: true,
+            promptLabel: 'Alguma observação... (opcional)'
+        });
+
         const dueDate = doc.vencimento.split('/').reverse().join('-')
         console.log(`${dueDate} < ${paymentDay}`)
         if (dueDate < paymentDay) {
@@ -172,8 +181,8 @@ const WriteOffBillets = ({docId}) => {
         } else {
             // If the billet has not passed the dueDate
             
-            await billetsDocsRef.child(docKeyPath).child('historico').push({status: 2, paidValue: paidValue, paymentDay: paymentDay, userCreator: user.id})
-            enqueueSnackbar('Baixa efetuada', {title: 'Sucesso', variant: 'success', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button>})
+            await billetsDocsRef.child(docKeyPath).child('historico').push({status: 2, paidValue: paidValue, paymentDay: paymentDay, userCreator: user.id, motivo: text})
+            enqueueSnackbar('Baixa solicitada. O sistema processará o pedido em background.', {title: 'Sucesso', variant: 'info', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button>})
         }
     }
 

@@ -130,7 +130,7 @@ function BasicDataFields({ shrink, handleOptionalSteps, setParentsRequired, setL
               >
                 <Grid item>
                     <FormControl className={classes.fields}> 
-                        <TextField required autoComplete="off" InputLabelProps={{shrink: shrink,}}  variant="filled" label="Nome Completo" type="text" id="nomeAluno" name="nomeAluno" aria-describedby="my-helper-text" />
+                        <TextField required autoComplete="off" InputLabelProps={{shrink: shrink,}}  variant="filled" label="Nome Completo do aluno" type="text" id="nomeAluno" name="nomeAluno" aria-describedby="my-helper-text" />
                     </FormControl>
                 </Grid>
                 <Grid item>
@@ -141,12 +141,12 @@ function BasicDataFields({ shrink, handleOptionalSteps, setParentsRequired, setL
                 </Grid>
                 <Grid item>
                     <FormControl className={classes.fields}> 
-                        <TextField variant="filled" autoComplete="off" InputLabelProps={{shrink: shrink,}} label="Telefone" type="text" id="telefoneAluno" name="telefoneAluno" aria-describedby="my-helper-text" />
+                        <TextField variant="filled" autoComplete="off" InputLabelProps={{shrink: shrink,}} label="Telefone" type="number" id="telefoneAluno" name="telefoneAluno" aria-describedby="my-helper-text" onKeyPress={(e) => $(e.target).mask("99999999999")}/>
                     </FormControl>
                 </Grid>
                 <Grid item>
                     <FormControl className={classes.fields}> 
-                        <TextField variant="filled" autoComplete="off" InputLabelProps={{shrink: shrink,}} required label="Celular" type="text" id="celularAluno" name="celularAluno" aria-describedby="my-helper-text" />
+                        <TextField variant="filled" autoComplete="off" InputLabelProps={{shrink: shrink,}} required label="Celular" type="number" id="celularAluno" name="celularAluno" aria-describedby="my-helper-text" onKeyPress={(e) => $(e.target).mask("99999999999")} />
                         <FormHelperText>DDD e o número (Ex.: 31999999999) </FormHelperText>
                     </FormControl>
                     

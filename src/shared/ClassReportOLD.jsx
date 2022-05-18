@@ -131,6 +131,7 @@ async function geraDiario(turma, codHistorico) {
     const desempenhoRef = performanceGradesRef
     const infoEscola = (await schoolInfoRef.once('value')).val();
     const infoTurma = (await turmaRef.once('value')).val();
+    const studentInfo = (await turmaRef.child('alunos').orderByChild('nome').once('value')).val();
     const notasDesempenho = (await desempenhoRef.once('value')).val()
     let somatorioDesempenho = 0
     for (const nomeNota in notasDesempenho) {
@@ -169,21 +170,24 @@ async function geraDiario(turma, codHistorico) {
     infoTopics(topicsArray)
 
     let rows = []
-    const alunos = infoTurma.alunos
+    const alunos = studentInfo
     let c = 0
     for (const matricula in alunos) {
         if (Object.hasOwnProperty.call(alunos, matricula)) {
             const aluno = alunos[matricula];
             let infoRow = []
-            infoRow.push({text: c + 1, size: 1, center: true});
+            infoRow.push({text: matricula, size: 1, center: true});
             infoRow.push({text: aluno.nome, size: 13 - qtdeNotas});
             let somatorioNotas = 0
-            for (const nomeNota in aluno.notas) {
-                if (Object.hasOwnProperty.call(aluno.notas, nomeNota)) {
+            for (const nomeNota in notas) {
+                try {
                     const nota = aluno.notas[nomeNota];
                     infoRow.push({text: nota, size: 1, center: true});
                     somatorioNotas += nota;
+                } catch (error) {
+                    infoRow.push({text: '', size: 1, center: true});
                 }
+                
             }
             infoRow.push({text: somatorioNotas, size: 1, center: true});
             const totalFaltas = aluno.frequencia ? Object.keys(aluno.frequencia).length : 0
@@ -193,6 +197,11 @@ async function geraDiario(turma, codHistorico) {
             c++
         }
     }
+
+    rows = rows.sort((a, b) => {
+        console.log(a, b)
+        return a[1].text.localeCompare(b[1].text)
+    })
     console.log(rows)
     setRows(rows)
 

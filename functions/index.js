@@ -1939,22 +1939,37 @@ exports.escutaHistoricoBoletos = functions.database.ref('sistemaEscolar/docsBole
 })
 
 exports.escutaContratos = functions.database.ref('sistemaEscolar/infoEscola/contratos/{key}').onCreate((snapshot, context) => {
-    const key = context.params.key
-    const studentId = snapshot.child('matricula').val()
-    console.log(studentId)
-    admin.database().ref('sistemaEscolar/infoEscola/contratos').child(key).child('status').set(0)
-    admin.database().ref('sistemaEscolar/infoEscola/contratos').child(key).child('timestamp').set(admin.firestore.Timestamp.now())
-    return admin.database().ref('sistemaEscolar/alunos').child(studentId).child('contratos').once('value').then((snap) => {
+    const setContract = async () => {
+        const key = context.params.key
+        const studentId = snapshot.child('matricula').val()
+        console.log(studentId)
+        await admin.database().ref('sistemaEscolar/infoEscola/contratos').child(key).child('status').set(0)
+        await admin.database().ref('sistemaEscolar/infoEscola/contratos').child(key).child('timestamp').set(admin.firestore.Timestamp.now())
+        const snap = await admin.database().ref('sistemaEscolar/alunos').child(studentId).child('contratos').once('value')
         if (snap.exists()) {
             let contracts = snap.val()
-            contracts.push(key)
-            return contracts.indexOf(key) === -1 && admin.database().ref('sistemaEscolar/alunos').child(studentId).child('contratos').set(contracts)
+            
+            let message
+            if (contracts.indexOf(key) === -1) {
+                contracts.push(key)
+                await admin.database().ref('sistemaEscolar/alunos').child(studentId).child('contratos').set(contracts)
+                message = ' e eu coloquei mais um'
+            }
+            return 'Já tinha contrato no aluno' + message
         } else {
-            return admin.database().ref('sistemaEscolar/alunos').child(studentId).child('contratos').set([key])
+            await admin.database().ref('sistemaEscolar/alunos').child(studentId).child('contratos').set([key])
+            return 'Estava sem nada no aluno'
         }
+            
+    
         
-
+    }
+    
+    return setContract().then(result => {
+        console.log('Deu certo.', result)
+        return 'Deu certo';
     })
+
 })
 
 
@@ -1990,7 +2005,7 @@ exports.escutaContratos = functions.database.ref('sistemaEscolar/infoEscola/cont
     
 // })
 
-// Functions for chat app
+//Functions for chat app
 
 // exports.chatListener = functions.database.instance('chatchat-7d3bc').ref('chats').onCreate(async (snapshot, context) => {
     
