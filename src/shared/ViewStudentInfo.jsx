@@ -14,6 +14,7 @@ import StudentContracts from "./StudentContracts";
 import StudentDataCard from "./StudentDataCard";
 import StudentFiles from "./StudentFiles";
 import ViewParentsInfo from "./ViewParentsInfo";
+import ViewStudentHistory from "./ViewStudentHistory";
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -96,7 +97,7 @@ const StudentInfo = (props) => {
     const [desablingStudent, setDesablingStudent] = useState(false);
     const [classCodeTransfer, setClassCodeTransfer] = useState('');
     const [openStudentPDF, setOpenStudentPDF] = useState(false);
-
+    const [openStudentHistory, setOpenStudentHistory] = useState(false);
     useEffect(() => {
       
       getData();
@@ -219,9 +220,15 @@ const handleOpenStudentPDF = () => {
   setOpenStudentPDF(true);
 }
 
+const handleOpenStudentHistory = () => {
+  setOpenStudentHistory(true)
+}
+
     return ( 
         <Fragment>
-              {openStudentPDF && <BaseDocument open={openStudentPDF} onClose={setOpenStudentPDF} />}
+              {openStudentPDF && <BaseDocument open={openStudentPDF} onClose={setOpenStudentPDF}  />}
+
+              <ViewStudentHistory isDisabled={false} studentId={studentId} isOpen={openStudentHistory} onClose={setOpenStudentHistory} />
 
               <StudentContracts studentId={studentId} isDisabled={disabledStudent} isOpen={openContractsDialog} onClose={() => {
                   setOpenContractsDialog(false);
@@ -381,7 +388,7 @@ const handleOpenStudentPDF = () => {
                         )}) : 'Não há registro de faltas'}
                       </CardContent>
                       <CardActions>
-                        <Button size="small" variant='outlined' color="primary" fullWidth startIcon={<ChromeReaderMode />}>Acessar histórico escolar</Button>
+                        <Button size="small" variant='outlined' color="primary" onClick={handleOpenStudentHistory} fullWidth startIcon={<ChromeReaderMode />}>Acessar histórico escolar</Button>
                       </CardActions>
                     </Card>
                   

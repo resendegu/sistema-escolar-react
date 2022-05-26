@@ -41,6 +41,23 @@ export default function BaseDocument({classCode, open, onClose}) {
     var dadosTabela = document.getElementById('dadosTabela');
     var dadosFinais = document.getElementById('dadosFinais');
     var espacoFinal = document.getElementById('espacoFinal')
+
+    const timeNow = await timestamp()
+        setTime(timeNow)
+
+        // Instantiating the elements
+        const dataEhora = new Date(timeNow.data.timestamp._seconds * 1000);
+        
+        
+
+        const infoEscola = await schoolInfoRef.once('value')
+        setInfos(infoEscola.val())
+        let infos = infoEscola.val()
+        nomeEscola.innerText =  infos.dadosBasicos.nomeEscola
+        dataEmissao.innerText = `${dataEhora.getDate()}/${dataEhora.getMonth() + 1}/${dataEhora.getFullYear()} ${dataEhora.getHours()}:${dataEhora.getMinutes()}`
+        logoEscola.innerHTML = `<img src="${infos.logoEscola}" style="width: 70px; height: 70px;"></img>`
+        logoSecundaria.innerHTML = `<p style="font-size: x-small;">${infos.dadosBasicos.cnpjEscola}</p><p style="font-size: x-small;">${infos.dadosBasicos.telefoneEscola}</p><p style="font-size: x-small;">${infos.dadosBasicos.enderecoEscola}</p>`
+
     let hash = window.location.hash;
         if (hash) {
             let type = hash.split('?')[0].substring(1);
@@ -58,26 +75,12 @@ export default function BaseDocument({classCode, open, onClose}) {
                 tipoDocumento.innerText = 'Ficha de Pré-matrícula'
             }
             if (type === 'boletim') {
-                geraBoletim(matriculas, ids); 
+                geraBoletim(matriculas, ids, infos); 
                 tipoDocumento.innerText = 'Boletim'
             } 
         }
 
-        const timeNow = await timestamp()
-        setTime(timeNow)
-
-        // Instantiating the elements
-        const dataEhora = new Date(timeNow.data.timestamp._seconds * 1000);
         
-        
-
-        const infoEscola = await schoolInfoRef.once('value')
-        setInfos(infoEscola.val())
-        let infos = infoEscola.val()
-        nomeEscola.innerText =  infos.dadosBasicos.nomeEscola
-        dataEmissao.innerText = `${dataEhora.getDate()}/${dataEhora.getMonth() + 1}/${dataEhora.getFullYear()} ${dataEhora.getHours()}:${dataEhora.getMinutes()}`
-        logoEscola.innerHTML = `<img src="${infos.logoEscola}" style="width: 70px; height: 70px;"></img>`
-        logoSecundaria.innerHTML = `<p style="font-size: x-small;">${infos.dadosBasicos.cnpjEscola}</p><p style="font-size: x-small;">${infos.dadosBasicos.telefoneEscola}</p><p style="font-size: x-small;">${infos.dadosBasicos.enderecoEscola}</p>`
 
 
   }
@@ -207,7 +210,7 @@ export default function BaseDocument({classCode, open, onClose}) {
         }
 
 
-        async function geraBoletim(matriculas, ids) {
+        async function geraBoletim(matriculas, ids, infos) {
             var dadosTabela = document.getElementById('dadosTabela');
             var previousMatricula = document.getElementById('previousMatricula');
             
