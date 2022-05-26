@@ -4,6 +4,7 @@ import { AccountBox, Assignment, Assistant, AttachFile, Check, CheckCircle, Chro
 import { useSnackbar } from "notistack";
 import { Fragment, useEffect, useState } from "react";
 import { preEnrollmentsRef } from "../../../services/databaseRefs";
+import BaseDocument from "../../../shared/BaseDocument";
 import EditStudentData from "../../../shared/EditStudentData";
 import StudentContracts from "../../../shared/StudentContracts";
 import StudentDataCard from "../../../shared/StudentDataCard";
@@ -91,6 +92,7 @@ const ViewPreEnrollment = ({ studentInfo, changeTab }) => {
     const [classCodeEnable, setClassCodeEnable] = useState('');
     const [desablingStudent, setDesablingStudent] = useState(false);
     const [classCodeTransfer, setClassCodeTransfer] = useState('');
+    const [openStudentPDF, setOpenStudentPDF] = useState(false);
 
     useEffect(() => {
       
@@ -125,6 +127,11 @@ const ViewPreEnrollment = ({ studentInfo, changeTab }) => {
     setOpenContractsDialog(true);
     }
 
+    const handleOpenStudentPDF = () => {
+      window.location.hash = `preMatricula?${studentId}`
+      setOpenStudentPDF(true);
+    }
+
     const handleEnrollStudent = async () => {
       sessionStorage.setItem(0, JSON.stringify(studentData))
       sessionStorage.setItem(2, JSON.stringify(studentData))
@@ -134,6 +141,7 @@ const ViewPreEnrollment = ({ studentInfo, changeTab }) => {
 
     return ( 
         <Fragment>
+              {openStudentPDF && <BaseDocument open={openStudentPDF} onClose={setOpenStudentPDF} />}
               {openContractsDialog && <StudentContracts studentId={studentId} isDisabled={disabledStudent} isOpen={openContractsDialog} onClose={() => {
                   setOpenContractsDialog(false);
               }}/>}
@@ -181,7 +189,7 @@ const ViewPreEnrollment = ({ studentInfo, changeTab }) => {
                       
                       
                       <Box m={1}>
-                        <Button fullWidth size="large" variant="contained" color="primary" startIcon={<Print />}>Ficha de Matrícula</Button>
+                        <Button fullWidth size="large" variant="contained" color="primary" onClick={handleOpenStudentPDF} startIcon={<Print />}>Ficha de Matrícula</Button>
                       </Box>
                       
                       <Box m={1}>

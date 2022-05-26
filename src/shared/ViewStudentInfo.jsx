@@ -5,6 +5,7 @@ import { useSnackbar } from "notistack";
 import { Fragment, useEffect, useState } from "react";
 
 import { classesRef, disabledStudentsRef, studentsRef } from '../services/databaseRefs'
+import BaseDocument from "./BaseDocument";
 import EditStudentData from "./EditStudentData";
 import FollowUp from "./FollowUp";
 import FullScreenDialog from "./FullscreenDialog";
@@ -94,6 +95,7 @@ const StudentInfo = (props) => {
     const [classCodeEnable, setClassCodeEnable] = useState('');
     const [desablingStudent, setDesablingStudent] = useState(false);
     const [classCodeTransfer, setClassCodeTransfer] = useState('');
+    const [openStudentPDF, setOpenStudentPDF] = useState(false);
 
     useEffect(() => {
       
@@ -212,8 +214,15 @@ const handleOpenContractsDialog = () => {
   setOpenContractsDialog(true);
 }
 
+const handleOpenStudentPDF = () => {
+  window.location.hash = `fichaCadastral?${studentId}`
+  setOpenStudentPDF(true);
+}
+
     return ( 
         <Fragment>
+              {openStudentPDF && <BaseDocument open={openStudentPDF} onClose={setOpenStudentPDF} />}
+
               <StudentContracts studentId={studentId} isDisabled={disabledStudent} isOpen={openContractsDialog} onClose={() => {
                   setOpenContractsDialog(false);
               }}/>
@@ -257,7 +266,7 @@ const handleOpenContractsDialog = () => {
                 </DialogActions>
             </Dialog>
               <Backdrop open={loading} className={classes.backdrop}><CircularProgress color="inherit" /></Backdrop>
-              <div className={classes.container}>
+              <div className={classes.container} id="noprint">
                 <StudentDataCard studentData={studentData} />
              
                 
@@ -298,7 +307,7 @@ const handleOpenContractsDialog = () => {
                         <Button fullWidth size="large" variant="contained" color="primary" onClick={handleOpenContractsDialog} startIcon={<Description />}>Contratos</Button>
                       </Box>
                       <Box m={1}>
-                        <Button fullWidth size="large" variant="contained" color="primary" startIcon={<Print />}>Ficha de Matrícula</Button>
+                        <Button fullWidth size="large" variant="contained" color="primary" onClick={handleOpenStudentPDF} startIcon={<Print />}>Ficha de Matrícula</Button>
                       </Box>
                       <Box m={1}>
                         <Button fullWidth size="large" variant="contained" color="primary" onClick={handleOpenFollowUp} startIcon={<Assignment />}>Follow Up</Button>

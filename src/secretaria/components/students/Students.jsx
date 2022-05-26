@@ -4,6 +4,7 @@ import { DataGrid, GridToolbar, GridToolbarContainer, GridToolbarExport } from "
 import { useSnackbar } from "notistack";
 import { Fragment, useEffect, useState } from "react";
 import { disabledStudentsRef, studentsRef } from "../../../services/databaseRefs";
+import BaseDocument from "../../../shared/BaseDocument";
 import { LocaleText } from "../../../shared/DataGridLocaleText";
 import FullScreenDialog from "../../../shared/FullscreenDialog";
 import { handleEnableDisableStudents } from "../../../shared/FunctionsUse";
@@ -77,6 +78,7 @@ const Students = () => {
     const [ rows, setRows ] = useState([]);
     const [ selectedRows, setSelectedRows ] = useState([]);
     const [ studentInfo, setStudentInfo ] = useState({})
+    const [openStudentPDF, setOpenStudentPDF] = useState(false);
 
     const { enqueueSnackbar, closeSnackbar } = useSnackbar()
 
@@ -210,8 +212,17 @@ const Students = () => {
         setShowDisabledStudents(checked);
     }
 
+    const handleOpenStudentPDF = () => {
+        console.log(selectedRows)
+        let ids = selectedRows.join(',')
+        
+        window.location.hash = `fichaCadastral?${ids}`
+        setOpenStudentPDF(true);
+      }
+
     return (
         <Fragment>
+            {openStudentPDF && <BaseDocument open={openStudentPDF} onClose={setOpenStudentPDF} />}
             <Dialog
                 aria-labelledby="confirmation-dialog-title"
                 open={openDialog}
@@ -305,8 +316,11 @@ const Students = () => {
                     
                 </Grid>
                 <Grid item>
-                    {selectedRows.length > 0 && (<Button variant="contained" color="secondary" onClick={() => {handleConfirmDisable()}}>Desativar selecionado{selectedRows.length > 1 && 's'}</Button>)}
+                    <Button variant="contained" disabled={!selectedRows.length > 0} color="secondary" onClick={() => {handleConfirmDisable()}}>Desativar selecionado{selectedRows.length > 1 && 's'}</Button>
                 </Grid>
+                {/* <Grid item>
+                    <Button variant="contained" disabled={!selectedRows.length > 0} color="primary" onClick={() => {handleOpenStudentPDF()}}>Fichas de matrícula</Button>
+                </Grid> */}
             </Grid>
         </Fragment>
         
