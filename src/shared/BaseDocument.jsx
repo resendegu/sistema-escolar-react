@@ -610,7 +610,7 @@ export default function BaseDocument({classCode, open, onClose}) {
       <>
       <Backdrop open={loader} className={classes.backdrop}><CircularProgress color="inherit" /></Backdrop>
         <Dialog open={open} fullScreen>
-        <DialogTitle>Ficha do estudante</DialogTitle>
+        <DialogTitle>Visualizar documento</DialogTitle>
             <DialogContent>
                 <div class="actionButtons">
                     <table border="1" style={{width: "100%", borderStyle: "hidden"}}>
