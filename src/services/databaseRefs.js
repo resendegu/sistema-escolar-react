@@ -27,6 +27,7 @@ const performanceGradesPath = 'notasDesempenho/referencia'
 const billetsDocsPath = 'docsBoletos/'
 const usersListPath = 'listaDeUsuarios/'
 const preEnrollmentsPath = 'preMatriculas/'
+const quickDataPath = 'dadosRapidos/'
 
 
 // Setting the root ref
@@ -52,6 +53,7 @@ const usersRef = rootRef.child(usersPath);
 const billetsDocsRef = rootRef.child(billetsDocsPath);
 const usersListRef = rootRef.child(usersListPath);
 const preEnrollmentsRef = rootRef.child(preEnrollmentsPath);
+const quickDataRef = rootRef.child(quickDataPath);
 
 // Export the refs created
-export { schoolInfoRef, classesRef, booksRef, coursesRef, contractRef, daysCodesRef, additionalFieldsRef, basicDataRef, notificationsRef, studentsRef, disabledStudentsRef, teachersListRef, calendarRef, followUpRef, performanceGradesRef, usersRef, billetsDocsRef, usersListRef, preEnrollmentsRef };
+export { schoolInfoRef, classesRef, booksRef, coursesRef, contractRef, daysCodesRef, additionalFieldsRef, basicDataRef, notificationsRef, studentsRef, disabledStudentsRef, teachersListRef, calendarRef, followUpRef, performanceGradesRef, usersRef, billetsDocsRef, usersListRef, preEnrollmentsRef, quickDataRef };

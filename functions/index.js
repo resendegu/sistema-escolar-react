@@ -1309,6 +1309,67 @@ exports.systemUpdate = functions.pubsub.schedule('0 2 * * 0').timeZone('America/
     return null;
 });
 
+exports.dailyUpdate = functions.pubsub.schedule('0 0 * * *').timeZone('America/Sao_Paulo').onRun((context) => {
+    // let aniversariantesRef = admin.database().ref('sistemaEscolar/aniversariantes')
+    // let alunosRef = admin.database().ref('sistemaEscolar/alunos')
+    // let alunosRef = admin.database().ref('sistemaEscolar/alunos')
+    const firestoreRef = admin.firestore().collection('mail');
+
+    const now = new Date(context.timestamp)
+
+    const ref = admin.database().ref("sistemaEscolar")
+
+    const updates = async () => {
+        
+        const students = (await ref.child('alunos').once('value')).numChildren();
+        const classes = (await ref.child('turmas').once('value')).numChildren();
+        const disabledStudents = (await ref.child('alunosDesativados').once('value')).numChildren();
+        return {students: students, classes: classes, disabledStudents: disabledStudents};
+    }
+
+    
+
+
+    updates().then(async (result) => {
+        await ref.child('dadosRapidos').update(result)
+        const emailContent = {
+            to: "gustavo.resende@grupoprox.com",
+            message: {
+                subject: `Job diário realizado`,
+                text: `Veja o log do job diário`,
+                html: `<h3>Olá!</h3><p>O Job de dailyUpdate do Sistema Escolar foi executado.</p><p> Alunos: ${result.students}</p><p> Turmas: ${result.classes}</p><p> Alunos Desativados: ${result.disabledStudents}</p><p>Ano base: ${now.getFullYear()}</p><p> Timestamp: ${context.timestamp}</p><p> EventId: ${context.eventId}</p><p> EventType: ${context.eventType}</p><p>Sistemas ProjetoX.</p>`
+            }
+        }
+
+        firestoreRef.add(emailContent).then(() => {
+            console.log('Queued email for delivery')
+        }).catch(error => {
+            console.error(error)
+            throw new Error(error.message)
+        })
+    }).catch((error) => {
+        const emailContent = {
+            to: "gustavo.resende@grupoprox.com",
+            message: {
+                subject: `Job diário falhou`,
+                text: `Veja o log do job diário`,
+                html: `<h3>Olá!</h3><p>O Job de dailyUpdate do Sistema Escolar foi executado, porém falhou.</p><p>Error message: ${error.message}</p><p>Ano base: ${now.getFullYear()}</p><p> Timestamp: ${context.timestamp}</p><p> EventId: ${context.eventId}</p><p> EventType: ${context.eventType}</p><p>Sistemas ProjetoX.</p>`
+            }
+        }
+
+        firestoreRef.add(emailContent).then(() => {
+            console.log('Queued email for delivery')
+        }).catch(error => {
+            console.error(error)
+            throw new Error(error.message)
+        })
+    })
+
+    
+
+    return null;
+});
+
 exports.newYear = functions.pubsub.schedule('0 2 1 1 *').timeZone('America/Sao_Paulo').onRun((context) => {
         const firestoreRef = admin.firestore().collection('mail');
 
@@ -1379,7 +1440,7 @@ exports.newYear = functions.pubsub.schedule('0 2 1 1 *').timeZone('America/Sao_P
             to: "gustavo.resende@grupoprox.com",
             message: {
                 subject: `Job anual realizado`,
-                text: `Veja o log do job de domingo`,
+                text: `Veja o log do job anual`,
                 html: `<h3>Olá!</h3><p>O Job de newYear do Sistema Escolar foi executado.</p><p>Ano base: ${now.getFullYear()}</p><p> Timestamp: ${context.timestamp}</p><p> EventId: ${context.eventId}</p><p> EventType: ${context.eventType}</p><p>Sistemas ProjetoX.</p>`
             }
         }
