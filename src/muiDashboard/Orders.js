@@ -8,6 +8,7 @@ import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Title from './Title';
 import { quickDataRef } from '../services/databaseRefs';
+import { TableFooter } from '@material-ui/core';
 
 // Generate Order Data
 function createData(id, date, name, since, email) {
@@ -30,9 +31,15 @@ export default function Orders() {
 
   useEffect(() => {
     let localRows = []
-    quickDataRef.child('aniversaries').once('child_added').then((child) => {
-      localRows.push(child.val())
-      setRows(localRows)
+    quickDataRef.child('aniversaries').once('value').then((snapshot) => {
+      let aniver = snapshot.val()
+      if (snapshot.exists()) {
+        setRows([...aniver])
+      } else {
+        setRows([])
+      }
+      
+      console.log(localRows)
     })
     
   }, [])
@@ -41,7 +48,7 @@ export default function Orders() {
   const classes = useStyles();
   return (
     <React.Fragment>
-      <Title>Aniversariantes do mês</Title>
+      <Title>Aniversariantes do mês 🥳</Title>
       <Table size="small">
         <TableHead>
           <TableRow>
@@ -62,6 +69,7 @@ export default function Orders() {
               {/* <TableCell align="right">{row.amount}</TableCell> */}
             </TableRow>
           ))}
+          {rows.length === 0 && <TableFooter>Não foram encontrados alunos aniversariantes neste mês.</TableFooter>}
         </TableBody>
       </Table>
       {/* <div className={classes.seeMore}>
