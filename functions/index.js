@@ -1320,11 +1320,24 @@ exports.dailyUpdate = functions.pubsub.schedule('0 0 * * *').timeZone('America/S
     const ref = admin.database().ref("sistemaEscolar")
 
     const updates = async () => {
-        
-        const students = (await ref.child('alunos').once('value')).numChildren();
+        let aniversaries = []
+        const studentsSnap = await ref.child('alunos').once('value')
+        const allStudents = studentsSnap.val()
+        for (const id in allStudents) {
+            if (Object.hasOwnProperty.call(allStudents, id)) {
+                const student = allStudents[id];
+                let timestamp = new Date(student.timestamp._seconds * 1000)
+                let birthMonth = student.dataNascimentoAluno.split('-')[1]
+                let month = context.timestamp.split('-')[1]
+                if (birthMonth === month) {
+                    aniversaries.push({name: student.nomeAluno, birthDate: student.dataNascimentoAluno, studentSince: timestamp.toLocaleDateString('pt-BR'), email: student.emailAluno, id: id})
+                }
+            }
+        }
         const classes = (await ref.child('turmas').once('value')).numChildren();
         const disabledStudents = (await ref.child('alunosDesativados').once('value')).numChildren();
-        return {students: students, classes: classes, disabledStudents: disabledStudents};
+        const students = studentsSnap.numChildren();
+        return {students: students, classes: classes, disabledStudents: disabledStudents, aniversaries: aniversaries};
     }
 
     
