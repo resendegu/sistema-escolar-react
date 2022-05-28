@@ -22,6 +22,10 @@
           ".write": "auth.uid != null && auth.token.master == true",
           ".read":"auth.uid != null && auth.token.master == true"
         },
+          "dadosRapidos": {
+          ".write": "auth.uid != null && auth.token.master == true",
+          ".read":"auth.uid != null"
+        },
           "docsBoletos": {
           ".indexOn": "numeroDoc",
           ".write": "auth.uid != null && auth.token.master == true || auth.token.secretaria == true",
