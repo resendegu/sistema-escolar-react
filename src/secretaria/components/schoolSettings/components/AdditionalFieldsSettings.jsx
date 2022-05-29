@@ -101,15 +101,15 @@ const AdditionalFieldsSetting = () => {
                             rows={rows} 
                             columns={
                                 [
-                                    {field: 'label', headerName: 'Nome', width: 250, editable: true},
-                                    {field: 'placeholder', headerName: 'Texto de ajuda', width: 180, editable: true},
+                                    {field: 'label', headerName: 'Nome', description: "Nome do campo que aparecerá na matrícula ou pré-matrícula.", width: 250, editable: true},
+                                    {field: 'placeholder', headerName: 'Texto de ajuda', description: "Um texto útil para ajudar ou exemplificar o que deve ser preenchido no campo.", width: 180, editable: true},
                                     {
                                         field: 'required', 
                                         headerName: 'Obrigatório',
                                         type: 'boolean', 
                                         width: 180, 
                                         editable: true,
-                                        
+                                        description: "Define se é obrigatório o preenchimento do campo. Caso a esteja marcada, o usuário não será capaz de continuar com a matrícula/pré-matrícula, até que preencha este campo.",
                                     },
                             
                                 ]

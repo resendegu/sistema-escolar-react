@@ -639,6 +639,11 @@ const handleConfirmCloseClass = async () => {
     setClassReport(true);  
   }
 
+  const handleOpenCalendar = () => {
+    //setOpenCalendar(true)
+    enqueueSnackbar('O Calendário da Turma ainda está em desenvolvimento 😊', {title: 'Info', variant: 'info', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
+  }
+
     return ( 
         <Fragment>
           {classReport && <ClassReportOLD open={classReport} onClose={setClassReport} classCode={classCode}/>}
@@ -959,7 +964,7 @@ const handleConfirmCloseClass = async () => {
                       </Box>
                      {(classData.hasOwnProperty('status') && classData.status.turma === 'aberta') && 
                       <Box m={1}>
-                        <Button fullWidth size="large" variant="contained" color="primary" onClick={() => setOpenCalendar(true)} startIcon={<Event />}>Calendário da turma</Button>
+                        <Button fullWidth size="large" variant="contained" color="primary" onClick={handleOpenCalendar} startIcon={<Event />}>Calendário da turma</Button>
                       </Box>}
                       {/* <Box m={1}>
                         <Button fullWidth size="large" variant="contained" color="primary" startIcon={<Lock />}disabled={(!classData.hasOwnProperty('status') || classData.status.turma === 'fechada')}>Fechar turma</Button>

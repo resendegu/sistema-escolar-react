@@ -19,10 +19,10 @@ import DeleteIcon from '@material-ui/icons/Delete';
 import { studentFilesRef } from '../services/storageRefs';
 import { formatBytes } from './FunctionsUse';
 import { storage } from '../services/firebase';
-import { Box, Button } from '@material-ui/core';
+import { Box, Button, Tooltip } from '@material-ui/core';
 import LinearProgress from '@material-ui/core/LinearProgress'
 import ShowFiles from './ShowFiles';
-import { CloudUpload, Refresh } from '@material-ui/icons';
+import { CloudUpload, Face, Refresh } from '@material-ui/icons';
 import { useSnackbar } from 'notistack';
 import { disabledStudentsRef, preEnrollmentsRef, studentsRef } from '../services/databaseRefs';
 import { useConfirmation } from '../contexts/ConfirmContext';
@@ -188,6 +188,8 @@ export default function StudentFiles({ studentId, disabledStudent, preEnrollment
     });
 
     
+
+    
   
     
     function putStorageItem(item) {
@@ -200,6 +202,22 @@ export default function StudentFiles({ studentId, disabledStudent, preEnrollment
         console.log('One failed:', item, error.message)
       });
     }
+  }
+
+  const handleSetStudentPhoto = async (fullPath) => {
+    setLoading(true)
+    try {
+      const strgRef = storage.ref(fullPath)
+      let url = await strgRef.getDownloadURL();
+      await studentsRef.child(studentId).child('fotoAluno').set(url)
+      let metadata = await strgRef.getMetadata()
+      console.log(metadata)
+      enqueueSnackbar('Foto do aluno definida', {variant: 'success'})
+    } catch (error) {
+      console.log(error)
+      enqueueSnackbar(error.message, {variant: 'error'})
+    }
+    setLoading(false)
   }
 
   const calculateTotalSize = () => {
@@ -224,6 +242,7 @@ export default function StudentFiles({ studentId, disabledStudent, preEnrollment
           size: file.metadata.size,
           name: file.name,
           onDelete: () => handleDeleteFile(file.fullPath),
+          setStudentPhoto: () => handleSetStudentPhoto(file.fullPath)
         })
 
       )
@@ -246,7 +265,7 @@ export default function StudentFiles({ studentId, disabledStudent, preEnrollment
   }
 
   const ListItemElem = (props) => {
-    const { onClick, button, name, size, onDelete} = props;
+    const { onClick, button, name, size, onDelete, setStudentPhoto} = props;
 
     return (
       
@@ -257,6 +276,14 @@ export default function StudentFiles({ studentId, disabledStudent, preEnrollment
           secondary={secondary ? formatBytes(size) : null}
         />
         <ListItemSecondaryAction>
+          {(name.includes(".jpg") || name.includes(".png")) && (
+            <Tooltip title="Definir como foto para o boletim do aluno">
+              <IconButton edge="end" aria-label="delete" onClick={setStudentPhoto}>
+                <Face />
+              </IconButton>
+            </Tooltip>
+          
+          )}
           <IconButton edge="end" aria-label="delete" onClick={onDelete}>
             <DeleteIcon />
           </IconButton>

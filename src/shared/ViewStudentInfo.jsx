@@ -1,6 +1,6 @@
 import { Avatar, Backdrop, Box, Button, Card, CardActions, CardContent, CircularProgress, Container, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, Grid, List, ListItem, ListItemText, makeStyles, MenuItem, Select, Typography } from "@material-ui/core";
 import { green } from "@material-ui/core/colors";
-import { AccountBox, Assignment, Assistant, AttachFile, Check, ChromeReaderMode, Description, DoneAll, Edit, NotInterested, Person, Print, School, SupervisedUserCircle, TransferWithinAStation } from "@material-ui/icons";
+import { AccountBox, Assignment, Assistant, AttachFile, Check, ChromeReaderMode, Description, DoneAll, Edit, NotInterested, Person, Print, Refresh, School, SupervisedUserCircle, TransferWithinAStation } from "@material-ui/icons";
 import { useSnackbar } from "notistack";
 import { Fragment, useEffect, useState } from "react";
 
@@ -102,9 +102,10 @@ const StudentInfo = (props) => {
       
       getData();
       
-    }, [classCode, studentId])
+    }, [classCode, studentId, openEditStudentsInfo])
 
     const getData = async () => {
+      setLoading(true)
       try {
         if (disabledStudent || !desablingStudent) {
           let classes = (await (classesRef.once('value'))).val()
@@ -124,7 +125,7 @@ const StudentInfo = (props) => {
       } catch (error) {
         console.log(error)
       }
-      
+      setLoading(false)
     }
 
     const calculateGrade = (grades) => {
@@ -207,8 +208,8 @@ const handleOpenEditStudentInfo = () => {
 }
 
 const handleOpenFollowUp = () => {
-  setOpenFollowUp(true)
-  console.log(`hey`)
+  //setOpenFollowUp(true)
+  enqueueSnackbar('O FollowUp está em fase de desenvolvimento 😊', {title: 'Info', variant: 'info', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
 }
 
 const handleOpenContractsDialog = () => {
@@ -222,6 +223,10 @@ const handleOpenStudentPDF = () => {
 
 const handleOpenStudentHistory = () => {
   setOpenStudentHistory(true)
+}
+
+const handleOpenChecklist = () => {
+  enqueueSnackbar('O Checklist está em fase de desenvolvimento 😊', {title: 'Info', variant: 'info', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
 }
 
     return ( 
@@ -308,7 +313,7 @@ const handleOpenStudentHistory = () => {
                         <Button fullWidth size="large" variant="contained" color="primary" startIcon={<Edit />} onClick={handleOpenEditStudentInfo}>Editar dados</Button>
                       </Box>
                       <Box m={1}>
-                        <Button fullWidth size="large" variant="contained" color="primary" startIcon={<DoneAll />}disabled={disabledStudent}>Checklist</Button>
+                        <Button fullWidth size="large" variant="contained" color="primary" startIcon={<DoneAll />}disabled={disabledStudent} onClick={handleOpenChecklist}>Checklist</Button>
                       </Box>
                       <Box m={1}>
                         <Button fullWidth size="large" variant="contained" color="primary" onClick={handleOpenContractsDialog} startIcon={<Description />}>Contratos</Button>
@@ -324,6 +329,10 @@ const handleOpenStudentHistory = () => {
                       </Box>
                       <Box m={1}>
                         <Button fullWidth size="small" variant="contained" color={"secondary"} startIcon={disabledStudent ? <Check /> :<NotInterested />} onClick={disabledStudent ? handleConfirmEnable : handleConfirmDisable}>{disabledStudent ? 'Reativar' : 'Desativar'}</Button>
+                      </Box>
+                      <Box m={1}>
+
+                        <Button fullWidth size="small" variant="outlined" color={"primary"} startIcon={<Refresh />} onClick={getData}>Atualizar dados</Button>
                       </Box>
                       
                       </CardContent>

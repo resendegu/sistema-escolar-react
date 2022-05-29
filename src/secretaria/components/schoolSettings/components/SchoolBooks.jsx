@@ -101,10 +101,10 @@ const SchoolBooks = () => {
                             rows={rows} 
                             columns={
                                 [
-                                    {field: 'codSistema', headerName: 'ID', width: 92, editable: false},
-                                    {field: 'codLivro', headerName: 'Código', width: 130, editable: true},
-                                    {field: 'nomeLivro', headerName: 'Nome do Livro', width: 300, editable: true},
-                                    {field: 'idLivro', headerName: 'Ident. do Livro', width: 300, editable: true},
+                                    {field: 'codSistema', headerName: 'ID', description: "Código apenas para identificação interna no sistema. Não aparecerá em outros documentos do sistema.", width: 92, editable: false},
+                                    {field: 'codLivro', headerName: 'Código', description: "O código do livro será utilizado para formar o código automático da turma.", width: 130, editable: true},
+                                    {field: 'nomeLivro', headerName: 'Nome do Livro', description: "Nome completo do livro para fins de consulta interna.", width: 300, editable: true},
+                                    {field: 'idLivro', headerName: 'Ident. do Livro', description: "Esse será o nome que aparecerá nos boletins.", width: 300, editable: true},
                                 ]
                             } 
                             disableSelectionOnClick 

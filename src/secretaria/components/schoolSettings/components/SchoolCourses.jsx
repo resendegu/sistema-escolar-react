@@ -101,9 +101,9 @@ const SchoolCourses = () => {
                             rows={rows} 
                             columns={
                                 [
-                                    {field: 'codSistema', headerName: 'ID', width: 92, editable: false},
-                                    {field: 'codCurso', headerName: 'Código', width: 130, editable: true},
-                                    {field: 'nomeCurso', headerName: 'Nome do Curso', width: 300, editable: true},
+                                    {field: 'codSistema', headerName: 'ID', description: "Código apenas para identificação interna no sistema. Não aparecerá em outros documentos do sistema.", width: 92, editable: false},
+                                    {field: 'codCurso', headerName: 'Código', description: "O código do curso será utilizado para formar o código automático da turma.", width: 130, editable: true},
+                                    {field: 'nomeCurso', headerName: 'Nome do Curso', description: "Este será o nome que aparecerá nos boletins.", width: 300, editable: true},
                                 ]
                             } 
                             disableSelectionOnClick 

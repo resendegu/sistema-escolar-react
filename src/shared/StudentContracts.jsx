@@ -221,6 +221,12 @@ const StudentContracts = ({studentId, isOpen, onClose, isDisabled}) => {
 
     const handleGenerateBillets = async (contractId) => {
         try {
+            await confirm({
+                variant: "danger",
+                catchOnCancel: true,
+                title: "Confirmação",
+                description: "Você deseja gerar débitos/boletos para este aluno?"
+            })
             let localContract = systemContracts.filter(contract => contract.codContrato === contractId)
             
             setContractSelected(contractId);
@@ -228,13 +234,14 @@ const StudentContracts = ({studentId, isOpen, onClose, isDisabled}) => {
                     variant: "danger",
                     catchOnCancel: true,
                     title: "Confirmação",
-                    description: "Já existem boletos gerados para este contrato. Se continuar, serão gerados novos débitos/boletos para este contrato. Deseja continuar?"
+                    description: "Já existem boletos gerados para este contrato, se quiser vê-los, cancele esta ação e clique na opção de Segunda Via. Se continuar, serão gerados novos débitos/boletos para este contrato. Deseja continuar?"
                 })
             
             setLoading(true)
             const result = await generateBillets(studentId, contractId);
             console.log(result)
             setShowBillets(true)
+            getData()
             enqueueSnackbar("Boletos gerados com sucesso.", {title: 'Sucesso', variant: 'success', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
         } catch (error) {
             console.log(error)
