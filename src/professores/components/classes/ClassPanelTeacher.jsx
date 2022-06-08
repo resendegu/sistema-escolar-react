@@ -3,29 +3,29 @@ import { Calendar,  } from "@fullcalendar/core";
 import { render } from "@fullcalendar/react";
 import { Avatar, Backdrop, Box, Button, Card, CardActions, CardContent, CircularProgress, Container, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, Grid, IconButton, List, ListItem, ListItemSecondaryAction, ListItemText, makeStyles, MenuItem, Select, Tooltip, Typography, TextField, FormControl, FormHelperText, Paper } from "@material-ui/core";
 import { green } from "@material-ui/core/colors";
-import { AccountBox, Add, Assignment, Assistant, AttachFile, ChromeReaderMode, Clear, DeleteForever, Description, DoneAll, Edit, Grade, Lock, LockOpen, Person, Print, School, SupervisedUserCircle, TransferWithinAStation, Refresh, Event, MeetingRoom, NoMeetingRoom } from "@material-ui/icons";
+import { AccountBox, Add, Assignment, Assistant, AttachFile, ChromeReaderMode, Clear, DeleteForever, Description, DoneAll, Edit, Grade, Lock, LockOpen, Person, Print, School, SupervisedUserCircle, TransferWithinAStation, Refresh, Event, MeetingRoom, NoMeetingRoom, Speed } from "@material-ui/icons";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import { useSnackbar } from "notistack";
 import { Fragment, useEffect, useState } from "react";
 
-import { classesRef, coursesRef, teachersListRef } from '../services/databaseRefs'
-import { LocaleText } from "./DataGridLocaleText";
-import FullScreenDialog from "./FullscreenDialog";
-import { handleEnableDisableStudents, handleTransferStudents, handleAddTeacher, handleDeleteClass, handleRemoveTeacher, handleClassOpen, handleCloseClass } from "./FunctionsUse";
-import StudentFiles from "./StudentFiles";
-import StudentInfo from "./ViewStudentInfo";
+import { basicDataRef, classesRef, coursesRef, schoolInfoRef, teachersListRef } from '../../../services/databaseRefs'
+import { LocaleText } from "../../../shared/DataGridLocaleText";
+import FullScreenDialog from "../../../shared/FullscreenDialog";
+import { handleEnableDisableStudents, handleTransferStudents, handleAddTeacher, handleDeleteClass, handleRemoveTeacher, handleClassOpen, handleCloseClass } from "../../../shared/FunctionsUse";
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import listPlugin from '@fullcalendar/list';
 import brLocale from '@fullcalendar/core/locales/pt-br';
 import interactionPlugin from '@fullcalendar/interaction';
 import { useRef } from "react";
-import CalendarComponent from "../muiDashboard/Calendar";
-import { useConfirmation } from "../contexts/ConfirmContext";
-import AddClass from "../secretaria/components/addClass/AddClass";
-import GradeDefinition from "./GradeDefinition";
-import ClassReport from "./ClassReport";
-import ClassReportOLD from "./ClassReportOLD";
+import CalendarComponent from "../../../muiDashboard/Calendar";
+import { useConfirmation } from "../../../contexts/ConfirmContext";
+import AddClass from "../../../secretaria/components/addClass/AddClass";
+import ClassReportOLD from "../../../shared/ClassReportOLD";
+import StudentPanelTeacher from "../students/StudentPanelTeacher";
+import ReleaseGrades from "../../../shared/ReleaseGrades";
+import GradeDefinition from "../../../shared/GradeDefinition";
+import ReleasePerformance from "../../../shared/ReleasePerformance";
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -58,7 +58,7 @@ const useStyles = makeStyles((theme) => ({
     },
     bigCards: {
       minWidth: 275,
-      maxWidth: 600,
+      maxWidth: "70vw",
       height: "84vh",
       marginLeft: "10px",
       width: "100%",
@@ -107,7 +107,7 @@ const useStyles = makeStyles((theme) => ({
     },
   }));
 
-const ClassInfo = ({classDataRows, onClose}) => {
+const ClassPanelTeacher = ({classDataRows, onClose}) => {
 
     
 
@@ -149,14 +149,17 @@ const ClassInfo = ({classDataRows, onClose}) => {
     const [dialogContent, setDialogContent] = useState(<Fragment></Fragment>);
     const [teachersList, setTeachersList] = useState([]);
     const [chosenTeacher, setChosenTeacher] = useState('');
-    const [startEndClasses, setStartEndClasses] = useState({start: '', end: ''})
-    const [classEndTime, setClassEndTime] = useState(classData.hasOwnProperty('horarioTerminoTurma') && classData.horarioTerminoTurma)
-    const [eventColor, setEventColor] = useState('#001EFF')
-    const [eventTextColor, setEventTextColor] = useState('#FFFFFF')
+    const [startEndClasses, setStartEndClasses] = useState({start: '', end: ''});
+    const [classEndTime, setClassEndTime] = useState(classData.hasOwnProperty('horarioTerminoTurma') && classData.horarioTerminoTurma);
+    const [eventColor, setEventColor] = useState('#001EFF');
+    const [eventTextColor, setEventTextColor] = useState('#FFFFFF');
     const [periodName, setPeriodName] = useState('');
     const [numberOfClasses, setNumberOfClasses] = useState('');
-    const [gradeDefinition, setGradeDefinition] = useState(false);
+    const [gradeRelease, setGradeRelease] = useState(false);
+    const [performanceRelease, setPerformanceRelease] = useState(false);
     const [classReport, setClassReport] = useState(false);
+    const [canDefineGrades, setCanDefineGrades] = useState(false);
+    const [gradeDefinition, setGradeDefinition] = useState(false);
 
     
     useEffect(() => {
@@ -168,6 +171,29 @@ const ClassInfo = ({classDataRows, onClose}) => {
     useEffect(() => {
       handleRerenderCalendar()
     }, [eventColor, eventTextColor])
+
+    useEffect(() => {
+        
+        basicDataRef.child('permitirDistribuiNotas').on('value', (snapshot) => {
+            const value = snapshot.val()
+          
+            if (snapshot.exists()) {
+                setCanDefineGrades(value)
+            } else {
+                setCanDefineGrades(false)
+            }
+            
+            
+        }, (error) => {
+            enqueueSnackbar(error.message, {title: 'Error', variant: 'error', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button>})
+        })
+      
+      
+      
+      return () => {
+          basicDataRef.child('permitirDistribuiNotas').off('value');
+      }
+  }, [])
 
     const getData = async () => {
       setLoader(true)
@@ -215,6 +241,7 @@ const ClassInfo = ({classDataRows, onClose}) => {
             if (Object.hasOwnProperty.call(students, id)) {
               let student = students[id];
               student.id = id
+              student.actions = id
               student.gradeSum = 0;
               for (const gradeName in student.notas) {
                 if (Object.hasOwnProperty.call(student.notas, gradeName)) {
@@ -285,7 +312,12 @@ const ClassInfo = ({classDataRows, onClose}) => {
 
   const handleRowClick = (e) => {
     console.log(e)
-    setStudentInfo({id: e.id, classCode: classCode})
+    //setStudentInfo({id: e.id, classCode: classCode})
+    // setOpen(true);
+  }
+
+  const handleOpenStudent = (id) => {
+    setStudentInfo({id: id, classCode: classCode})
     setOpen(true);
   }
 
@@ -293,218 +325,6 @@ const ClassInfo = ({classDataRows, onClose}) => {
     console.log(e)
   }
 
-  const handleConfirmDeleteTeacher = (teacherIndex) => {
-    setDialogContent(
-      <Fragment>
-        <DialogContent>
-        <DialogContentText>{'Você está removendo o acesso deste professor á esta turma.'}</DialogContentText>
-
-        </DialogContent>
-        
-        <DialogActions>
-            <Button onClick={() => setOpenDialog(false)} color="primary">
-                Cancelar
-            </Button>
-            <Button onClick={() => handleDeleteTeacher(teacherIndex)} variant="contained" color="primary" autoFocus>
-                Sim, continuar
-            </Button>
-        </DialogActions>
-      </Fragment>
-    )
-    setOpenDialog(true)
-  }
-
-  const handleDeleteTeacher = async (teacherIndex) => {
-    setOpenDialog(false)
-    setLoader(true)
-    
-    try {
-      const message = await handleRemoveTeacher(classCode, teacherIndex);
-      enqueueSnackbar(message, {title: 'Sucesso', variant: 'success', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button>})
-      setLoader(false)
-    } catch (error) {
-      enqueueSnackbar(error.message, {title: 'Erro', variant: 'error', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button>})
-      setLoader(false)
-    }
-
-    getData();
-    
-  }
-
-
-  const handleConfirmTransfer = () => {
-    setDialogContent((
-      <Fragment>
-        <DialogContent>
-          <DialogContentText>{`Você está transferindo ${selectedRows.length} alunos. Escolha a turma de destino:`}</DialogContentText>
-          {
-            <Select 
-              autoFocus
-              fullWidth
-              required
-              onChange={(e) => setClassCodeTransfer(e.target.value)}
-            >
-            
-            {classesCodes.map((id, i) => <MenuItem value={id}>{id}</MenuItem>)}
-            </Select>
-          }
-        </DialogContent>
-
-        <DialogActions>
-          <Button onClick={() => setOpenDialog(false)} color="primary">
-              Cancelar
-          </Button>
-          <Button onClick={handleTransfer} variant="contained" color="primary" autoFocus>
-              Sim, continuar
-          </Button>
-        </DialogActions>
-        
-      </Fragment>
-    ))
-    setOpenDialog(true)
-  }
-
-  const handleTransfer = async () => {
-    setOpenDialog(false)
-    setLoader(true)
-    try {
-        let message = await handleTransferStudents(classCode, classCodeTransfer, selectedRows)
-        getData()
-        enqueueSnackbar(message, {title: 'Sucesso', variant: 'success', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
-        setLoader(false)
-    } catch (error) {
-        getData()
-        enqueueSnackbar(error.message, {title: 'Sucesso', variant: 'error', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button>})
-        setLoader(false)
-    }
-  }
-
-  const handleConfirmDisable = () => {
-    setDialogContent(
-      <Fragment>
-        <DialogContent>
-            
-
-            <DialogContentText>{`Você está desativando ${selectedRows.length} alunos.`}</DialogContentText>
-            
-        </DialogContent>
-        
-        <DialogActions>
-            <Button onClick={() => setOpenDialog(false)} color="primary">
-                Cancelar
-            </Button>
-            <Button onClick={handleDisableStudents} variant="contained" color="primary" autoFocus>
-                Sim, continuar
-            </Button>
-        </DialogActions>
-        
-      </Fragment>
-    )
-
-    setOpenDialog(true) 
-  }
-
-const handleDisableStudents = async () => {
-    setLoader(true)
-    try {
-        let message = await handleEnableDisableStudents(selectedRows)
-        getData()
-        enqueueSnackbar(message, {title: 'Sucesso', variant: 'success', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
-        setLoader(false)
-    } catch (error) {
-        getData()
-        enqueueSnackbar(error.message, {title: 'Sucesso', variant: 'error', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button>})
-        setLoader(false)
-    }
-}
-
-  const handleConfirmAddTeacher = () => {
-    if (teachersList.length === 0) {
-      enqueueSnackbar('Todos os professores cadastrados no sistema já estão conectados nesta turma.', {title: 'Aviso', variant: 'info', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button>})
-    } else {
-      setDialogContent((
-        <Fragment>
-          <DialogContent>
-          <DialogContentText>{'Você está adicionando um(a) professor(a) á esta turma. Escolha o(a) professor(a):'}</DialogContentText>
-          
-          
-            <Select 
-              autoFocus
-              fullWidth
-              required
-              onChange={(e) => setChosenTeacher(e.target.value)}
-            >
-            
-            {teachersList.map((teacher, i) => <MenuItem value={teacher.email}>{teacher.nome} ({teacher.email})</MenuItem>)}
-            </Select>
-          </DialogContent>
-          
-          <DialogActions>
-              <Button onClick={() => setOpenDialog(false)} color="primary">
-                  Cancelar
-              </Button>
-              <Button onClick={handleTeacherAdding} variant="contained" color="primary" autoFocus>
-                  Sim, continuar
-              </Button>
-          </DialogActions>
-        </Fragment>
-      ))
-      setOpenDialog(true)
-    }
-    
-    
-  }
-
-  const handleTeacherAdding = async () => {
-    setOpenDialog(false)
-    setLoader(true)
-    try {
-        let message = await handleAddTeacher(chosenTeacher, classCode);
-        getData()
-        enqueueSnackbar(message, {title: 'Sucesso', variant: 'success', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
-        setLoader(false)
-    } catch (error) {
-        getData()
-        enqueueSnackbar(error.message, {title: 'Sucesso', variant: 'error', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button>})
-        setLoader(false)
-    }
-  }
-
-  const handleDeleteClassConfirm = () => {
-    setDialogContent(
-      <Fragment>
-        <DialogContent>
-        <DialogContentText>{'Você está excluindo todos os registros desta turma.'}</DialogContentText>
-        
-        </DialogContent>
-        
-        <DialogActions>
-            <Button onClick={() => setOpenDialog(false)} color="primary">
-                Cancelar
-            </Button>
-            <Button onClick={handleClassDelete} variant="contained" color="primary" autoFocus>
-                Sim, continuar
-            </Button>
-        </DialogActions>
-      </Fragment>
-    )
-    setOpenDialog(true)
-  }
-
- const handleClassDelete = async () => {
-  setOpenDialog(false)
-  setLoader(true)
-  try {
-      let message = await handleDeleteClass(classCode);
-      getData()
-      enqueueSnackbar(message, {title: 'Sucesso', variant: 'success', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
-      setLoader(false)
-  } catch (error) {
-      getData()
-      enqueueSnackbar(error.message, {title: 'Sucesso', variant: 'error', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button>})
-      setLoader(false)
-  }
- }
 
  // Functions for the calendar
  const handleDateClick = (e) => {
@@ -644,11 +464,27 @@ const handleConfirmCloseClass = async () => {
     enqueueSnackbar('O Calendário da Turma ainda está em desenvolvimento 😊', {title: 'Info', variant: 'info', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
   }
 
+  const handleReleaseGrades = (single) => {
+    console.log(single)
+    if (single) {
+      setSelectedRows([single])
+    }
+    setGradeRelease(true);
+  }
+
+  const handleReleasePerformance = (single) => {
+    if (single) {
+      setSelectedRows([single])
+    }
+    setPerformanceRelease(true)
+  }
+
     return ( 
         <Fragment>
           {classReport && <ClassReportOLD open={classReport} onClose={setClassReport} classCode={classCode}/>}
+          <ReleaseGrades open={gradeRelease} onClose={setGradeRelease} classCode={classCode} studentsIds={selectedRows} refresh={getData}/>
+          <ReleasePerformance open={performanceRelease} onClose={setPerformanceRelease} classCode={classCode} studentsIds={selectedRows} refresh={getData}/>
           <GradeDefinition open={gradeDefinition} onClose={setGradeDefinition} classCode={classCode}/>
-
           <Dialog 
             aria-labelledby="confirmation-dialog-title"
             open={openDialog}
@@ -835,7 +671,7 @@ const handleConfirmCloseClass = async () => {
                 saveButton={"Salvar"}
                 saveButtonDisabled={true}
             > 
-                <StudentInfo studentInfo={studentInfo} />
+                <StudentPanelTeacher studentInfo={studentInfo} />
           </FullScreenDialog>
             <div style={{position: 'absolute'}}>
               <Backdrop className={classes.backdrop} open={loader}>
@@ -893,25 +729,39 @@ const handleConfirmCloseClass = async () => {
                         
                       </Grid>
                     </Grid>
+                    {canDefineGrades && 
+                      <Box m={1}>
+                        <Button fullWidth size="large" variant="contained" color="primary" startIcon={<Grade />} onClick={handleGradeDefinition}>Distribuir notas</Button>
+                      </Box>}
+                      
+                      <Box m={1}>
+                        <Button fullWidth size="large" variant="contained" disabled={classData.hasOwnProperty('status') ? classData.status.turma !== 'aberta' : true} color="primary" startIcon={<Print />}onClick={handleClassReport}>Diário de classe</Button>
+                      </Box>
+                      {/* <Box m={1}>
+                        <Button fullWidth size="large" variant="contained" color="primary" onClick={(classData.hasOwnProperty('status') && classData.status.turma === 'aberta') ? handleConfirmCloseClass : handleConfirmOpenClass} startIcon={(classData.hasOwnProperty('status') && classData.status.turma === 'aberta') ? <NoMeetingRoom /> : <MeetingRoom />}>{(classData.hasOwnProperty('status') && classData.status.turma === 'aberta') ? 'Fechar ' : 'Abrir '}turma</Button>
+                      </Box> */}
+                     {(classData.hasOwnProperty('status') && classData.status.turma === 'aberta') && 
+                      <Box m={1}>
+                        <Button fullWidth size="large" variant="contained" color="primary" onClick={handleOpenCalendar} startIcon={<Event />}>Calendário da turma</Button>
+                      </Box>}
+                      {/* <Box m={1}>
+                        <Button fullWidth size="large" variant="contained" color="primary" startIcon={<Lock />}disabled={(!classData.hasOwnProperty('status') || classData.status.turma === 'fechada')}>Fechar turma</Button>
+                      </Box> */}
                     
-                    <Typography className={classes.title} color="textPrimary" gutterBottom>
+                    {/* <Typography className={classes.title} color="textPrimary" gutterBottom>
                       Lista de professores
                     </Typography>
                     <List component="nav" aria-label="professores cadastrados">
                       {teachers.map((teacher, i) => (
                         <ListItem divider button onClick={handleTeacherClick}>
                           <ListItemText className={classes.list}>{teacher.nome} ({teacher.email}) </ListItemText>
-                          <ListItemSecondaryAction onClick={() => handleConfirmDeleteTeacher(i)}>
-                            <IconButton edge="end" aria-label="delete">
-                              <Clear />
-                            </IconButton>
-                          </ListItemSecondaryAction>
+                          
                         </ListItem>
                       ))}
                       
                       
                       
-                    </List>
+                    </List> */}
 
                     
                   </CardContent>
@@ -920,60 +770,7 @@ const handleConfirmCloseClass = async () => {
              
                 
                   
-                    <Card className={classes.smallCards} variant="outlined">
-                      <CardContent>
-                      <Grid 
-                      justifyContent="flex-start"
-                      direction="row"
-                      container
-                      spacing={1}
-                    >
-                      <Grid item>
-                        <Avatar className={classes.avatar}>
-                          <Assistant />
-                        </Avatar>
-                      </Grid>
-
-                      <Grid item>
-                        <Typography variant="h5" component="h2">
-                          Ações
-                        </Typography>
-                        
-                        
-                      </Grid>
-                    </Grid>
-                      <hr />
-                      <Box  m={1}>
-                        <Button fullWidth size="large" variant="contained" color="primary" startIcon={<Add />} onClick={handleConfirmAddTeacher}> Add professores</Button>
-                      </Box>
-                      <Box  m={1}>
-                        <Button fullWidth size="large" variant="contained" color="primary" onClick={() => setOpenClassEditing(true)} startIcon={<Edit />}>Editar dados</Button>
-                      </Box>
-                      <Box m={1}>
-                        <Button fullWidth size="large" variant="contained" color="primary" startIcon={<DeleteForever />} onClick={handleDeleteClassConfirm}>Excluir turma</Button>
-                      </Box>
-                      <Box m={1}>
-                        <Button fullWidth size="large" variant="contained" color="primary" startIcon={<Grade />} onClick={handleGradeDefinition}>Distribuir notas</Button>
-                      </Box>
-                      
-                      <Box m={1}>
-                        <Button fullWidth size="large" variant="contained" disabled={classData.hasOwnProperty('status') ? classData.status.turma !== 'aberta' : true} color="primary" startIcon={<Print />}onClick={handleClassReport}>Diário de classe</Button>
-                      </Box>
-                      <Box m={1}>
-                        <Button fullWidth size="large" variant="contained" color="primary" onClick={(classData.hasOwnProperty('status') && classData.status.turma === 'aberta') ? handleConfirmCloseClass : handleConfirmOpenClass} startIcon={(classData.hasOwnProperty('status') && classData.status.turma === 'aberta') ? <NoMeetingRoom /> : <MeetingRoom />}>{(classData.hasOwnProperty('status') && classData.status.turma === 'aberta') ? 'Fechar ' : 'Abrir '}turma</Button>
-                      </Box>
-                     {(classData.hasOwnProperty('status') && classData.status.turma === 'aberta') && 
-                      <Box m={1}>
-                        <Button fullWidth size="large" variant="contained" color="primary" onClick={handleOpenCalendar} startIcon={<Event />}>Calendário da turma</Button>
-                      </Box>}
-                      {/* <Box m={1}>
-                        <Button fullWidth size="large" variant="contained" color="primary" startIcon={<Lock />}disabled={(!classData.hasOwnProperty('status') || classData.status.turma === 'fechada')}>Fechar turma</Button>
-                      </Box> */}
-                      
-                      
-                      </CardContent>
-                      
-                    </Card>
+                    
                   
 
                   
@@ -1007,9 +804,36 @@ const handleConfirmCloseClass = async () => {
                           rows={students} 
                           columns={
                               [
-                                  {field: 'nome', headerName: 'Nome', width: 200},
+                                  {field: 'nome', flex: 1, headerName: 'Nome', width: 200},
                                   {field: 'id', headerName: 'Matrícula', width: 140},
-                                  {field: 'gradeSum', headerName: 'Nota atual', width: 145}
+                                  {field: 'gradeSum', headerName: 'Nota atual', width: 145},
+                                  {
+                                    field: 'actions',
+                                    headerName: 'Ações',
+                                    minWidth: 150,
+                                    flex: 1,
+                                    renderCell: (params) => (
+                                      <strong>
+                                        <Tooltip title="Notas">
+                                          <IconButton onClick={() => handleReleaseGrades(params.value)} disabled={!(classData.hasOwnProperty('status') && classData.status.turma === 'aberta')}>
+                                            <Grade />
+                                          </IconButton> 
+                                        </Tooltip>
+
+                                        <Tooltip title="Desempenho">
+                                          <IconButton onClick={() => handleReleasePerformance(params.value)} disabled={!(classData.hasOwnProperty('status') && classData.status.turma === 'aberta')}>
+                                            <Speed />
+                                          </IconButton> 
+                                        </Tooltip>
+                                        
+                                        <Tooltip title="Ver aluno">
+                                          <IconButton onClick={() => handleOpenStudent(params.value)}>
+                                            <Person />
+                                          </IconButton> 
+                                        </Tooltip>
+                                      </strong>
+                                    ),
+                                  },
                               ]
                           } 
                           disableSelectionOnClick 
@@ -1026,8 +850,8 @@ const handleConfirmCloseClass = async () => {
                         />
                         
                           <div className={classes.container}>
-                            <Button size="medium" variant="contained" color="primary" disabled={selectedRows.length === 0} startIcon={<TransferWithinAStation />} onClick={handleConfirmTransfer}>Transferir</Button>
-                            <Button size="medium" variant="contained" color="secondary" startIcon={<Clear />} disabled={selectedRows.length === 0} onClick={handleConfirmDisable}>Desativar</Button>
+                            <Button size="medium" variant="contained" color="primary" disabled={!(classData.hasOwnProperty('status') && classData.status.turma === 'aberta') || selectedRows.length === 0} startIcon={<Grade />} onClick={() => handleReleaseGrades()}>Lançar notas</Button>
+                            <Button size="medium" variant="contained" color="secondary" startIcon={<Speed />} disabled={!(classData.hasOwnProperty('status') && classData.status.turma === 'aberta') || selectedRows.length === 0} onClick={() => handleReleasePerformance()}>Lançar desempenho</Button>
                           </div>
                         
                         
@@ -1057,4 +881,4 @@ const handleConfirmCloseClass = async () => {
      );
 }
  
-export default ClassInfo;
+export default ClassPanelTeacher;

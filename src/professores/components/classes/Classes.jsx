@@ -7,8 +7,7 @@ import { classesRef, usersRef } from "../../../services/databaseRefs";
 import { LocaleText } from "../../../shared/DataGridLocaleText";
 import FullScreenDialog from "../../../shared/FullscreenDialog";
 import { capitalizeFirstLetter } from "../../../shared/FunctionsUse";
-import ClassInfo from "../../../shared/ViewClassInfo";
-import StudentInfo from "../../../shared/ViewStudentInfo";
+import ClassPanelTeacher from "./ClassPanelTeacher";
 
 function getThemePaletteMode(palette) {
     return palette.type || palette.mode;
@@ -191,7 +190,7 @@ const Classes = () => {
                 saveButton={"Salvar"}
                 saveButtonDisabled={true}
             > 
-                <ClassInfo classDataRows={classData} onClose={() => setOpen(false)}/>
+                <ClassPanelTeacher classDataRows={classData} onClose={() => setOpen(false)}/>
             </FullScreenDialog>
             <Grid
             justifyContent="flex-start"   
