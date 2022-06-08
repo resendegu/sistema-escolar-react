@@ -109,7 +109,7 @@ const ReleaseGrades = ({open, onClose, classCode, studentsIds, refresh}) => {
                     for (const i in gradesArray) {
                         let key = gradesArray[i].key
                         if (Object.hasOwnProperty.call(gradesArray, i)) {
-                            tempGrade.push({key: key, value: 0, readonly: key === "Desempenho",})
+                            tempGrade.push({key: key, value: key === "Desempenho" ? (studentResults && studentResults.hasOwnProperty('Desempenho') ? studentResults.Desempenho : 0) : 0, readonly: key === "Desempenho",})
                             
                         }
                     }
@@ -148,6 +148,8 @@ const ReleaseGrades = ({open, onClose, classCode, studentsIds, refresh}) => {
 
         setSum(localSum)
         console.log(studentsAvatars)
+        
+        
     }
 
     const handleAddGrade = (key='', value=0, readonly=false) => {
@@ -165,7 +167,10 @@ const ReleaseGrades = ({open, onClose, classCode, studentsIds, refresh}) => {
                 console.log(studentGrades)
                 let localGrades = {};
                 studentGrades.map((grade, i) => {
-                    localGrades[grade.key] = Number(grade.value);
+                    if (grade.key !== "Desempenho") {
+                        localGrades[grade.key] = Number(grade.value);
+                    }
+                    
                 })
                 console.log(localGrades)
                 for (const i in studentsIds) {
@@ -238,8 +243,10 @@ const ReleaseGrades = ({open, onClose, classCode, studentsIds, refresh}) => {
                         <TextField
                             variant="outlined"
                             onChange={(e) => {
-                                console.log(localStudentGrades, localGrades)
-                                localStudentGrades[i].value = e.target.value
+                                console.log(localStudentGrades, localGrades, e.target.value)
+                                
+                                localStudentGrades[i].value = e.target.value === '' ? 0 : e.target.value
+                                e.target.value = e.target.value === '' ? 0 : e.target.value
                                 setStudentGrades(localStudentGrades)
                                 
                             }}
@@ -250,7 +257,7 @@ const ReleaseGrades = ({open, onClose, classCode, studentsIds, refresh}) => {
                             color="secondary"
                             label="Nota"
                             defaultValue={localStudentGrades.hasOwnProperty(i) && localStudentGrades[i].value}
-                            
+                            id={grade.key}
                             InputProps={{
                                 endAdornment: <InputAdornment position="start">/{grade.value}</InputAdornment>,
                                 
@@ -286,7 +293,7 @@ const ReleaseGrades = ({open, onClose, classCode, studentsIds, refresh}) => {
                     <div className={classes.root}>
                         {studentsAvatars && studentsAvatars.map((student, i) => (
                             <Tooltip title={`${student.id}: ${student.studentName}`}>
-                                <Badge badgeContent={studentsIds.length !== 1 ? (sum === 0 ? Number(student.total) : Number(sum) - Number(student.performance === undefined ? 0 : student.performance)) : (sum)} max={999} color="primary">
+                                <Badge badgeContent={studentsIds.length !== 1 ? (sum === 0 ? Number(student.total) : Number(sum) + Number(student.performance === undefined ? 0 : student.performance)) : (sum)} max={999} color="primary">
                                     {student.avatar ? (<img src={student.avatar} style={{width: "40px", height: "40px", borderRadius: '50%',}} alt=""/>) : <Avatar />}
                                     
                                 </Badge>

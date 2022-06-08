@@ -246,6 +246,7 @@ const ClassPanelTeacher = ({classDataRows, onClose}) => {
               for (const gradeName in student.notas) {
                 if (Object.hasOwnProperty.call(student.notas, gradeName)) {
                   const grade = student.notas[gradeName];
+                  
                   student.gradeSum += parseFloat(grade);
                 }
               }
@@ -747,7 +748,9 @@ const handleConfirmCloseClass = async () => {
                       {/* <Box m={1}>
                         <Button fullWidth size="large" variant="contained" color="primary" startIcon={<Lock />}disabled={(!classData.hasOwnProperty('status') || classData.status.turma === 'fechada')}>Fechar turma</Button>
                       </Box> */}
-                    
+                      <Box m={1}>
+                        <Button fullWidth size="small" variant="outlined" color="primary" onClick={getData} startIcon={<Refresh />}>Atualizar dados</Button>
+                      </Box>
                     {/* <Typography className={classes.title} color="textPrimary" gutterBottom>
                       Lista de professores
                     </Typography>

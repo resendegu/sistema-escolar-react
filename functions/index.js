@@ -978,7 +978,7 @@ exports.lancaDesempenhos = functions.database.ref('sistemaEscolar/turmas/{codTur
                 throw new functions.https.HttpsError('unknown', error.message, error)
             })
         } else {
-            return 'A turma ' + referencia.turma + 'não possui nota de desepenho distribuída no somatório final das notas. A nota da matricula ' + referencia.matriculaAluno + ' não foi alterada.'
+            return 'A turma ' + referencia.turma + 'não possui nota de desempenho distribuída no somatório final das notas. A nota da matricula ' + referencia.matriculaAluno + ' não foi alterada.'
         }
     }).catch(error => {
         throw new functions.https.HttpsError('unknown', error.message, error)
