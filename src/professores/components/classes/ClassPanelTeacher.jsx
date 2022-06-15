@@ -461,8 +461,8 @@ const handleConfirmCloseClass = async () => {
   }
 
   const handleOpenCalendar = () => {
-    //setOpenCalendar(true)
-    enqueueSnackbar('O Calendário da Turma ainda está em desenvolvimento 😊', {title: 'Info', variant: 'info', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
+    setOpenCalendar(true)
+    //enqueueSnackbar('O Calendário da Turma ainda está em desenvolvimento 😊', {title: 'Info', variant: 'info', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
   }
 
   const handleReleaseGrades = (single) => {

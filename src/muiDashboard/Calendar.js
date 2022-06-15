@@ -13,7 +13,7 @@ import { ChevronRight, ChevronLeft, Today, ViewComfy, ViewList, ViewWeek, Assist
 import { useState } from 'react';
 import { getRandomKey } from '../shared/FunctionsUse';
 import { endOfTomorrow } from 'date-fns/esm';
-import { calendarRef } from '../services/databaseRefs';
+import { calendarRef, classesRef } from '../services/databaseRefs';
 import { useSnackbar } from 'notistack';
 import SeeEventPopover from '../shared/SeeEventPopover';
 import FullScreenDialog from '../shared/FullscreenDialog';
@@ -23,7 +23,7 @@ import useStyles from '../hooks/useStyles';
 
 
 
-const CalendarComponent = ({sourceId, isFromClassCode}) => {
+const CalendarComponent = ({sourceId, isFromClassCode=false}) => {
     
 
     const classes = useStyles();
@@ -53,8 +53,34 @@ const CalendarComponent = ({sourceId, isFromClassCode}) => {
     const [api, setApi] = useState();
    
     useEffect(() => {
-        
-        if (sourceId) {
+
+        if (isFromClassCode) {
+            classesRef.child(sourceId).child('aulaEvento').on('value', (snapshot) => {
+                let sourceArray = []
+                const sources = snapshot.val()
+                console.log(sources)
+                if (snapshot.exists()) {
+                    sourceArray.push(sources)
+                    setEventsSources([...sourceArray])
+                } else {
+                    setEventsSources([])
+                }
+                
+                if (sources && sources.hasOwnProperty('length')) {
+                    setViewSources(sources)
+                } else {
+                    for (const key in sources) {
+                        if (Object.hasOwnProperty.call(sources, key)) {
+                            const single = sources[key];
+                            sources !== null && setViewSources([single])
+                        }
+                    }
+                    
+                }
+            }, (error) => {
+                enqueueSnackbar(error.message, {title: 'Error', variant: 'error', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button>})
+            })
+        } else if (!isFromClassCode && sourceId) {
             
             calendarRef.orderByChild('id').equalTo(sourceId).on('value', (snapshot) => {
                 const sources = snapshot.val()
