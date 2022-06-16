@@ -639,5 +639,33 @@ const grantAndRevokeAccess = async (access, uid, checked) => {
         throw new Error(error.message)
     }
 }
+
+const releaseFaults = async (dateStr, classId, studentsIds) => {
+    const data = {dateStr: dateStr, classId: classId, studentsIds: studentsIds}
+
+    let releaseFaultsFunction = functions.httpsCallable('lancaFaltas');
+    try {
+        let result = await releaseFaultsFunction(data);
+        console.log(result.data)
+        return result.data.answer;
+    } catch (error) {
+        console.log(error)
+        throw new Error(error.message)
+    }
+}
+
+const removeFaults = async (dateStr, classId, studentId) => {
+    const data = {dateStr: dateStr, classId: classId, studentId: studentId}
+    console.log(data)
+    let removeFaultsFunction = functions.httpsCallable('removeFaltas');
+    try {
+        let result = await removeFaultsFunction(data);
+        console.log(result.data)
+        return result.data.answer;
+    } catch (error) {
+        console.log(error)
+        throw new Error(error.message)
+    }
+}
  
-export { calculateAge, checkCpf, getAddress, enrollStudent, handleSendClassData, formatBytes, generateClassCode, handleEnableDisableStudents, handleTransferStudents, handleAddTeacher, handleDeleteClass, handleRemoveTeacher, getRandomKey, handleClassOpen, handleCloseClass, capitalizeFirstLetter, getBrazilianHolidays, accessVerification, generateBillets, createBilletView, grantAndRevokeAccess };
+export { calculateAge, checkCpf, getAddress, enrollStudent, handleSendClassData, formatBytes, generateClassCode, handleEnableDisableStudents, handleTransferStudents, handleAddTeacher, handleDeleteClass, handleRemoveTeacher, getRandomKey, handleClassOpen, handleCloseClass, capitalizeFirstLetter, getBrazilianHolidays, accessVerification, generateBillets, createBilletView, grantAndRevokeAccess, releaseFaults, removeFaults };

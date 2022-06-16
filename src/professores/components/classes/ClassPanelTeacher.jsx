@@ -3,7 +3,7 @@ import { Calendar,  } from "@fullcalendar/core";
 import { render } from "@fullcalendar/react";
 import { Avatar, Backdrop, Box, Button, Card, CardActions, CardContent, CircularProgress, Container, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, Grid, IconButton, List, ListItem, ListItemSecondaryAction, ListItemText, makeStyles, MenuItem, Select, Tooltip, Typography, TextField, FormControl, FormHelperText, Paper } from "@material-ui/core";
 import { green } from "@material-ui/core/colors";
-import { AccountBox, Add, Assignment, Assistant, AttachFile, ChromeReaderMode, Clear, DeleteForever, Description, DoneAll, Edit, Grade, Lock, LockOpen, Person, Print, School, SupervisedUserCircle, TransferWithinAStation, Refresh, Event, MeetingRoom, NoMeetingRoom, Speed } from "@material-ui/icons";
+import { AccountBox, Add, Assignment, Assistant, AttachFile, ChromeReaderMode, Clear, DeleteForever, Description, DoneAll, Edit, Grade, Lock, LockOpen, Person, Print, School, SupervisedUserCircle, TransferWithinAStation, Refresh, Event, MeetingRoom, NoMeetingRoom, Speed, CalendarToday } from "@material-ui/icons";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import { useSnackbar } from "notistack";
 import { Fragment, useEffect, useState } from "react";
@@ -11,7 +11,7 @@ import { Fragment, useEffect, useState } from "react";
 import { basicDataRef, classesRef, coursesRef, schoolInfoRef, teachersListRef } from '../../../services/databaseRefs'
 import { LocaleText } from "../../../shared/DataGridLocaleText";
 import FullScreenDialog from "../../../shared/FullscreenDialog";
-import { handleEnableDisableStudents, handleTransferStudents, handleAddTeacher, handleDeleteClass, handleRemoveTeacher, handleClassOpen, handleCloseClass } from "../../../shared/FunctionsUse";
+import { handleEnableDisableStudents, handleTransferStudents, handleAddTeacher, handleDeleteClass, handleRemoveTeacher, handleClassOpen, handleCloseClass, releaseFaults, removeFaults } from "../../../shared/FunctionsUse";
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import listPlugin from '@fullcalendar/list';
@@ -480,6 +480,64 @@ const handleConfirmCloseClass = async () => {
     setPerformanceRelease(true)
   }
 
+  const handleFault = async (event, remove=false) => {
+    if (remove) {
+      // in case of remove === true, "event" will be like {eventStr: event.startStr, classCode: eventId, studentId: fault.id, studentName: fault.name}
+      try {
+        console.log(event)
+        await confirm({
+          variant: "danger",
+          catchOnCancel: true,
+          title: "Confirmação",
+          description: `Você deseja remover a falta do aluno ${event.studentId}: ${event.studentName}?`
+        })
+        setLoader(true)
+        
+        const message = await removeFaults(event.eventStr, event.classCode, event.studentId)
+        enqueueSnackbar(message, {title: 'Sucesso', variant: 'success', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
+      } catch (error) {
+        if (error)
+          enqueueSnackbar(error.message, {title: 'Erro', variant: 'error', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button>})
+      }
+      setLoader(false)
+    } else {
+      console.log(event)
+      if (selectedRows.length > 0) {
+        try {
+          let selectedStudents = ""
+          if (selectedRows.length === 1) {
+            selectedStudents = selectedRows[0]
+          } else {
+            for (const i in selectedRows) {
+              if (Object.hasOwnProperty.call(selectedRows, i)) {
+                const id = selectedRows[i];
+                console.log((selectedRows.length - 1), Number(i))
+                selectedStudents += (selectedRows.length - 1) === Number(i) ? `${id}` : `${id}, `
+              }
+            }
+          }
+          await confirm({
+            variant: "danger",
+            catchOnCancel: true,
+            title: "Confirmação",
+            description: "Após lançar uma falta, você não poderá lançar outras para o mesmo dia. Poderá lançar novamente, somente depois que remover as faltas já lançadas. Você deseja lançar faltas para os alunos selecionados? Alunos: " + selectedStudents
+          })
+          setLoader(true)
+          const message = await releaseFaults(event.startStr, classCode, selectedRows)
+          enqueueSnackbar(message, {title: 'Sucesso', variant: 'success', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
+        } catch (error) {
+          if (error)
+            enqueueSnackbar(error.message, {title: 'Erro', variant: 'error', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button>})
+        }
+      } else {
+        enqueueSnackbar("Para lançar faltas, selecione os alunos na tabela acima.", {title: 'Info', variant: 'info', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button>})
+      }
+      setLoader(false)
+    }
+    
+    
+  }
+
     return ( 
         <Fragment>
           {classReport && <ClassReportOLD open={classReport} onClose={setClassReport} classCode={classCode}/>}
@@ -741,10 +799,10 @@ const handleConfirmCloseClass = async () => {
                       {/* <Box m={1}>
                         <Button fullWidth size="large" variant="contained" color="primary" onClick={(classData.hasOwnProperty('status') && classData.status.turma === 'aberta') ? handleConfirmCloseClass : handleConfirmOpenClass} startIcon={(classData.hasOwnProperty('status') && classData.status.turma === 'aberta') ? <NoMeetingRoom /> : <MeetingRoom />}>{(classData.hasOwnProperty('status') && classData.status.turma === 'aberta') ? 'Fechar ' : 'Abrir '}turma</Button>
                       </Box> */}
-                     {(classData.hasOwnProperty('status') && classData.status.turma === 'aberta') && 
+                     {/* {(classData.hasOwnProperty('status') && classData.status.turma === 'aberta') && 
                       <Box m={1}>
                         <Button fullWidth size="large" variant="contained" color="primary" onClick={handleOpenCalendar} startIcon={<Event />}>Calendário da turma</Button>
-                      </Box>}
+                      </Box>} */}
                       {/* <Box m={1}>
                         <Button fullWidth size="large" variant="contained" color="primary" startIcon={<Lock />}disabled={(!classData.hasOwnProperty('status') || classData.status.turma === 'fechada')}>Fechar turma</Button>
                       </Box> */}
@@ -864,7 +922,42 @@ const handleConfirmCloseClass = async () => {
                     </Card>
                   
                   
-                  
+                    <Card className={classes.bigCards} style={{height: "100vh"}} variant="outlined">
+                      <CardContent>
+                      <Grid 
+                        justifyContent="flex-start"
+                        direction="row"
+                        container
+                        spacing={1}
+                      >
+                        <Grid item>
+                          <Avatar className={classes.avatar}>
+                            <CalendarToday />
+                          </Avatar>
+                        </Grid>
+
+                        <Grid item>
+                          <Typography variant="h5" component="h2">
+                            Calendário da turma
+                          </Typography>
+                          
+                          
+                        </Grid>
+                      </Grid>
+                      <hr />
+                      <div style={{ height: "20vh", width: '100%' }}>
+                        
+                          <CalendarComponent sourceId={classCode} isFromClassCode handleFault={handleFault} />
+                        
+                      </div>
+                      
+                        
+                        
+                        
+                      
+                      
+                        </CardContent>
+                    </Card>
                     
                   
 

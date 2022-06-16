@@ -1,13 +1,14 @@
-import { DialogActions, DialogContent, DialogTitle, Grid, IconButton, Popover, Tooltip, Typography } from "@material-ui/core";
-import { Close, Delete, Edit, Event } from "@material-ui/icons";
-import { useEffect } from "react";
+import { Avatar, DialogActions, DialogContent, DialogTitle, Grid, IconButton, List, ListItem, ListItemAvatar, ListItemSecondaryAction, ListItemText, Popover, Tooltip, Typography } from "@material-ui/core";
+import { Close, Delete, Edit, Event, PersonOutline } from "@material-ui/icons";
+import { useEffect, useState } from "react";
 import { Fragment } from "react";
 
-import { calendarRef } from "../services/databaseRefs";
+import { calendarRef, classesRef, studentsRef } from "../services/databaseRefs";
 import { daysOfWeek } from "./LocaleDaysOfWeek";
 import { useConfirmation } from "../contexts/ConfirmContext";
 
-const SeeEventPopover = ({ anchorElEventInfo, handleClose, event, api, isFromClassCode }) => {
+
+const SeeEventPopover = ({ anchorElEventInfo, handleClose, event, api, isFromClassCode, handleFault }) => {
 
     
 
@@ -19,8 +20,39 @@ const SeeEventPopover = ({ anchorElEventInfo, handleClose, event, api, isFromCla
     const recurrence = (event && event._def.recurringDef !== null) && event._def.recurringDef.typeData
     const sourceId = (event && event.source.id)
     const eventId = (event && event.id)
+    const [faults, setFaults] = useState([]);
 
-    
+    useEffect(() => {
+        if (isFromClassCode) {
+            classesRef.child(eventId).child("frequencia").child(event.startStr).on('value', async faultsSnap => {
+                if (faultsSnap.exists()) {
+                    let faultStudentsIds = faultsSnap.val()
+                    let faultsArray = []
+                    for (const id in faultStudentsIds) {
+                        if (Object.hasOwnProperty.call(faultStudentsIds, id)) {
+                            const studentSnap = await studentsRef.child(id).once("value")
+                            const name = studentSnap.child('nomeAluno').val()
+                            const avatar = studentSnap.child('fotoAluno').val()
+                            faultsArray.push({name: name, avatar: avatar, id: id})
+                            setFaults([...faultsArray])
+                        }
+                    }
+                } else {
+                    setFaults([])
+                }
+            })
+
+            return () => {
+                classesRef.off('value');
+            }
+        }
+    }, [])
+
+    const getClassFaults = async () => {
+        const faultsSnap = await classesRef.child(eventId).child("frequencia").child(event.startStr).once('value')
+        
+
+    }
 
     const handleDeleteEvent = async () => {
         try {
@@ -56,6 +88,17 @@ const SeeEventPopover = ({ anchorElEventInfo, handleClose, event, api, isFromCla
         }
         
     }
+
+    const handleReleaseFault = async () => {
+        handleFault(event)
+    }
+
+    const handleRemoveFault = async (fault) => {
+        // true means tha it will remove a fault
+        handleFault({eventStr: event.startStr, classCode: eventId, studentId: fault.id, studentName: fault.name}, true)
+        
+        
+    }
     
 
     return (
@@ -84,12 +127,17 @@ const SeeEventPopover = ({ anchorElEventInfo, handleClose, event, api, isFromCla
                         alignItems="center"
                     >
                         <Grid item>
-                        <Tooltip title={'Editar evento'}>
+                        {!isFromClassCode && (<><Tooltip title={'Editar evento'}>
                             <IconButton variant='outlined' edge="end" color="inherit"><Edit /></IconButton>
                         </Tooltip>
                         <Tooltip title={'Deletar evento'}>
                             <IconButton variant='outlined' edge="end" color="inherit" onClick={handleDeleteEvent}><Delete /></IconButton>
-                        </Tooltip>
+                        </Tooltip></>)}
+                        {isFromClassCode && (
+                            <Tooltip title={'Lançar faltas'}>
+                                <IconButton variant='outlined' edge="end" color="inherit" onClick={handleReleaseFault}><PersonOutline /></IconButton>
+                            </Tooltip>
+                        )}
                         
                             
                             
@@ -137,7 +185,42 @@ const SeeEventPopover = ({ anchorElEventInfo, handleClose, event, api, isFromCla
                     )}
                     
                 </DialogContent>
-                <DialogActions></DialogActions>
+                <DialogTitle>Faltas</DialogTitle>
+                {isFromClassCode && <DialogContent>
+                <div>
+                    <List>
+                    {faults.map((fault, i) => (
+                        <ListItem>
+                            <ListItemAvatar>
+                            <Tooltip 
+                                title={fault.id}
+                            >
+                                <Avatar>
+                                    {fault.avatar ? (<img src={fault.avatar} style={{width: "40px", height: "40px", borderRadius: '50%',}} alt=""/>) : <Avatar />}
+                                </Avatar>
+                            </Tooltip>
+                            </ListItemAvatar>
+                            <ListItemText
+                                primary={fault.name}
+                                
+                            />
+                            <ListItemSecondaryAction>
+                                <Tooltip 
+                                    title={'Remover falta'}
+                                >
+                                    <IconButton edge="end" aria-label="delete" onClick={() => handleRemoveFault(fault)}>
+                                        <Delete />
+                                    </IconButton>
+                                </Tooltip>
+                            </ListItemSecondaryAction>
+                        </ListItem>
+                    ))}
+                    {faults.length === 0 && 'Não há faltas registradas para este dia'}
+                        
+                    
+                    </List>
+                </div>
+                </DialogContent>}
 
             {/*  */}
             </Popover>

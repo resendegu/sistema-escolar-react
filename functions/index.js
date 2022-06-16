@@ -985,6 +985,19 @@ exports.lancaDesempenhos = functions.database.ref('sistemaEscolar/turmas/{codTur
     })
 })
 
+exports.aberturaTurma = functions.database.ref('sistemaEscolar/turmas/{turma}/status/turma').onUpdate((snapshot, context) => {
+    // context.timestamp = context.timestamp
+    // context.params = { turma: "cod da turma" }
+    const classId = context.params.turma
+    const classState = snapshot.after.val()
+
+    // checking if the class status is "opened"
+    if (classState === "aberta") {
+        
+    }
+
+})
+
 exports.fechaTurma = functions.https.onCall((data, context) => {
     function formataNumMatricula(num) {
         let numero = num
@@ -2046,6 +2059,69 @@ exports.escutaContratos = functions.database.ref('sistemaEscolar/infoEscola/cont
 
 })
 
+exports.lancaFaltas = functions.https.onCall((data, context) => {
+    // const data = {dateStr: dateStr, classId: classId, studentsIds: studentsIds}
+    const classId = data.classId
+    const studentsIds = data.studentsIds
+    const dateStr = data.dateStr
+    let studentsObj = {}
+    for (const i in studentsIds) {
+        if (Object.hasOwnProperty.call(studentsIds, i)) {
+            const id = studentsIds[i];
+            studentsObj[id] = id
+        }
+    }
+
+    const release = async () => {
+        const classRef = admin.database().ref('sistemaEscolar/turmas/' + classId);
+        const checkStr = await classRef.child("frequencia").child(dateStr).once("value")
+        if (checkStr.exists()) {
+            throw new Error('Já existem faltas lançadas para este dia. Para lançar faltas novamente, apague as faltas já lançadas.')
+        } else {
+            await classRef.child("frequencia").child(dateStr).set(studentsObj);
+            for (const i in studentsIds) {
+                if (Object.hasOwnProperty.call(studentsIds, i)) {
+                    const id = studentsIds[i];
+                    await classRef.child('alunos').child(id).child('frequencia').child(dateStr).set({turma: classId})
+                }
+            }
+            
+            return data;
+        }
+        
+        
+    }
+
+    return release().then(result => {
+        return {answer: "Faltas lançadas com sucesso.", result: result}
+    }).catch(error => {
+        throw new functions.https.HttpsError('unknown', error.message, error)
+    })
+
+})
+
+exports.removeFaltas = functions.https.onCall((data, context) => {
+    // const data = {dateStr: dateStr, classId: classId, studentId: studentId}
+    const classId = data.classId
+    const studentId = data.studentId
+    const dateStr = data.dateStr
+    
+
+    const release = async () => {
+        const classRef = admin.database().ref('sistemaEscolar/turmas/' + classId);
+        await classRef.child("frequencia").child(dateStr).child(studentId).remove();
+        await classRef.child('alunos').child(studentId).child('frequencia').child(dateStr).remove();
+        
+        return data;
+    }
+
+    return release().then(result => {
+        return {answer: "Faltas removidas com sucesso.", result: result}
+    }).catch(error => {
+        throw new functions.https.HttpsError('unknown', error.message, error)
+    })
+
+})
 
 // exports.adicionaFotoAluno = functions.storage.object().onFinalize(async (object) => {
 //     const fileBucket = object.bucket; // The Storage bucket that contains the file.

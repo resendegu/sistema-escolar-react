@@ -23,7 +23,7 @@ import useStyles from '../hooks/useStyles';
 
 
 
-const CalendarComponent = ({sourceId, isFromClassCode=false}) => {
+const CalendarComponent = ({sourceId, isFromClassCode=false,  handleFault}) => {
     
 
     const classes = useStyles();
@@ -45,6 +45,7 @@ const CalendarComponent = ({sourceId, isFromClassCode=false}) => {
     const [anchorElRightClick, setAnchorElRightClick] = useState(null);
     const [e, setE] = useState();
     const [openNewCalendar, setOpenNewCalendar] = useState(false);
+    const [holidays, setHolidays] = useState(true);
 
     
 
@@ -61,18 +62,19 @@ const CalendarComponent = ({sourceId, isFromClassCode=false}) => {
                 console.log(sources)
                 if (snapshot.exists()) {
                     sourceArray.push(sources)
+                    console.log(sourceArray)
                     setEventsSources([...sourceArray])
                 } else {
                     setEventsSources([])
                 }
                 
-                if (sources && sources.hasOwnProperty('length')) {
-                    setViewSources(sources)
+                if (sourceArray && sourceArray.hasOwnProperty('length')) {
+                    setViewSources(sourceArray)
                 } else {
-                    for (const key in sources) {
-                        if (Object.hasOwnProperty.call(sources, key)) {
-                            const single = sources[key];
-                            sources !== null && setViewSources([single])
+                    for (const key in sourceArray) {
+                        if (Object.hasOwnProperty.call(sourceArray, key)) {
+                            const single = sourceArray[key];
+                            sourceArray !== null && setViewSources([single])
                         }
                     }
                     
@@ -325,6 +327,7 @@ const CalendarComponent = ({sourceId, isFromClassCode=false}) => {
                 eventSourceId={sourceSelected.id}
                 api={api}
                 isFromClassCode={isFromClassCode}
+                handleFault={handleFault}
             />}
            
             {/* Popover for creating events */}
