@@ -167,9 +167,8 @@ const ReleaseGrades = ({open, onClose, classCode, studentsIds, refresh}) => {
                 console.log(studentGrades)
                 let localGrades = {};
                 studentGrades.map((grade, i) => {
-                    if (grade.key !== "Desempenho") {
-                        localGrades[grade.key] = Number(grade.value);
-                    }
+                    
+                    localGrades[grade.key] = Number(grade.value);
                     
                 })
                 console.log(localGrades)
