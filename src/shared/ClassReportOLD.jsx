@@ -155,8 +155,8 @@ async function geraDiario(turma, codHistorico) {
     
     let qtdeNotas = notas !== undefined ? Object.keys(notas).length : 0
     let topicsArray = [
-        {text: 'Nº', size: 1, width: '10%'},
-        {text: 'Aluno', size: 13 - qtdeNotas, width: '37%'},
+        {text: 'Nº', size: 1, width: '0.2%'},
+        {text: 'Nome', size: 13 - qtdeNotas, width: '37%'},
     ]
     
     for (const nomeNota in notas) {
@@ -176,22 +176,21 @@ async function geraDiario(turma, codHistorico) {
         if (Object.hasOwnProperty.call(alunos, matricula)) {
             const aluno = alunos[matricula];
             let infoRow = []
-            infoRow.push({text: matricula, size: 1, center: true});
-            infoRow.push({text: aluno.nome, size: 13 - qtdeNotas});
+            infoRow.push({text: c + 1, size: 1, center: true});
+            infoRow.push({text: `${aluno.nome}`, size: 13 - qtdeNotas});
             let somatorioNotas = 0
             for (const nomeNota in notas) {
                 try {
                     const nota = aluno.notas[nomeNota];
-                    infoRow.push({text: nota, size: 1, center: true});
+                    infoRow.push({text: nota === 0 ? " " : nota, size: 1, center: true});
                     somatorioNotas += nota;
                 } catch (error) {
                     infoRow.push({text: '', size: 1, center: true});
                 }
-                
             }
-            infoRow.push({text: somatorioNotas, size: 1, center: true});
+            infoRow.push({text: somatorioNotas === 0 ? " " : somatorioNotas, size: 1, center: true});
             const totalFaltas = aluno.frequencia ? Object.keys(aluno.frequencia).length : 0
-            infoRow.push({text: totalFaltas, size: 1, center: true})
+            infoRow.push({text: totalFaltas === 0 ? " " : totalFaltas, size: 1, center: true})
             
             rows.push(infoRow)
             c++
@@ -203,6 +202,12 @@ async function geraDiario(turma, codHistorico) {
         return a[1].text.localeCompare(b[1].text)
     })
     console.log(rows)
+    for (const rowI in rows) {
+        if (Object.hasOwnProperty.call(rows, rowI)) {
+            let row = rows[rowI];
+            row[0].text = Number(rowI) + 1
+        }
+    }
     setRows(rows)
 
     let lastRowArray = []
@@ -214,6 +219,114 @@ async function geraDiario(turma, codHistorico) {
     setLoader(false)
 }
   
+function printElem() {
+    let elem = 'diary'
+    var mywindow = window.open('', 'PRINT', 'height=800,width=950');
+    
+    mywindow.document.write('<html><head><title>' + document.title  + '</title>');
+    mywindow.document.write(`
+        <style>
+        body {
+            -webkit-print-color-adjust: exact;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #FAFAFA;
+            font: 12pt "Arial";
+        }
+        
+        body {
+            -webkit-print-color-adjust: exact;
+        }
+        
+        * {
+            box-sizing: border-box;
+            -moz-box-sizing: border-box;
+            line-height: 110%;
+        }
+        
+        .page {
+            width: 29.7cm;
+            min-height: 21cm;
+            padding: 0.3cm;
+            margin: 0.3cm auto;
+            border: 1px #D3D3D3 solid;
+            border-radius: 5px;
+            background: white;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .subpage {
+            padding: 0.5cm;
+            height: 256mm;
+            outline: 2cm #ffffff00 solid;
+        }
+        
+        @page {
+            size: A4;
+            margin: 0;
+        }
+        
+        @media print {
+            .page {
+                margin: 0;
+                border: initial;
+                border-radius: initial;
+                width: initial;
+                min-height: initial;
+                box-shadow: initial;
+                background: initial;
+                page-break-after: always;
+            }
+            .actionButtons {
+                display: none !important;
+            }
+        }
+        
+        .actionButtons {
+            width: 21cm;
+            padding: 1cm;
+            margin: 1cm auto;
+        }
+        .tg  {border-collapse:collapse; border-style: solid; border-color:#000000;border-spacing:0;margin:0px auto; width: 28cm;}
+      .tg td{background-color:#ffffff;border-color:#000000;border-style:hidden;border-width:1px;color:#444;
+        font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:2px 15px;word-break:normal;}
+      .tg th{background-color:#ffffff;border-color:#000000;border-style:hidden;border-width:1px;color:#fff;
+        font-family:Arial, sans-serif;font-size:14px;font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}
+      .tg .tg-yj5y{background-color:#efefef;border-color:inherit;text-align:center;vertical-align:center}
+      .tg .tg-sg5v{border-bottom: solid; font-size: 9pt;}
+      .tg .tg-wp8o{text-align:center;vertical-align:center; }
+      .tg .tg-m1nc{background-color:#ffffff;border-color:inherit;color:#000000;font-size:10px;text-align:right;vertical-align:center}
+      .tg .tg-0pky{border-color:inherit;border-style: solid; text-align:left;vertical-align:center; text-align: center;}
+      .tg .tg-73oq{border-color:#000000;text-align:left;vertical-align:center}
+      .tg .tg-hvas{font-size:xx-small;text-align:left;vertical-align:center}
+      .tg .tg-0lax{text-align:left;vertical-align:center; font-size: 9pt; border-style: solid; }
+      .blank_row
+        {
+            height: 10px !important; /* overwrites any other rules */
+            
+            border-top: #000000;
+            border-bottom: #000000;
+        }
+    @page {
+    size: auto
+    }
+        </style>
+    `)
+    mywindow.document.write('</head><body > <div id="noprint" class="actionButtons" style="width: 100%; text-align: center; margin-top: 10px;"><button onclick="window.print()" style="align-self: center;" id="noprint">Imprimir/PDF</button></div>');
+    //mywindow.document.write('<h1>' + document.title  + '</h1>');
+    mywindow.document.write(document.getElementById(elem).innerHTML);
+    mywindow.document.write('</body></html>');
+
+    mywindow.document.close(); // necessary for IE >= 10
+    mywindow.focus(); // necessary for IE >= 10*/
+    
+
+    //mywindow.close();
+
+    return true;
+}
   
 
   return (
@@ -221,89 +334,92 @@ async function geraDiario(turma, codHistorico) {
       <Backdrop open={loader} className={classes.backdrop}><CircularProgress color="inherit" /></Backdrop>
         <Dialog open={open} fullScreen>
             <DialogContent>
-            <table class="tg">
-        <thead id="head">
-          <tr>
-            <th class="tg-m1nc" colspan="16" id="timestamp">Data de emissão: --/--/-- --:--:--</th>
-          </tr>
-          <tr id="title">
-            <td class="tg-wp8o" colspan="16"><span style={{fontWeight: "bold"}}>Carregando dados...</span></td>
-          </tr>
-          <tr id="infoSchool">
-            <td class="tg-wp8o" colspan="16">INFORMAÇÕES DA ESCOLA</td>
-          </tr>
-          <tr id="infoDoc">
-            <td class="tg-sg5v" colspan="4">TOPICO DE INFORMAÇÕES</td>
-            <td class="tg-sg5v" colspan="4">INFORMAÇÕES</td>
-            <td class="tg-sg5v" colspan="4">TOPICO DE INFORMAÇÕES</td>
-            <td class="tg-sg5v" colspan="4">INFORMAÇÕES</td>
-          </tr>
-          
-          <tr id="infoTopics">
-            <td class="tg-0pky"></td>
-            <td class="tg-0pky"></td>
-            <td class="tg-0pky"></td>
-            <td class="tg-0pky"></td>
-            <td class="tg-0pky"></td>
-            <td class="tg-0pky"></td>
-            <td class="tg-0pky"></td>
-            <td class="tg-0pky"></td>
-            <td class="tg-0pky"></td>
-            <td class="tg-0pky"></td>
-            <td class="tg-0pky"></td>
-            <td class="tg-0pky"></td>
-            <td class="tg-0pky"></td>
-            <td class="tg-0pky"></td>
-            <td class="tg-0pky"></td>
-            <td class="tg-0pky"></td>
-          </tr>
-        </thead>
-        <tbody id="rows">
-          
-          <tr>
-            <td class="tg-0lax"></td>
-            <td class="tg-0lax"></td>
-            <td class="tg-0lax"></td>
-            <td class="tg-0lax"></td>
-            <td class="tg-0lax"></td>
-            <td class="tg-0lax"></td>
-            <td class="tg-0lax"></td>
-            <td class="tg-0lax"></td>
-            <td class="tg-0lax"></td>
-            <td class="tg-0lax"></td>
-            <td class="tg-0lax"></td>
-            <td class="tg-0lax"></td>
-            <td class="tg-0lax"></td>
-            <td class="tg-0lax"></td>
-            <td class="tg-0lax"></td>
-            <td class="tg-0lax"></td>
-          </tr>
-          
-        </tbody>
-        
-            <tfoot id="lastRow">
-                <tr>
-                    <td class="tg-0lax"></td>
-                    <td class="tg-0lax"></td>
-                    <td class="tg-0lax"></td>
-                    <td class="tg-0lax"></td>
-                    <td class="tg-0lax"></td>
-                    <td class="tg-0lax"></td>
-                    <td class="tg-0lax"></td>
-                    <td class="tg-0lax"></td>
-                    <td class="tg-0lax"></td>
-                    <td class="tg-0lax"></td>
-                    <td class="tg-0lax"></td>
-                    <td class="tg-0lax"></td>
-                    <td class="tg-0lax"></td>
-                    <td class="tg-0lax"></td>
-                    <td class="tg-0lax"></td>
-                    <td class="tg-0lax"></td>
-                </tr>
-            </tfoot>
-        </table>
+                <div id='diary'>
+                    <table class="tg">
+                        <thead id="head">
+                            <tr>
+                                <th class="tg-m1nc" colspan="16" id="timestamp">Data de emissão: --/--/-- --:--:--</th>
+                            </tr>
+                            <tr id="title">
+                                <td class="tg-wp8o" colspan="16"><span style={{fontWeight: "bold"}}>Carregando dados...</span></td>
+                            </tr>
+                            <tr id="infoSchool">
+                                <td class="tg-wp8o" colspan="16">INFORMAÇÕES DA ESCOLA</td>
+                            </tr>
+                            <tr id="infoDoc">
+                                <td class="tg-sg5v" colspan="4">TOPICO DE INFORMAÇÕES</td>
+                                <td class="tg-sg5v" colspan="4">INFORMAÇÕES</td>
+                                <td class="tg-sg5v" colspan="4">TOPICO DE INFORMAÇÕES</td>
+                                <td class="tg-sg5v" colspan="4">INFORMAÇÕES</td>
+                            </tr>
+                            
+                            <tr id="infoTopics">
+                                <td class="tg-0pky"></td>
+                                <td class="tg-0pky"></td>
+                                <td class="tg-0pky"></td>
+                                <td class="tg-0pky"></td>
+                                <td class="tg-0pky"></td>
+                                <td class="tg-0pky"></td>
+                                <td class="tg-0pky"></td>
+                                <td class="tg-0pky"></td>
+                                <td class="tg-0pky"></td>
+                                <td class="tg-0pky"></td>
+                                <td class="tg-0pky"></td>
+                                <td class="tg-0pky"></td>
+                                <td class="tg-0pky"></td>
+                                <td class="tg-0pky"></td>
+                                <td class="tg-0pky"></td>
+                                <td class="tg-0pky"></td>
+                            </tr>
+                        </thead>
+                        <tbody id="rows">
+                        
+                            <tr>
+                                <td class="tg-0lax"></td>
+                                <td class="tg-0lax"></td>
+                                <td class="tg-0lax"></td>
+                                <td class="tg-0lax"></td>
+                                <td class="tg-0lax"></td>
+                                <td class="tg-0lax"></td>
+                                <td class="tg-0lax"></td>
+                                <td class="tg-0lax"></td>
+                                <td class="tg-0lax"></td>
+                                <td class="tg-0lax"></td>
+                                <td class="tg-0lax"></td>
+                                <td class="tg-0lax"></td>
+                                <td class="tg-0lax"></td>
+                                <td class="tg-0lax"></td>
+                                <td class="tg-0lax"></td>
+                                <td class="tg-0lax"></td>
+                            </tr>
+                        
+                        </tbody>
+                        
+                            <tfoot id="lastRow">
+                                <tr>
+                                    <td class="tg-0lax"></td>
+                                    <td class="tg-0lax"></td>
+                                    <td class="tg-0lax"></td>
+                                    <td class="tg-0lax"></td>
+                                    <td class="tg-0lax"></td>
+                                    <td class="tg-0lax"></td>
+                                    <td class="tg-0lax"></td>
+                                    <td class="tg-0lax"></td>
+                                    <td class="tg-0lax"></td>
+                                    <td class="tg-0lax"></td>
+                                    <td class="tg-0lax"></td>
+                                    <td class="tg-0lax"></td>
+                                    <td class="tg-0lax"></td>
+                                    <td class="tg-0lax"></td>
+                                    <td class="tg-0lax"></td>
+                                    <td class="tg-0lax"></td>
+                                </tr>
+                            </tfoot>
+                    </table>
+                </div>
+                
             </DialogContent>
-        <DialogActions><Button id='noprint' onClick={() => window.print()}>Imprimir/PDF</Button><Button id='noprint' onClick={() => onClose(false)}>Fechar</Button></DialogActions>
+        <DialogActions><Button id='noprint' onClick={() => printElem()}>Imprimir/PDF</Button><Button id='noprint' onClick={() => onClose(false)}>Fechar</Button></DialogActions>
         </Dialog>
       
       </>

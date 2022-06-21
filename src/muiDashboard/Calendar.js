@@ -13,7 +13,7 @@ import { ChevronRight, ChevronLeft, Today, ViewComfy, ViewList, ViewWeek, Assist
 import { useState } from 'react';
 import { getRandomKey } from '../shared/FunctionsUse';
 import { endOfTomorrow } from 'date-fns/esm';
-import { calendarRef, classesRef } from '../services/databaseRefs';
+import { calendarRef } from '../services/databaseRefs';
 import { useSnackbar } from 'notistack';
 import SeeEventPopover from '../shared/SeeEventPopover';
 import FullScreenDialog from '../shared/FullscreenDialog';
@@ -56,25 +56,22 @@ const CalendarComponent = ({sourceId, isFromClassCode=false,  handleFault}) => {
     useEffect(() => {
 
         if (isFromClassCode) {
-            classesRef.child(sourceId).child('aulaEvento').on('value', (snapshot) => {
-                let sourceArray = []
+            calendarRef.orderByChild('id').equalTo(sourceId).on('value', (snapshot) => {
                 const sources = snapshot.val()
                 console.log(sources)
                 if (snapshot.exists()) {
-                    sourceArray.push(sources)
-                    console.log(sourceArray)
-                    setEventsSources([...sourceArray])
+                    setEventsSources([...sources])
                 } else {
                     setEventsSources([])
                 }
                 
-                if (sourceArray && sourceArray.hasOwnProperty('length')) {
-                    setViewSources(sourceArray)
+                if (sources && sources.hasOwnProperty('length')) {
+                    setViewSources(sources)
                 } else {
-                    for (const key in sourceArray) {
-                        if (Object.hasOwnProperty.call(sourceArray, key)) {
-                            const single = sourceArray[key];
-                            sourceArray !== null && setViewSources([single])
+                    for (const key in sources) {
+                        if (Object.hasOwnProperty.call(sources, key)) {
+                            const single = sources[key];
+                            sources !== null && setViewSources([single])
                         }
                     }
                     
