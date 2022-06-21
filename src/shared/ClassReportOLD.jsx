@@ -182,13 +182,13 @@ async function geraDiario(turma, codHistorico) {
             for (const nomeNota in notas) {
                 try {
                     const nota = aluno.notas[nomeNota];
-                    infoRow.push({text: nota === 0 ? " " : nota, size: 1, center: true});
+                    infoRow.push({text: (nota === 0 || nota === undefined) ? " " : nota, size: 1, center: true});
                     somatorioNotas += nota;
                 } catch (error) {
                     infoRow.push({text: '', size: 1, center: true});
                 }
             }
-            infoRow.push({text: somatorioNotas === 0 ? " " : somatorioNotas, size: 1, center: true});
+            infoRow.push({text: (somatorioNotas === 0 || isNaN(somatorioNotas)) ? " " : somatorioNotas, size: 1, center: true});
             const totalFaltas = aluno.frequencia ? Object.keys(aluno.frequencia).length : 0
             infoRow.push({text: totalFaltas === 0 ? " " : totalFaltas, size: 1, center: true})
             
