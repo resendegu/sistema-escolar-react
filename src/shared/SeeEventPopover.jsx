@@ -1,4 +1,4 @@
-import { Avatar, DialogActions, DialogContent, DialogTitle, Grid, IconButton, List, ListItem, ListItemAvatar, ListItemSecondaryAction, ListItemText, Popover, Tooltip, Typography } from "@material-ui/core";
+import { Avatar, DialogActions, DialogContent, DialogTitle, Fab, Grid, IconButton, List, ListItem, ListItemAvatar, ListItemSecondaryAction, ListItemText, Popover, Tooltip, Typography } from "@material-ui/core";
 import { Close, Delete, Edit, Event, PersonOutline } from "@material-ui/icons";
 import { useEffect, useState } from "react";
 import { Fragment } from "react";
@@ -131,11 +131,17 @@ const SeeEventPopover = ({ anchorElEventInfo, handleClose, event, api, isFromCla
                             <IconButton variant='outlined' edge="end" color="inherit"><Edit /></IconButton>
                         </Tooltip>
                         <Tooltip title={'Deletar evento'}>
+                            
                             <IconButton variant='outlined' edge="end" color="inherit" onClick={handleDeleteEvent}><Delete /></IconButton>
+                        
+                            
                         </Tooltip></>)}
                         {isFromClassCode && (
-                            <Tooltip title={'Lançar faltas'}>
-                                <IconButton variant='outlined' edge="end" color="inherit" onClick={handleReleaseFault}><PersonOutline /></IconButton>
+                            <Tooltip title={'Lançar faltas para os alunos selecionados'}>
+                                <Fab variant="extended" onClick={handleReleaseFault} size="medium" >
+                                    <PersonOutline />
+                                    Lançar faltas
+                                </Fab>
                             </Tooltip>
                         )}
                         
@@ -185,7 +191,7 @@ const SeeEventPopover = ({ anchorElEventInfo, handleClose, event, api, isFromCla
                     )}
                     
                 </DialogContent>
-                <DialogTitle>Faltas</DialogTitle>
+                {isFromClassCode && <DialogTitle>Faltas</DialogTitle>}
                 {isFromClassCode && <DialogContent>
                 <div>
                     <List>

@@ -640,8 +640,8 @@ const handleConfirmCloseClass = async () => {
   }
 
   const handleOpenCalendar = () => {
-    //setOpenCalendar(true)
-    enqueueSnackbar('O Calendário da Turma ainda está em desenvolvimento 😊', {title: 'Info', variant: 'info', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
+    setOpenCalendar(true)
+    //enqueueSnackbar('O Calendário da Turma ainda está em desenvolvimento 😊', {title: 'Info', variant: 'info', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
   }
 
     return ( 
@@ -693,7 +693,7 @@ const handleConfirmCloseClass = async () => {
             saveButtonDisabled={true}
           >
             <Container>
-              <CalendarComponent sourceId={classCode} isFromClassCode />
+              <CalendarComponent sourceId={classCode} />
             </Container>
             
           </FullScreenDialog>
@@ -949,9 +949,7 @@ const handleConfirmCloseClass = async () => {
                       <Box  m={1}>
                         <Button fullWidth size="large" variant="contained" color="primary" onClick={() => setOpenClassEditing(true)} startIcon={<Edit />}>Editar dados</Button>
                       </Box>
-                      <Box m={1}>
-                        <Button fullWidth size="large" variant="contained" color="primary" startIcon={<DeleteForever />} onClick={handleDeleteClassConfirm}>Excluir turma</Button>
-                      </Box>
+                      
                       <Box m={1}>
                         <Button fullWidth size="large" variant="contained" color="primary" startIcon={<Grade />} onClick={handleGradeDefinition}>Distribuir notas</Button>
                       </Box>
@@ -969,6 +967,9 @@ const handleConfirmCloseClass = async () => {
                       {/* <Box m={1}>
                         <Button fullWidth size="large" variant="contained" color="primary" startIcon={<Lock />}disabled={(!classData.hasOwnProperty('status') || classData.status.turma === 'fechada')}>Fechar turma</Button>
                       </Box> */}
+                      <Box m={1}>
+                        <Button fullWidth size="small" variant="contained" style={{backgroundColor: 'red', color: 'white'}} startIcon={<DeleteForever />} onClick={handleDeleteClassConfirm}>Excluir turma</Button>
+                      </Box>
                       
                       
                       </CardContent>

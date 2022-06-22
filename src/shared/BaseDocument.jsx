@@ -54,7 +54,7 @@ export default function BaseDocument({classCode, open, onClose}) {
         setInfos(infoEscola.val())
         let infos = infoEscola.val()
         nomeEscola.innerText =  infos.dadosBasicos.nomeEscola
-        dataEmissao.innerText = `${dataEhora.getDate()}/${dataEhora.getMonth() + 1}/${dataEhora.getFullYear()} ${dataEhora.getHours()}:${dataEhora.getMinutes()}`
+        dataEmissao.innerText = `${dataEhora.toLocaleDateString()} ${dataEhora.toLocaleTimeString()}`
         logoEscola.innerHTML = `<img src="${infos.logoEscola}" style="width: 70px; height: 70px;"></img>`
         logoSecundaria.innerHTML = `<p style="font-size: x-small;">${infos.dadosBasicos.cnpjEscola}</p><p style="font-size: x-small;">${infos.dadosBasicos.telefoneEscola}</p><p style="font-size: x-small;">${infos.dadosBasicos.enderecoEscola}</p>`
 
@@ -280,7 +280,7 @@ export default function BaseDocument({classCode, open, onClose}) {
                     console.log(aluno.fotoAluno)
                     imagemAluno.src = !aluno.fotoAluno ? null : aluno.fotoAluno 
                     adicionaEspacoCabeçalho('Turma:', historico.turma, 'Curso:', infos.cursos[historico.infoAluno.curso].nomeCurso)
-                    adicionaEspacoCabeçalho('Data Início:', historico.infoAluno.inicio.split('-').reverse().join('/'), 'Data término:', historico.infoAluno.fim.split('-').reverse().join('/'))
+                    adicionaEspacoCabeçalho('Data Início:', historico.infoAluno.inicio.split('-').reverse().join('/'), 'Data término:', historico.infoAluno.fim.indexOf('T') === -1 ? historico.infoAluno.fim.split('-').reverse().join('/') : new Date(historico.infoAluno.fim).toLocaleDateString())
                     adicionaEspacoCabeçalho('Semestre - Livro:', semestreLivros, '', '', 'colspan=2')
 
                     tituloSecao.innerText = ''
@@ -317,7 +317,7 @@ export default function BaseDocument({classCode, open, onClose}) {
                     adicionaDadosTabela(topicos, notas)
                     adicionaDadosTabela([false, `Nota Final: ${soma}`])
 
-                    adicionaDadosTabela([true, 'Frequência'])
+                    adicionaDadosTabela([true, 'Aproveitamento'])
                     let faltas = 0
                     let frequencia = historico.infoAluno.frequencia
                     for (const time in frequencia) {
@@ -330,14 +330,14 @@ export default function BaseDocument({classCode, open, onClose}) {
                     let porcentagemFrequencia = ((100*aulasPresente)/Number(historico.infoAluno.qtdeAulas)).toFixed(2)
                     
                     adicionaDadosTabela(['Frequência (%)', 'Faltas'], [porcentagemFrequencia + '%', faltas == 0 ? 'Nenhuma falta' :`${faltas} de um total de ${historico.infoAluno.qtdeAulas} aulas ministradas`])
-                    if (soma >= infos.dadosBasicos.pontosAprovacao) {
-                        if (porcentagemFrequencia >= infos.dadosBasicos.frequenciaAprovacao) {
+                    if (soma >= Number(infos.dadosBasicos.pontosAprovacao)) {
+                        if (porcentagemFrequencia >= Number(infos.dadosBasicos.frequenciaAprovacao)) {
                             adicionaDadosTabela([false, 'Situação final: <label style="color: green;">APROVADO</label>'])
                         } else {
                             adicionaDadosTabela([false, 'Situação final: <label style="color: red;">REPROVADO POR FREQUÊNCIA</label>'])
                         }  
                     } else {
-                        if (porcentagemFrequencia < infos.dadosBasicos.frequenciaAprovacao) {
+                        if (porcentagemFrequencia < Number(infos.dadosBasicos.frequenciaAprovacao)) {
                             adicionaDadosTabela([false, 'Situação final: <label style="color: red;">REPROVADO POR NOTA E FREQUÊNCIA</label>'])
                         } else {
                             adicionaDadosTabela([false, 'Situação final: <label style="color: red;">REPROVADO POR NOTA</label>'])
