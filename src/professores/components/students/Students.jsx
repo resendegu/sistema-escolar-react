@@ -1,5 +1,5 @@
 import { Button, Checkbox, createTheme, darken, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControlLabel, Grid, lighten, makeStyles } from "@material-ui/core";
-import { CheckBox, PlusOneRounded, Refresh } from "@material-ui/icons";
+import { Assignment, CheckBox, PlusOneRounded, Refresh } from "@material-ui/icons";
 import { DataGrid, GridToolbar, GridToolbarContainer, GridToolbarExport } from "@mui/x-data-grid";
 import { useSnackbar } from "notistack";
 import { Fragment, useEffect, useState } from "react";
@@ -7,6 +7,7 @@ import { useAuth } from "../../../hooks/useAuth";
 import { classesRef, disabledStudentsRef, studentsRef, usersRef } from "../../../services/databaseRefs";
 import { functions } from "../../../services/firebase";
 import { LocaleText } from "../../../shared/DataGridLocaleText";
+import FollowUp from "../../../shared/FollowUp";
 import FullScreenDialog from "../../../shared/FullscreenDialog";
 import { handleEnableDisableStudents } from "../../../shared/FunctionsUse";
 import StudentInfo from "../../../shared/ViewStudentInfo";
@@ -80,7 +81,8 @@ const Students = () => {
     // const [ students, setStudents ] = useState({});  
     const [ rows, setRows ] = useState([]);
     const [ selectedRows, setSelectedRows ] = useState([]);
-    const [ studentInfo, setStudentInfo ] = useState({})
+    const [ studentInfo, setStudentInfo ] = useState({});
+    const [ openFollowUp, setOpenFollowUp ] = useState(false);
 
     const { enqueueSnackbar, closeSnackbar } = useSnackbar()
 
@@ -225,6 +227,7 @@ const Students = () => {
 
     return (
         <Fragment>
+            <FollowUp isOpen={openFollowUp} onClose={setOpenFollowUp} />
             <Dialog
                 aria-labelledby="confirmation-dialog-title"
                 open={openDialog}
@@ -257,7 +260,7 @@ const Students = () => {
                 saveButton={"Salvar"}
                 saveButtonDisabled={true}
             > 
-                <StudentInfo studentInfo={studentInfo} />
+                <StudentInfo studentInfo={studentInfo} teacherView />
             </FullScreenDialog>
             <Grid
             justifyContent="flex-start"   
@@ -270,6 +273,7 @@ const Students = () => {
                 <Grid item xs={12}>
                     <div style={{ height: "59vh", width: '100%' }} className={classes.root}>
                         <DataGrid 
+                            key={"15"}
                             filterModel={filterModel}
                             onFilterModelChange={(model) => setFilterModel(model)}
                             rows={rows} 
@@ -315,6 +319,10 @@ const Students = () => {
                 </Grid>
                 <Grid item>
                     <Button variant="contained" color="primary" onClick={() => getData()}><Refresh />Atualizar lista</Button>
+                    
+                </Grid>
+                <Grid item>
+                    <Button variant="contained" color="primary" onClick={() => setOpenFollowUp(true)}><Assignment />Follow Up's</Button>
                     
                 </Grid>
                 <Grid item>

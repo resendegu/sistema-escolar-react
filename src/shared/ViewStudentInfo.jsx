@@ -1,6 +1,6 @@
 import { Avatar, Backdrop, Box, Button, Card, CardActions, CardContent, CircularProgress, Container, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, Grid, List, ListItem, ListItemText, makeStyles, MenuItem, Select, Typography } from "@material-ui/core";
 import { green } from "@material-ui/core/colors";
-import { AccountBox, Assignment, Assistant, AttachFile, Check, ChromeReaderMode, Description, DoneAll, Edit, NotInterested, Person, Print, Refresh, School, SupervisedUserCircle, TransferWithinAStation } from "@material-ui/icons";
+import { AccountBox, Assignment, Assistant, AttachFile, Check, ChromeReaderMode, Description, DoneAll, Edit, NotInterested, Person, Print, Refresh, School, Speed, Star, SupervisedUserCircle, TransferWithinAStation } from "@material-ui/icons";
 import { useSnackbar } from "notistack";
 import { Fragment, useEffect, useState } from "react";
 
@@ -10,6 +10,8 @@ import EditStudentData from "./EditStudentData";
 import FollowUp from "./FollowUp";
 import FullScreenDialog from "./FullscreenDialog";
 import { handleEnableDisableStudents, handleTransferStudents } from "./FunctionsUse";
+import ReleaseGrades from "./ReleaseGrades";
+import ReleasePerformance from "./ReleasePerformance";
 import StudentContracts from "./StudentContracts";
 import StudentDataCard from "./StudentDataCard";
 import StudentFiles from "./StudentFiles";
@@ -70,9 +72,9 @@ const useStyles = makeStyles((theme) => ({
     },
   }));
 
-const StudentInfo = (props) => {
+const StudentInfo = ({ studentInfo, teacherView=false }) => {
 
-    const { studentInfo } = props;
+    
     const classes = useStyles();
 
     const classCode = studentInfo.classCode
@@ -98,6 +100,8 @@ const StudentInfo = (props) => {
     const [classCodeTransfer, setClassCodeTransfer] = useState('');
     const [openStudentPDF, setOpenStudentPDF] = useState(false);
     const [openStudentHistory, setOpenStudentHistory] = useState(false);
+    const [openReleaseGrades, setOpenReleaseGrades] = useState(false);
+    const [openReleasePerformanceGrades, setOpenReleasePerformanceGrades] = useState(false);
     useEffect(() => {
       
       getData();
@@ -208,8 +212,8 @@ const handleOpenEditStudentInfo = () => {
 }
 
 const handleOpenFollowUp = () => {
-  //setOpenFollowUp(true)
-  enqueueSnackbar('O FollowUp está em fase de desenvolvimento 😊', {title: 'Info', variant: 'info', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
+  setOpenFollowUp(true)
+  //enqueueSnackbar('O FollowUp está em fase de desenvolvimento 😊', {title: 'Info', variant: 'info', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
 }
 
 const handleOpenContractsDialog = () => {
@@ -229,8 +233,18 @@ const handleOpenChecklist = () => {
   enqueueSnackbar('O Checklist está em fase de desenvolvimento 😊', {title: 'Info', variant: 'info', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button> })
 }
 
+const handleOpenReleaseGrades = () => {
+  setOpenReleaseGrades(true)
+}
+const handleOpenReleasePerformanceGrades = () => {
+  setOpenReleasePerformanceGrades(true)
+}
+
     return ( 
         <Fragment>
+              <ReleasePerformance classCode={classCode} studentsIds={[studentId]} onClose={setOpenReleasePerformanceGrades} open={openReleasePerformanceGrades} refresh={getData} />
+              <ReleaseGrades classCode={classCode} studentsIds={[studentId]} onClose={setOpenReleaseGrades} open={openReleaseGrades} refresh={getData} />
+
               {openStudentPDF && <BaseDocument open={openStudentPDF} onClose={setOpenStudentPDF}  />}
 
               <ViewStudentHistory isDisabled={false} studentId={studentId} isOpen={openStudentHistory} onClose={setOpenStudentHistory} />
@@ -245,7 +259,7 @@ const handleOpenChecklist = () => {
 
               <EditStudentData studentId={studentId} isOpen={openEditStudentsInfo} onClose={() => setOpenEditStudentsInfo(false)} />
 
-              <FollowUp isOpen={openFollowUp} onClose={() => setOpenFollowUp(false)} />
+              <FollowUp isOpen={openFollowUp} onClose={() => setOpenFollowUp(false)} studentId={studentId} />
               
               <Dialog 
                  aria-labelledby="confirmation-dialog-title"
@@ -306,30 +320,36 @@ const handleOpenChecklist = () => {
                       </Grid>
                     </Grid>
                       <hr />
-                      <Box  m={1}>
+                      {!teacherView && <Box  m={1}>
                         <Button fullWidth size="large" variant="contained" color="primary" startIcon={<TransferWithinAStation />} disabled={disabledStudent} onClick={handleConfirmTransfer}>Transferir</Button>
-                      </Box>
-                      <Box  m={1}>
+                      </Box>}
+                      {!teacherView && <Box  m={1}>
                         <Button fullWidth size="large" variant="contained" color="primary" startIcon={<Edit />} onClick={handleOpenEditStudentInfo}>Editar dados</Button>
-                      </Box>
-                      <Box m={1}>
+                      </Box>}
+                      {!teacherView && <Box m={1}>
                         <Button fullWidth size="large" variant="contained" color="primary" startIcon={<DoneAll />}disabled={disabledStudent} onClick={handleOpenChecklist}>Checklist</Button>
-                      </Box>
-                      <Box m={1}>
+                      </Box>}
+                      {!teacherView && <Box m={1}>
                         <Button fullWidth size="large" variant="contained" color="primary" onClick={handleOpenContractsDialog} startIcon={<Description />}>Contratos</Button>
-                      </Box>
-                      <Box m={1}>
+                      </Box>}
+                      {!teacherView && <Box m={1}>
                         <Button fullWidth size="large" variant="contained" color="primary" onClick={handleOpenStudentPDF} startIcon={<Print />}>Ficha de Matrícula</Button>
-                      </Box>
+                      </Box>}
                       <Box m={1}>
                         <Button fullWidth size="large" variant="contained" color="primary" onClick={handleOpenFollowUp} startIcon={<Assignment />}>Follow Up</Button>
                       </Box>
                       <Box m={1}>
                         <Button fullWidth size="large" variant="contained" color="primary" startIcon={<SupervisedUserCircle />} onClick={handleOpenParentsDialog}>Responsáveis</Button>
                       </Box>
-                      <Box m={1}>
+                      {!teacherView && <Box m={1}>
                         <Button fullWidth size="small" variant="contained" color={"secondary"} startIcon={disabledStudent ? <Check /> :<NotInterested />} onClick={disabledStudent ? handleConfirmEnable : handleConfirmDisable}>{disabledStudent ? 'Reativar' : 'Desativar'}</Button>
-                      </Box>
+                      </Box>}
+                      {teacherView && <Box m={1}>
+                        <Button fullWidth size="small" variant="contained" color={"secondary"} startIcon={<Star />} onClick={handleOpenReleaseGrades}>Notas</Button>
+                      </Box>}
+                      {teacherView && <Box m={1}>
+                        <Button fullWidth size="small" variant="contained" color={"secondary"} startIcon={<Speed />} onClick={handleOpenReleasePerformanceGrades}>Desempenho</Button>
+                      </Box>}
                       <Box m={1}>
 
                         <Button fullWidth size="small" variant="outlined" color={"primary"} startIcon={<Refresh />} onClick={getData}>Atualizar dados</Button>
@@ -403,7 +423,7 @@ const handleOpenChecklist = () => {
                   
                   
                   
-                    <Card className={classes.smallCards} variant="outlined">
+                    {!teacherView && <Card className={classes.smallCards} variant="outlined">
                       <CardContent>
                       <Grid 
                         justifyContent="flex-start"
@@ -433,7 +453,7 @@ const handleOpenChecklist = () => {
                       <CardActions>
                         <Button size="small"></Button>
                       </CardActions>
-                    </Card>
+                    </Card>}
                   
 
                   

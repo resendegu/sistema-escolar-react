@@ -26,6 +26,7 @@ import StudentPanelTeacher from "../students/StudentPanelTeacher";
 import ReleaseGrades from "../../../shared/ReleaseGrades";
 import GradeDefinition from "../../../shared/GradeDefinition";
 import ReleasePerformance from "../../../shared/ReleasePerformance";
+import StudentInfo from "../../../shared/ViewStudentInfo";
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -730,7 +731,7 @@ const handleConfirmCloseClass = async () => {
                 saveButton={"Salvar"}
                 saveButtonDisabled={true}
             > 
-                <StudentPanelTeacher studentInfo={studentInfo} />
+                <StudentInfo studentInfo={studentInfo} teacherView />
           </FullScreenDialog>
             <div style={{position: 'absolute'}}>
               <Backdrop className={classes.backdrop} open={loader}>

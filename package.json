@@ -19,6 +19,7 @@
     "@testing-library/react": "^11.2.7",
     "@testing-library/user-event": "^12.8.3",
     "@toast-ui/react-calendar": "^1.0.5",
+    "clsx": "^1.1.1",
     "date-fns": "^2.23.0",
     "firebase": "^8.10.0",
     "fullcalendar": "^5.10.1",

@@ -1,11 +1,12 @@
 import { Button, Checkbox, createTheme, darken, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControlLabel, Grid, lighten, makeStyles } from "@material-ui/core";
-import { CheckBox, PlusOneRounded, Refresh } from "@material-ui/icons";
+import { Assignment, CheckBox, PlusOneRounded, Refresh } from "@material-ui/icons";
 import { DataGrid, GridToolbar, GridToolbarContainer, GridToolbarExport } from "@mui/x-data-grid";
 import { useSnackbar } from "notistack";
 import { Fragment, useEffect, useState } from "react";
 import { disabledStudentsRef, studentsRef } from "../../../services/databaseRefs";
 import BaseDocument from "../../../shared/BaseDocument";
 import { LocaleText } from "../../../shared/DataGridLocaleText";
+import FollowUp from "../../../shared/FollowUp";
 import FullScreenDialog from "../../../shared/FullscreenDialog";
 import { handleEnableDisableStudents } from "../../../shared/FunctionsUse";
 import StudentInfo from "../../../shared/ViewStudentInfo";
@@ -79,6 +80,7 @@ const Students = () => {
     const [ selectedRows, setSelectedRows ] = useState([]);
     const [ studentInfo, setStudentInfo ] = useState({})
     const [openStudentPDF, setOpenStudentPDF] = useState(false);
+    const [ openFollowUp, setOpenFollowUp ] = useState(false);
 
     const { enqueueSnackbar, closeSnackbar } = useSnackbar()
 
@@ -222,6 +224,7 @@ const Students = () => {
 
     return (
         <Fragment>
+            <FollowUp isOpen={openFollowUp} onClose={setOpenFollowUp} />
             {openStudentPDF && <BaseDocument open={openStudentPDF} onClose={setOpenStudentPDF} />}
             <Dialog
                 aria-labelledby="confirmation-dialog-title"
@@ -313,6 +316,10 @@ const Students = () => {
                 </Grid>
                 <Grid item>
                     <Button variant="contained" color="primary" onClick={() => getData()}><Refresh />Atualizar lista</Button>
+                    
+                </Grid>
+                <Grid item>
+                    <Button variant="contained" color="primary" onClick={() => setOpenFollowUp(true)}><Assignment />Follow Up's</Button>
                     
                 </Grid>
                 <Grid item>

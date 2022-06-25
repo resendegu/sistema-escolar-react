@@ -962,27 +962,37 @@ exports.lancaDesempenhos = functions.database.ref('sistemaEscolar/turmas/{codTur
     var notasDesempenho = snapshot.after.val()
     var referencia = {turma: context.params.codTurma, matriculaAluno: context.params.matricula}
 
-    return admin.database().ref(`sistemaEscolar/turmas/${referencia.turma}/notas/Desempenho`).once('value').then(notasDesempenhoTurma => {
-        if (notasDesempenhoTurma.exists()) {
-            let somatorioDesempenho = 0
-            for (const nomeNota in notasDesempenho) {
-                if (Object.hasOwnProperty.call(notasDesempenho, nomeNota)) {
-                    const valor = notasDesempenho[nomeNota];
-                    somatorioDesempenho += valor
+    return admin.database().ref(`sistemaEscolar/turmas/${referencia.turma}/status/turma`).once("value").then(status => {
+        if(status === "aberta") {
+            return admin.database().ref(`sistemaEscolar/turmas/${referencia.turma}/notas/Desempenho`).once('value').then(notasDesempenhoTurma => {
+                if (notasDesempenhoTurma.exists()) {
+                    let somatorioDesempenho = 0
+                    for (const nomeNota in notasDesempenho) {
+                        if (Object.hasOwnProperty.call(notasDesempenho, nomeNota)) {
+                            const valor = notasDesempenho[nomeNota];
+                            somatorioDesempenho += valor
+                        }
+                    }
+        
+                    return admin.database().ref(`sistemaEscolar/turmas/${referencia.turma}/alunos/${referencia.matriculaAluno}/notas/Desempenho`).set(somatorioDesempenho).then(() => {
+                        return 'Somatório de desempenho da matricula '+ referencia.matriculaAluno + ' foi alterado na turma ' + referencia.turma
+                    }).catch(error => {
+                        throw new functions.https.HttpsError('unknown', error.message, error)
+                    })
+                } else {
+                    return 'A turma ' + referencia.turma + 'não possui nota de desempenho distribuída no somatório final das notas. A nota da matricula ' + referencia.matriculaAluno + ' não foi alterada.'
                 }
-            }
-
-            return admin.database().ref(`sistemaEscolar/turmas/${referencia.turma}/alunos/${referencia.matriculaAluno}/notas/Desempenho`).set(somatorioDesempenho).then(() => {
-                return 'Somatório de desempenho da matricula '+ referencia.matriculaAluno + ' foi alterado na turma ' + referencia.turma
             }).catch(error => {
                 throw new functions.https.HttpsError('unknown', error.message, error)
             })
         } else {
-            return 'A turma ' + referencia.turma + 'não possui nota de desempenho distribuída no somatório final das notas. A nota da matricula ' + referencia.matriculaAluno + ' não foi alterada.'
+            throw new functions.https.HttpsError('permission-denied', 'Você só pode lançar notas em uma turma aberta')
         }
     }).catch(error => {
         throw new functions.https.HttpsError('unknown', error.message, error)
     })
+
+    
 })
 
 exports.aberturaTurma = functions.database.ref('sistemaEscolar/turmas/{turma}/status/turma').onUpdate((snapshot, context) => {
@@ -2121,6 +2131,20 @@ exports.removeFaltas = functions.https.onCall((data, context) => {
         throw new functions.https.HttpsError('unknown', error.message, error)
     })
 
+})
+
+exports.escutaFollowUp = functions.database.ref('sistemaEscolar/followUp/{id}').onCreate((snapshot, context) => {
+    const setContract = async () => {
+        const key = context.params.id
+        const studentId = snapshot.child('matricula').val()
+        await admin.database().ref('sistemaEscolar/followUp').child(key).child('timestamp').set(admin.firestore.Timestamp.now())
+        
+    }
+    
+    return setContract().then(result => {
+        console.log('Deu certo.', result)
+        return 'Deu certo';
+    })
 })
 
 // exports.adicionaFotoAluno = functions.storage.object().onFinalize(async (object) => {
