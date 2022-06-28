@@ -30,7 +30,7 @@ import { useConfirmation } from '../contexts/ConfirmContext';
 const useStyles = makeStyles((theme) => ({
   root: {
     flexGrow: 1,
-    maxWidth: 752,
+    maxWidth: 270,
   },
   demo: {
     backgroundColor: theme.palette.background.paper,
@@ -40,7 +40,7 @@ const useStyles = makeStyles((theme) => ({
     margin: theme.spacing(4, 0, 2),
   },
   list: {
-    height: "55vh",
+    height: "50vh",
     overflow: 'auto',
   },
   backdrop: {

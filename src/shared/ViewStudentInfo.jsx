@@ -1,6 +1,7 @@
-import { Avatar, Backdrop, Box, Button, Card, CardActions, CardContent, CircularProgress, Container, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, Grid, List, ListItem, ListItemText, makeStyles, MenuItem, Select, Typography } from "@material-ui/core";
+import { Avatar, Backdrop, Box, Button, Card, CardActions, CardContent, CircularProgress, Container, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, Fab, Grid, IconButton, List, ListItem, ListItemText, makeStyles, MenuItem, Select, Typography, useMediaQuery, useTheme } from "@material-ui/core";
 import { green } from "@material-ui/core/colors";
-import { AccountBox, Assignment, Assistant, AttachFile, Check, ChromeReaderMode, Description, DoneAll, Edit, NotInterested, Person, Print, Refresh, School, Speed, Star, SupervisedUserCircle, TransferWithinAStation } from "@material-ui/icons";
+import { AccountBox, Assignment, Assistant, AttachFile, Check, ChromeReaderMode, Close, Description, DoneAll, Edit, NotInterested, Person, Print, Refresh, School, Speed, Star, SupervisedUserCircle, TransferWithinAStation } from "@material-ui/icons";
+import { SpeedDial, SpeedDialAction, SpeedDialIcon } from "@material-ui/lab";
 import { useSnackbar } from "notistack";
 import { Fragment, useEffect, useState } from "react";
 
@@ -67,8 +68,29 @@ const useStyles = makeStyles((theme) => ({
       backgroundColor: '#3f51b5',
     },
     backdrop: {
-      zIndex: theme.zIndex.drawer + 1,
+      zIndex: theme.zIndex.drawer + 2,
       color: '#fff',
+    },
+    rootSpeedDial: {
+      height: 380,
+      transform: 'translateZ(0px)',
+      flexGrow: 1,
+      
+    },
+    speedDial: {
+      position: 'absolute',
+      bottom: theme.spacing(2),
+      right: theme.spacing(2),
+      
+    },
+    actionButtons: {
+      zIndex: 99999999999999999,
+    },
+    fab: {
+      position: 'absolute',
+      bottom: theme.spacing(2),
+      right: theme.spacing(2),
+      zIndex: theme.zIndex.drawer + 1,
     },
   }));
 
@@ -76,6 +98,8 @@ const StudentInfo = ({ studentInfo, teacherView=false }) => {
 
     
     const classes = useStyles();
+    const theme = useTheme();
+    const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
 
     const classCode = studentInfo.classCode
     const studentId = studentInfo.id
@@ -102,11 +126,18 @@ const StudentInfo = ({ studentInfo, teacherView=false }) => {
     const [openStudentHistory, setOpenStudentHistory] = useState(false);
     const [openReleaseGrades, setOpenReleaseGrades] = useState(false);
     const [openReleasePerformanceGrades, setOpenReleasePerformanceGrades] = useState(false);
+    const [actions, setActions] = useState([]);
+    const [hiddenSpeedDial, setHiddenSpeedDial] = useState(false);
+    const [openSpeedDial, setOpenSpeedDial] = useState(false);
+    const [openFilesDialog, setOpenFilesDialog] = useState(false);
+
     useEffect(() => {
       
       getData();
       
     }, [classCode, studentId, openEditStudentsInfo])
+
+    
 
     const getData = async () => {
       setLoading(true)
@@ -126,6 +157,37 @@ const StudentInfo = ({ studentInfo, teacherView=false }) => {
         data.exists() && setAcademicData(data.val());
         data.exists() && calculateGrade(data.val().notas);
         console.log(data.val())
+        // Filtering action buttons
+        let actionButtons = []
+        if (teacherView) {
+          actionButtons.push({ icon: <Star />, name: 'Notas', onClick: handleOpenReleaseGrades, })
+          actionButtons.push({ icon: <Speed />, name: 'Desempenho', onClick: handleOpenReleasePerformanceGrades, })
+        } else {
+          actionButtons.push({ icon: <TransferWithinAStation />, name: 'Transferir', onClick: handleConfirmTransfer, disabled: disabledStudent, })
+          actionButtons.push({ icon: <Edit />, name: 'Editar dados', onClick: handleOpenEditStudentInfo, })
+          actionButtons.push({ icon: <DoneAll />, name: 'Checklist', onClick: handleOpenChecklist, disabled: disabledStudent,})
+          actionButtons.push({ icon: <Description />, name: 'Contratos', onClick: handleOpenContractsDialog, })
+          actionButtons.push({ icon: <Print />, name: 'Ficha de Matrícula', onClick: handleOpenStudentPDF, })
+          actionButtons.push({ icon: disabledStudent ? <Check /> : <NotInterested />, name: disabledStudent ? 'Reativar' : 'Desativar', onClick: disabledStudent ? handleConfirmEnable : handleConfirmDisable, })
+        }
+        actionButtons.push({ icon: <Assignment />, name: 'Follow Up', onClick: handleOpenFollowUp, })
+        actionButtons.push({ icon: <SupervisedUserCircle />, name: 'Responsáveis', onClick: handleOpenParentsDialog, })
+        actionButtons.push({ icon: <Refresh />, name: 'Atualizar dados', onClick: getData, })
+
+        setActions(actionButtons)
+        // setActions([
+        //   { icon: <TransferWithinAStation />, name: 'Transferir', onClick: handleConfirmTransfer, disabled: disabledStudent, },
+        //   { icon: <Edit />, name: 'Editar dados', onClick: handleOpenEditStudentInfo, },
+        //   { icon: <DoneAll />, name: 'Checklist', onClick: handleOpenChecklist, disabled: disabledStudent,},
+        //   { icon: <Description />, name: 'Contratos', onClick: handleOpenContractsDialog, },
+        //   { icon: <Print />, name: 'Ficha de Matrícula', onClick: handleOpenStudentPDF, },
+        //   { icon: <Assignment />, name: 'Follow Up', onClick: handleOpenFollowUp, },
+        //   { icon: <SupervisedUserCircle />, name: 'Responsáveis', onClick: handleOpenParentsDialog, },
+        //   { icon: disabledStudent ? <Check /> : <NotInterested />, name: disabledStudent ? 'Reativar' : 'Desativar', onClick: disabledStudent ? handleConfirmEnable : handleConfirmDisable, },
+        //   { icon: <Star />, name: 'Notas', onClick: handleOpenReleaseGrades, },
+        //   { icon: <Speed />, name: 'Desempenho', onClick: handleOpenReleasePerformanceGrades, },
+        //   { icon: <Refresh />, name: 'Atualizar dados', onClick: getData, },
+        // ])
       } catch (error) {
         console.log(error)
       }
@@ -240,10 +302,30 @@ const handleOpenReleasePerformanceGrades = () => {
   setOpenReleasePerformanceGrades(true)
 }
 
+const handleVisibilitySpeedDial = () => {
+  setHiddenSpeedDial((prevHidden) => !prevHidden);
+};
+
+const handleOpenSpeedDial = () => {
+  setOpenSpeedDial(true);
+};
+
+const handleCloseSpeedDial = () => {
+  setOpenSpeedDial(false);
+};
+
+const handleOpenFilesDialog = () => {
+  setOpenFilesDialog(true)
+}
+
+const handleCloseFilesDialog = () => {
+  setOpenFilesDialog(false)
+}
+
     return ( 
         <Fragment>
-              <ReleasePerformance classCode={classCode} studentsIds={[studentId]} onClose={setOpenReleasePerformanceGrades} open={openReleasePerformanceGrades} refresh={getData} />
-              <ReleaseGrades classCode={classCode} studentsIds={[studentId]} onClose={setOpenReleaseGrades} open={openReleaseGrades} refresh={getData} />
+              {!disabledStudent && <ReleasePerformance classCode={classCode} studentsIds={[studentId]} onClose={setOpenReleasePerformanceGrades} open={openReleasePerformanceGrades} refresh={getData} />}
+              {!disabledStudent && <ReleaseGrades classCode={classCode} studentsIds={[studentId]} onClose={setOpenReleaseGrades} open={openReleaseGrades} refresh={getData} />}
 
               {openStudentPDF && <BaseDocument open={openStudentPDF} onClose={setOpenStudentPDF}  />}
 
@@ -260,6 +342,33 @@ const handleOpenReleasePerformanceGrades = () => {
               <EditStudentData studentId={studentId} isOpen={openEditStudentsInfo} onClose={() => setOpenEditStudentsInfo(false)} />
 
               <FollowUp isOpen={openFollowUp} onClose={() => setOpenFollowUp(false)} studentId={studentId} />
+
+              {!teacherView && <Fab variant="extended" color="primary" onClick={handleOpenFilesDialog} className={classes.fab}>
+                <AttachFile className={classes.extendedIcon} />
+                Arquivos
+              </Fab>}
+
+              <Dialog
+                fullScreen={fullScreen}
+                open={openFilesDialog}
+                onClose={handleCloseFilesDialog}
+                aria-labelledby="responsive-dialog-title"
+              >
+                <DialogTitle id="responsive-dialog-title">Arquivos <IconButton style={{float: 'right'}} onClick={handleCloseFilesDialog}><Close /></IconButton></DialogTitle>
+                <DialogContent>
+              
+                  
+                    <StudentFiles studentId={studentId} disabledStudent={disabledStudent} />
+                    
+                 
+                </DialogContent>
+                <DialogActions>
+                  <Button autoFocus onClick={handleCloseFilesDialog} color="primary">
+                    Fechar
+                  </Button>
+                  
+                </DialogActions>
+              </Dialog>
               
               <Dialog 
                  aria-labelledby="confirmation-dialog-title"
@@ -292,78 +401,42 @@ const handleOpenReleasePerformanceGrades = () => {
                 </DialogActions>
             </Dialog>
               <Backdrop open={loading} className={classes.backdrop}><CircularProgress color="inherit" /></Backdrop>
-              <div className={classes.container} id="noprint">
-                <StudentDataCard studentData={studentData} />
-             
-                
+
+              <div className={classes.rootSpeedDial}>
+                {/* <Button onClick={handleVisibilitySpeedDial}>Toggle Speed Dial</Button> */}
+                {/* <Backdrop open={openSpeedDial} className={classes.backdrop} />
+                <SpeedDial
+                  ariaLabel="Ações"
+                  className={classes.speedDial}
+                  hidden={hiddenSpeedDial}
+                  icon={<Assistant />}
+                  onClose={handleCloseSpeedDial}
+                  onOpen={handleOpenSpeedDial}
+                  open={openSpeedDial}
+                  direction="left"
                   
-                    <Card className={classes.smallCards} variant="outlined">
-                      <CardContent>
-                      <Grid 
-                      justifyContent="flex-start"
-                      direction="row"
-                      container
-                      spacing={1}
-                    >
-                      <Grid item>
-                        <Avatar className={classes.orange}>
-                          <Assistant />
-                        </Avatar>
-                      </Grid>
-
-                      <Grid item>
-                        <Typography variant="h5" component="h2">
-                          Ações
-                        </Typography>
-                        
-                        
-                      </Grid>
-                    </Grid>
-                      <hr />
-                      {!teacherView && <Box  m={1}>
-                        <Button fullWidth size="large" variant="contained" color="primary" startIcon={<TransferWithinAStation />} disabled={disabledStudent} onClick={handleConfirmTransfer}>Transferir</Button>
-                      </Box>}
-                      {!teacherView && <Box  m={1}>
-                        <Button fullWidth size="large" variant="contained" color="primary" startIcon={<Edit />} onClick={handleOpenEditStudentInfo}>Editar dados</Button>
-                      </Box>}
-                      {!teacherView && <Box m={1}>
-                        <Button fullWidth size="large" variant="contained" color="primary" startIcon={<DoneAll />}disabled={disabledStudent} onClick={handleOpenChecklist}>Checklist</Button>
-                      </Box>}
-                      {!teacherView && <Box m={1}>
-                        <Button fullWidth size="large" variant="contained" color="primary" onClick={handleOpenContractsDialog} startIcon={<Description />}>Contratos</Button>
-                      </Box>}
-                      {!teacherView && <Box m={1}>
-                        <Button fullWidth size="large" variant="contained" color="primary" onClick={handleOpenStudentPDF} startIcon={<Print />}>Ficha de Matrícula</Button>
-                      </Box>}
-                      <Box m={1}>
-                        <Button fullWidth size="large" variant="contained" color="primary" onClick={handleOpenFollowUp} startIcon={<Assignment />}>Follow Up</Button>
-                      </Box>
-                      <Box m={1}>
-                        <Button fullWidth size="large" variant="contained" color="primary" startIcon={<SupervisedUserCircle />} onClick={handleOpenParentsDialog}>Responsáveis</Button>
-                      </Box>
-                      {!teacherView && <Box m={1}>
-                        <Button fullWidth size="small" variant="contained" color={"secondary"} startIcon={disabledStudent ? <Check /> :<NotInterested />} onClick={disabledStudent ? handleConfirmEnable : handleConfirmDisable}>{disabledStudent ? 'Reativar' : 'Desativar'}</Button>
-                      </Box>}
-                      {teacherView && <Box m={1}>
-                        <Button fullWidth size="small" variant="contained" color={"secondary"} startIcon={<Star />} onClick={handleOpenReleaseGrades}>Notas</Button>
-                      </Box>}
-                      {teacherView && <Box m={1}>
-                        <Button fullWidth size="small" variant="contained" color={"secondary"} startIcon={<Speed />} onClick={handleOpenReleasePerformanceGrades}>Desempenho</Button>
-                      </Box>}
-                      <Box m={1}>
-
-                        <Button fullWidth size="small" variant="outlined" color={"primary"} startIcon={<Refresh />} onClick={getData}>Atualizar dados</Button>
-                      </Box>
+                >
+                  {actions.map((action) => (
+                    <SpeedDialAction
+                      key={action.name}
+                      icon={action.icon}
+                      tooltipTitle={action.name}
+                      tooltipPlacement="top"
                       
-                      </CardContent>
-                      
-                    </Card>
-                  
+                      className={classes.actionButtons}
+                      onClick={() => {handleCloseSpeedDial(); action.onClick()}}
+                    />
+                  ))}
+                </SpeedDial> */}
 
+                <div className={classes.container} id="noprint">
+                  <StudentDataCard studentData={studentData} />
+              
                   
-                    <Card className={classes.smallCards} variant="outlined">
-                      <CardContent>
-                      <Grid 
+                    
+                      <Card className={classes.smallCards} variant="outlined">
+                        <CardContent>
+                        <Grid 
                         justifyContent="flex-start"
                         direction="row"
                         container
@@ -371,96 +444,162 @@ const handleOpenReleasePerformanceGrades = () => {
                       >
                         <Grid item>
                           <Avatar className={classes.orange}>
-                            <School />
+                            <Assistant />
                           </Avatar>
                         </Grid>
 
                         <Grid item>
                           <Typography variant="h5" component="h2">
-                            Dados acadêmicos
+                            Ações
                           </Typography>
                           
                           
                         </Grid>
                       </Grid>
-                      <hr />
-                        
-                        
-                        <Typography className={classes.pos} color="textSecondary">
-                          Turma atual: {classCode}
-                        </Typography>
-                        
-                        <Typography variant="h6" component="h6">
-                            Notas de Desempenho
-                        </Typography>
-                        {academicData.hasOwnProperty('desempenho') ? Object.keys(academicData.desempenho).map((name, i) => (
-                          <Typography className={classes.grades} color="textSecondary">
-                            {name}: {academicData.desempenho[name]}
-                          </Typography>
-                        )) : 'Notas não lançadas'}
-                        <Typography variant="h6" component="h6">
-                            Somatório Geral
-                        </Typography>
-                        <Typography className={classes.grades} color="textSecondary">
-                            Nota final: {currentGrade}
-                        </Typography>
-                        <Typography variant="h6" component="h6">
-                            Faltas Registradas
-                        </Typography>
-                        {academicData.hasOwnProperty('frequencia') ? Object.keys(academicData.frequencia).map((name, i) => {
-                          let date = new Date(name)
-                          let dateConverted = date.toISOString().substring(0, 10).split('-').reverse().join('/')
-                          return (
-                          <Typography className={classes.grades} color="textSecondary">
-                            {i + 1}: {dateConverted}
-                          </Typography>
-                        )}) : 'Não há registro de faltas'}
-                      </CardContent>
-                      <CardActions>
-                        <Button size="small" variant='outlined' color="primary" onClick={handleOpenStudentHistory} fullWidth startIcon={<ChromeReaderMode />}>Acessar histórico escolar</Button>
-                      </CardActions>
-                    </Card>
-                  
-                  
-                  
-                    {!teacherView && <Card className={classes.smallCards} variant="outlined">
-                      <CardContent>
-                      <Grid 
-                        justifyContent="flex-start"
-                        direction="row"
-                        container
-                        spacing={1}
-                      >
-                        <Grid item>
-                          <Avatar className={classes.avatar}>
-                            <AttachFile />
-                          </Avatar>
-                        </Grid>
+                        <hr />
+                        {!teacherView && <Box  m={1}>
+                          <Button fullWidth size="large" variant="contained" color="primary" startIcon={<TransferWithinAStation />} disabled={disabledStudent} onClick={handleConfirmTransfer}>Transferir</Button>
+                        </Box>}
+                        {!teacherView && <Box  m={1}>
+                          <Button fullWidth size="large" variant="contained" color="primary" startIcon={<Edit />} onClick={handleOpenEditStudentInfo}>Editar dados</Button>
+                        </Box>}
+                        {!teacherView && <Box m={1}>
+                          <Button fullWidth size="large" variant="contained" color="primary" startIcon={<DoneAll />} disabled={disabledStudent} onClick={handleOpenChecklist}>Checklist</Button>
+                        </Box>}
+                        {!teacherView && <Box m={1}>
+                          <Button fullWidth size="large" variant="contained" color="primary" onClick={handleOpenContractsDialog} startIcon={<Description />}>Contratos</Button>
+                        </Box>}
+                        {!teacherView && <Box m={1}>
+                          <Button fullWidth size="large" variant="contained" color="primary" onClick={handleOpenStudentPDF} startIcon={<Print />}>Ficha de Matrícula</Button>
+                        </Box>}
+                        <Box m={1}>
+                          <Button fullWidth size="large" variant="contained" color="primary" onClick={handleOpenFollowUp} startIcon={<Assignment />}>Follow Up</Button>
+                        </Box>
+                        <Box m={1}>
+                          <Button fullWidth size="large" variant="contained" color="primary" startIcon={<SupervisedUserCircle />} onClick={handleOpenParentsDialog}>Responsáveis</Button>
+                        </Box>
+                        {!teacherView && <Box m={1}>
+                          <Button fullWidth size="small" variant="contained" color={"secondary"} startIcon={disabledStudent ? <Check /> :<NotInterested />} onClick={disabledStudent ? handleConfirmEnable : handleConfirmDisable}>{disabledStudent ? 'Reativar' : 'Desativar'}</Button>
+                        </Box>}
+                        {teacherView && <Box m={1}>
+                          <Button fullWidth size="small" variant="contained" color={"secondary"} startIcon={<Star />} onClick={handleOpenReleaseGrades}>Notas</Button>
+                        </Box>}
+                        {teacherView && <Box m={1}>
+                          <Button fullWidth size="small" variant="contained" color={"secondary"} startIcon={<Speed />} onClick={handleOpenReleasePerformanceGrades}>Desempenho</Button>
+                        </Box>}
+                        <Box m={1}>
 
-                        <Grid item>
-                          <Typography variant="h5" component="h2">
-                            Arquivos
-                          </Typography>
+                          <Button fullWidth size="small" variant="outlined" color={"primary"} startIcon={<Refresh />} onClick={getData}>Atualizar dados</Button>
+                        </Box>
+                        
+                        </CardContent>
+                        
+                      </Card>
+                    
+
+                    
+                      <Card className={classes.smallCards} variant="outlined">
+                        <CardContent>
+                        <Grid 
+                          justifyContent="flex-start"
+                          direction="row"
+                          container
+                          spacing={1}
+                        >
+                          <Grid item>
+                            <Avatar className={classes.orange}>
+                              <School />
+                            </Avatar>
+                          </Grid>
+
+                          <Grid item>
+                            <Typography variant="h5" component="h2">
+                              Dados acadêmicos
+                            </Typography>
+                            
+                            
+                          </Grid>
+                        </Grid>
+                        <hr />
                           
                           
-                        </Grid>
-                      </Grid>
-                      <hr />
-                      
-                        <StudentFiles studentId={studentId} disabledStudent={disabledStudent} />
-                        
-                      </CardContent>
-                      <CardActions>
-                        <Button size="small"></Button>
-                      </CardActions>
-                    </Card>}
-                  
+                          <Typography className={classes.pos} color="textSecondary">
+                            Turma atual: {classCode}
+                          </Typography>
+                          
+                          <Typography variant="h6" component="h6">
+                              Notas de Desempenho
+                          </Typography>
+                          {academicData.hasOwnProperty('desempenho') ? Object.keys(academicData.desempenho).map((name, i) => (
+                            <Typography className={classes.grades} color="textSecondary">
+                              {name}: {academicData.desempenho[name]}
+                            </Typography>
+                          )) : 'Notas não lançadas'}
+                          <Typography variant="h6" component="h6">
+                              Somatório Geral
+                          </Typography>
+                          <Typography className={classes.grades} color="textSecondary">
+                              Nota final: {currentGrade}
+                          </Typography>
+                          <Typography variant="h6" component="h6">
+                              Faltas Registradas
+                          </Typography>
+                          {academicData.hasOwnProperty('frequencia') ? Object.keys(academicData.frequencia).map((name, i) => {
+                            let date = new Date(name)
+                            let dateConverted = date.toISOString().substring(0, 10).split('-').reverse().join('/')
+                            return (
+                            <Typography className={classes.grades} color="textSecondary">
+                              {i + 1}: {dateConverted}
+                            </Typography>
+                          )}) : 'Não há registro de faltas'}
+                        </CardContent>
+                        <CardActions>
+                          <Button size="small" variant='outlined' color="primary" onClick={handleOpenStudentHistory} fullWidth startIcon={<ChromeReaderMode />}>Acessar histórico escolar</Button>
+                        </CardActions>
+                      </Card>
+                    
+                    
+                    
+                      {/* {!teacherView && <Card className={classes.smallCards} variant="outlined">
+                        <CardContent>
+                        <Grid 
+                          justifyContent="flex-start"
+                          direction="row"
+                          container
+                          spacing={1}
+                        >
+                          <Grid item>
+                            <Avatar className={classes.avatar}>
+                              <AttachFile />
+                            </Avatar>
+                          </Grid>
 
-                  
+                          <Grid item>
+                            <Typography variant="h5" component="h2">
+                              Arquivos
+                            </Typography>
+                            
+                            
+                          </Grid>
+                        </Grid>
+                        <hr />
+                        
+                          <StudentFiles studentId={studentId} disabledStudent={disabledStudent} />
+                          
+                        </CardContent>
+                        <CardActions>
+                          <Button size="small"></Button>
+                        </CardActions>
+                      </Card>} */}
+                    
+
+                    
+                    
                   
                 
+              </div>
+              </div>
               
-             </div>
          
             
           
