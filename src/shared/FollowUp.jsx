@@ -138,8 +138,12 @@ const FollowUp = ({isOpen, onClose, studentId}) => {
   }, [filterModel])
 
     const getData = async () => {
-        const data = (await followUpRef.once('value')).val();
-        setFollowUps(data);
+        const snap = await followUpRef.once('value');
+        const data = snap.val();
+        if (snap.exists()) {
+          setFollowUps(data);
+        }
+        
         console.log(data)
         setFilterModel({
           items: [{id: 55942, columnField: 'matricula', operatorValue: 'equals', value: studentId}],
