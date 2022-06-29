@@ -130,7 +130,7 @@ function ResponsiveDrawer(props) {
         </div>
         <Divider />
         <List>
-            <Link to="/" style={{textDecoration: 'none', color: 'black'}}>
+            <Link to="/" style={{textDecoration: 'none', color: 'black'}} onClick={onClose}>
                 <ListItem button key={'Home'}>
                     <ListItemIcon><Home /></ListItemIcon>
                     <ListItemText primary={'Home'} />
@@ -141,7 +141,7 @@ function ResponsiveDrawer(props) {
         <Divider />
         <List>
             {areas.map((elem, index) => (
-                <Link to={'/' + elem.to} style={{textDecoration: 'none', color: 'black'}}>
+                <Link to={'/' + elem.to} style={{textDecoration: 'none', color: 'black'}} onClick={onClose}>
                     <ListItem button key={elem.text}>
                         <ListItemIcon>{firstIcons[elem.icon]}</ListItemIcon>
                         <ListItemText primary={elem.text} />
@@ -214,7 +214,7 @@ function ResponsiveDrawer(props) {
           )}
         </Toolbar>
       </AppBar> */}
-      <nav className={classes.drawer} aria-label="mailbox folders">
+      <nav className={classes.drawer} aria-label="menu">
         {/* The implementation can be swapped with js to avoid SEO duplication of links. */}
         <Hidden smUp implementation="css">
           <SwipeableDrawer

@@ -17,6 +17,8 @@ import { ConfirmationServiceProvider } from './contexts/ConfirmContext';
 import Professores from './professores/Professores';
 import Administration from './adm/Administration';
 import ExternalEnroll from './estudante/matricula/ExternalEnroll';
+import { CSSTransition, TransitionGroup } from 'react-transition-group';
+import './style.css';
 
 export const AuthContext = createContext({});
 
@@ -67,13 +69,22 @@ function App() {
         <ConfirmationServiceProvider>
           <AuthContextProvider>
             {window.location.pathname !== '/estudante/matricula' && <Navbar />}
-            <Switch>
-              <Route path="/" exact component={Home} />
-              <Route path="/secretaria" component={Secretaria} />
-              <Route path="/professores" component={Professores} />
-              <Route path="/adm" component={Administration}/>
-              <Route path="/estudante/matricula" exact component={ExternalEnroll}/>
-            </Switch>
+            <Route render={({location}) => (
+            <TransitionGroup>
+              <CSSTransition timeout={100} key={location.key} classNames="fade">
+                <Switch>
+                  <Route path="/" exact component={Home} />
+                  <Route path="/secretaria" component={Secretaria} />
+                  <Route path="/professores" component={Professores} />
+                  <Route path="/adm" component={Administration}/>
+                  <Route path="/estudante/matricula" exact component={ExternalEnroll}/>
+                </Switch>
+              </CSSTransition>
+            </TransitionGroup>
+            )} />
+            
+            
+            
             
           </AuthContextProvider>
         </ConfirmationServiceProvider>
