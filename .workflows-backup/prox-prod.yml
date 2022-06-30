@@ -1,0 +1,8 @@
+name: Deploy to ProX Production
+'on':
+  push:
+    branches:
+      - master
+
+jobs:
+  
