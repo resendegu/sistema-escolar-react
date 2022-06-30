@@ -4,6 +4,7 @@ name: Deploy to LearnUp Production
     branches:
       - master
 
+jobs:
   deploy_to_prox:
     runs-on: ubuntu-latest
     environment: production
