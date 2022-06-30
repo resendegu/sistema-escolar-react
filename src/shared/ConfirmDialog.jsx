@@ -43,7 +43,7 @@ const useStyles = makeStyles((theme) => ({
     const [ text, setText ] = useState('')
     const [ studentSelected, setStudentSelected ] = useState();
     const [students, setStudents] = useState([]);
-    const [submit, setSubmit] = useState();
+    const [submit, setSubmit] = useState('...');
 
     useEffect(() => {
       studentsRef.once('value').then(snap => {

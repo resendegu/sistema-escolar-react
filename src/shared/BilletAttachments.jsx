@@ -135,7 +135,7 @@ const BilletAttachments = ({docKeyPath, open, setOpen}) => {
             });
             await billetAttachmentsRef.child(docKeyPath + '/' + name).delete()
             await billetsDocsRef.child(docKeyPath).child('attachments').child(databaseKey).remove()
-            enqueueSnackbar('Anexo deletado.', {title: 'Erro', variant: 'error', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button>})
+            enqueueSnackbar('Anexo deletado.', {title: 'Sucesso', variant: 'success', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button>})
         } catch (error) {
             error && enqueueSnackbar(error.message, {title: 'Erro', variant: 'error', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button>})
         }

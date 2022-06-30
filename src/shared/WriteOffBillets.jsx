@@ -3,7 +3,7 @@ import { Fragment, useEffect, useState } from "react";
 import { billetsDocsRef, schoolInfoRef, studentsRef } from "../services/databaseRefs";
 import { functions } from "../services/firebase";
 import { useSnackbar } from "notistack";
-import { AccountBox, AccountCircle, Assistant, Attachment, AttachMoney, CallToActionSharp, Cancel, ConfirmationNumber, DateRange, Event, FileCopy, Gavel, History, Info, Money, Pageview, Print, ReportProblem } from "@material-ui/icons";
+import { AccountBox, AccountCircle, Assistant, Attachment, AttachMoney, CallToActionSharp, Cancel, ConfirmationNumber, DateRange, Event, FileCopy, Gavel, History, Info, Money, Pageview, Print, RemoveCircle, ReportProblem } from "@material-ui/icons";
 import StudentDataCard from "./StudentDataCard";
 import { createBilletView } from "./FunctionsUse";
 import { useAuth } from "../hooks/useAuth"
@@ -181,7 +181,7 @@ const WriteOffBillets = ({docId}) => {
         } else {
             // If the billet has not passed the dueDate
             
-            await billetsDocsRef.child(docKeyPath).child('historico').push({status: 2, paidValue: paidValue, paymentDay: paymentDay, userCreator: user.id, motivo: text})
+            await billetsDocsRef.child(docKeyPath).child('historico').push({status: 2, paidValue: paidValue, paymentDay: paymentDay, userCreator: user.id, motivo: text === undefined ? '0' : text})
             enqueueSnackbar('Baixa solicitada. O sistema processará o pedido em background.', {title: 'Sucesso', variant: 'info', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button>})
         }
     }
@@ -197,6 +197,21 @@ const WriteOffBillets = ({docId}) => {
         });
         
         await billetsDocsRef.child(docKeyPath).child('historico').push({status: 3, motivo: text, userCreator: user.id})
+        enqueueSnackbar('Contestação solicitada. O sistema processará o pedido em background.', {title: 'Sucesso', variant: 'info', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button>})
+    }
+
+    const handleUnChallenge = async () => {
+        const text = await confirm({
+            variant: "danger",
+            catchOnCancel: true,
+            title: "Confirmação",
+            description: "Você deseja retirar a contestação deste boleto? Se sim, digite abaixo o motivo e clique em 'Sim'. Sua decisão pode estar sujeita a aprovação.",
+            promptText: true,
+            promptLabel: 'Motivo da remoção do contestamento'
+        });
+        
+        await billetsDocsRef.child(docKeyPath).child('historico').push({status: 0, motivo: text, userCreator: user.id})
+        enqueueSnackbar('Remoção de contestação solicitada. O sistema processará o pedido em background.', {title: 'Sucesso', variant: 'info', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button>})
     }
 
     const handleCancel = async () => {
@@ -210,6 +225,7 @@ const WriteOffBillets = ({docId}) => {
         });
 
         await billetsDocsRef.child(docKeyPath).child('historico').push({status: 4, motivo: text, userCreator: user.id})
+        enqueueSnackbar('Cancelamento solicitado. O sistema processará o pedido em background.', {title: 'Sucesso', variant: 'info', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button>})
     }
 
     const handleShowHistory = async () => {
@@ -464,7 +480,7 @@ const WriteOffBillets = ({docId}) => {
                                 <Button variant="contained" color="secondary" fullWidth onClick={handleChallenge} startIcon={<ReportProblem />} style={{backgroundColor: billetColors[3]}} disabled={doc.status === 4 || doc.status === 3}>Contestar boleto</Button>
                             </Box>
                             <Box m={1}>
-                                <Button variant="contained" color="secondary" fullWidth onClick={handleChallenge} startIcon={<ReportProblem />} style={{backgroundColor: billetColors[0]}} disabled={doc.status !== 3}>Retirar contestação</Button>
+                                <Button variant="contained" color="secondary" fullWidth onClick={handleUnChallenge} startIcon={<RemoveCircle />} style={{backgroundColor: billetColors[0]}} disabled={doc.status !== 3}>Retirar contestação</Button>
                             </Box>
                             <Box m={1}>
                                 <Button variant="contained" color="secondary" fullWidth onClick={handleCancel} startIcon={<Cancel />} style={{backgroundColor: billetColors[4]}} disabled={doc.status === 4}>Cancelar boleto</Button>
