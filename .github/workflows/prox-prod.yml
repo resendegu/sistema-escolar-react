@@ -1,4 +1,4 @@
-name: Deploy to LearnUp Production
+name: Deploy to ProX Production
 'on':
   push:
     branches:
