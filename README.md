@@ -1,4 +1,4 @@
-[![Deploy to Firebase Hosting on merge](https://github.com/ProXDigital/sistema-escolar-react/actions/workflows/learnup-prod.yml/badge.svg?branch=master&event=push)](https://github.com/ProXDigital/sistema-escolar-react/actions/workflows/learnup-prod.yml)
+[![Deploy to Production Environments](https://github.com/ProXDigital/sistema-escolar-react/actions/workflows/deploy_prod_on_push.yml/badge.svg)](https://github.com/ProXDigital/sistema-escolar-react/actions/workflows/deploy_prod_on_push.yml)
 
 # Sistema de gestão escolar
 
