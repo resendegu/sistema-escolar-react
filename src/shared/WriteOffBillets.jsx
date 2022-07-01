@@ -163,7 +163,6 @@ const WriteOffBillets = ({docId}) => {
          * 3 means that some user has encountered some inconsistency related to that billet and needs review.
          * 4 means that this billet has been canceled for some reason and will not be charged.
          */
-
          const text = await confirm({
             variant: "danger",
             catchOnCancel: true,
