@@ -1,4 +1,5 @@
 [![Deploy to Production Environments](https://github.com/ProXDigital/sistema-escolar-react/actions/workflows/deploy_prod_on_push.yml/badge.svg)](https://github.com/ProXDigital/sistema-escolar-react/actions/workflows/deploy_prod_on_push.yml)
+[![CodeQL](https://github.com/ProXDigital/sistema-escolar-react/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/ProXDigital/sistema-escolar-react/actions/workflows/codeql-analysis.yml)
 
 # Sistema de gestão escolar
 
