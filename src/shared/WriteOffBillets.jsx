@@ -179,7 +179,6 @@ const WriteOffBillets = ({docId}) => {
             enqueueSnackbar('Boleto vencido.', {title: 'Erro', variant: 'error', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button>})
         } else {
             // If the billet has not passed the dueDate
-            
             await billetsDocsRef.child(docKeyPath).child('historico').push({status: 2, paidValue: paidValue, paymentDay: paymentDay, userCreator: user.id, motivo: text === undefined ? '0' : text})
             enqueueSnackbar('Baixa solicitada. O sistema processará o pedido em background.', {title: 'Sucesso', variant: 'info', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button>})
         }
