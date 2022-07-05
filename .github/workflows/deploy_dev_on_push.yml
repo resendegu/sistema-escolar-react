@@ -10,7 +10,7 @@ name: Deploy to Development Environments
 
 jobs:
   deploy_to_resende:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     environment: resende-dev
     env:
       REACT_APP_API_KEY: ${{secrets.REACT_APP_API_KEY}}
