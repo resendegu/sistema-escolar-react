@@ -1,8 +1,9 @@
 {
   "projects": {
-    "default": "projetoxagencia",
+    "default": "guresende",
     "learnup-prod": "learnupschool",
-    "prox-prod": "projetoxagencia"
+    "prox-prod": "projetoxagencia",
+    "resendedev": "guresende"
   },
   "targets": {
     "projetoxagencia": {

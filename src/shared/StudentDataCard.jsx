@@ -1,4 +1,4 @@
-import { Avatar, Backdrop, Button, Card, CardContent, CircularProgress, Container, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, Grid, List, ListItem, ListItemText, makeStyles, TextField, Typography } from "@material-ui/core";
+import { Avatar, Card, CardContent, Divider, Grid, List, ListItem, ListItemText, makeStyles, Typography } from "@material-ui/core";
 
 import { AccountBox } from "@material-ui/icons";
 
@@ -32,7 +32,7 @@ const useStyles = makeStyles((theme) => ({
       marginBottom: "10px",
     },
     title: {
-      fontSize: 14,
+      textDecoration: 'bold'
     },
     pos: {
       marginBottom: 12,
@@ -84,7 +84,7 @@ const StudentDataCard = ({studentData}) => {
                             </Grid>
                             </Grid>
                             <hr />
-                            <Typography className={classes.title} color="textPrimary" gutterBottom>
+                            <Typography component="h6" variant="h6" color="textPrimary" gutterBottom>
                             {studentData.nomeAluno}
                             </Typography>
                             <Grid 

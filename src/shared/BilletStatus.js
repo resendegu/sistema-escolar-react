@@ -7,22 +7,34 @@
  * 4 means that this billet has been canceled for some reason and will not be charged.
  */
 
+// Portuguese Status
 const billetStatus = [
     'Pendente',
     'Aguardando aprovação',
     'Baixa efetuada',
     'Contestado',
-    'Cancelado'
+    'Cancelado',
 ];
 
+// English Status
+// const billetStatus = [
+//     'Pending',
+//     'Waiting approval',
+//     'Written Off',
+//     'Challenge',
+//     'Canceled',
+// ];
+
+// Which colors each status will have?
 const billetColors = [
     '#f2bb13',
     'blue',
     'green',
     'red',
-    'grey'
+    'grey',
 ]
 
+// Portuguese Explanations
 const billetStatusExplanations = [
     `O status "${billetStatus[0]}" significa que este boleto ainda não foi pago ou ainda não foi efetuada sua baixa no sistema. Em outras palavras, o boleto está pendente de baixa.`,
     `O status "${billetStatus[1]}" significa que este boleto sofreu alguma mudança que requer aprovação. Normalmente acontece quando um usuário com poucos privilégios de sistema, efetua uma mudança de status em um boleto. Portanto, este boleto está aguardando aprovação da área competente.`,

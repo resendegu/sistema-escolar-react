@@ -61,7 +61,7 @@ const EditStudentData = ({studentId, isOpen, onClose, preEnrollment}) => {
                     try {
                         document.getElementById(field).value = value
                     } catch (error) {
-                        console.log(error, field, value)
+                        //console.log(error, field, value)
                     }
                 }
             }

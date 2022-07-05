@@ -1,11 +1,11 @@
 import { Avatar, Backdrop, Box, Button, Card, CardActions, CardContent, CircularProgress, Container, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, Fab, Grid, IconButton, List, ListItem, ListItemText, makeStyles, MenuItem, Select, Typography, useMediaQuery, useTheme } from "@material-ui/core";
 import { green } from "@material-ui/core/colors";
-import { AccountBox, Assignment, Assistant, AttachFile, Check, ChromeReaderMode, Close, Description, DoneAll, Edit, NotInterested, Person, Print, Refresh, School, Speed, Star, SupervisedUserCircle, TransferWithinAStation } from "@material-ui/icons";
+import { AccountBox, Assignment, Assistant, AttachFile, Check, ChromeReaderMode, Close, Description, DoneAll, Edit, EventBusy, Money, NotInterested, Person, Print, Receipt, Refresh, School, Speed, Star, SupervisedUserCircle, TransferWithinAStation } from "@material-ui/icons";
 import { SpeedDial, SpeedDialAction, SpeedDialIcon } from "@material-ui/lab";
 import { useSnackbar } from "notistack";
 import { Fragment, useEffect, useState } from "react";
 
-import { classesRef, disabledStudentsRef, studentsRef } from '../services/databaseRefs'
+import { billetsDocsRef, classesRef, disabledStudentsRef, studentsRef } from '../services/databaseRefs'
 import BaseDocument from "./BaseDocument";
 import EditStudentData from "./EditStudentData";
 import FollowUp from "./FollowUp";
@@ -130,6 +130,7 @@ const StudentInfo = ({ studentInfo, teacherView=false }) => {
     const [hiddenSpeedDial, setHiddenSpeedDial] = useState(false);
     const [openSpeedDial, setOpenSpeedDial] = useState(false);
     const [openFilesDialog, setOpenFilesDialog] = useState(false);
+    const [billets, setBillets] = useState([]);
 
     useEffect(() => {
       
@@ -151,12 +152,30 @@ const StudentInfo = ({ studentInfo, teacherView=false }) => {
         console.log(disabledStudent)
         let data = await classesRef.child(classCode).child('alunos').child(studentId).once('value');
         let studentData = !disabledStudent ? (await studentsRef.child(studentId).once('value')).val() : (await disabledStudentsRef.child(studentId + '/dadosAluno').once('value')).val()
-    
+        const billetsSnap = await billetsDocsRef.orderByChild('matricula').equalTo(studentId).once('value')
+        console.log(billetsSnap.val())
+        if (billetsSnap.exists()) {
+          let billetsObj = billetsSnap.val()
+          let billetsArray = []
+          for (const key in billetsObj) {
+            if (Object.hasOwnProperty.call(billetsObj, key)) {
+              let doc = billetsObj[key];
+              doc.key = key
+              billetsArray.push(doc)
+              setBillets([...billetsArray])
+            }
+          }
+        } else {
+          setBillets([])
+        }
         console.log(studentData);
         studentData && setStudentData(studentData)
         data.exists() && setAcademicData(data.val());
         data.exists() && calculateGrade(data.val().notas);
         console.log(data.val())
+
+
+
         // Filtering action buttons
         let actionButtons = []
         if (teacherView) {
@@ -558,6 +577,43 @@ const handleCloseFilesDialog = () => {
                         </CardActions>
                       </Card>
                     
+                      <Card className={classes.smallCards} variant="outlined">
+                        <CardContent>
+                        <Grid 
+                          justifyContent="flex-start"
+                          direction="row"
+                          container
+                          spacing={1}
+                        >
+                          <Grid item>
+                            <Avatar className={classes.orange}>
+                              <Money />
+                            </Avatar>
+                          </Grid>
+
+                          <Grid item>
+                            <Typography variant="h5" component="h2">
+                              Pagamentos
+                            </Typography>
+                            
+                            
+                          </Grid>
+                        </Grid>
+                        <hr />
+                          
+                          <Typography variant="h6" component="h6">
+                            Boletos
+                          </Typography>
+                          <Typography className={classes.pos} color="textSecondary">
+                            Vencidos
+                          </Typography>
+                          <Button size="small" variant='outlined' color="primary" fullWidth startIcon={<EventBusy />}>{billets.filter(billet => billet.status === 0).length === 1 ? new Date(billets.filter(billet => billet.status === 0)[0].vencimento.split('/').reverse().join('-')) : billets.filter(billet => billet.status === 0).map()}</Button>
+                          
+                        </CardContent>
+                        <CardActions>
+                          <Button size="small" variant='outlined' color="primary" fullWidth startIcon={<Receipt />}>Ver todos os boletos</Button>
+                        </CardActions>
+                      </Card>
                     
                     
                       {/* {!teacherView && <Card className={classes.smallCards} variant="outlined">

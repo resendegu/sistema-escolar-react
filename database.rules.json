@@ -27,7 +27,7 @@
           ".read":"auth.uid != null"
         },
           "docsBoletos": {
-          ".indexOn": "numeroDoc",
+          ".indexOn": ["numeroDoc", "matricula", "codContrato", "dataProcessamento"],
           ".write": "auth.uid != null && auth.token.master == true || auth.token.secretaria == true",
           ".read":"auth.uid != null && auth.token.master == true || auth.token.secretaria == true"
         },
