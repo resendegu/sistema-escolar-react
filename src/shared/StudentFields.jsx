@@ -1,4 +1,4 @@
-import { Box, Button, Container, FormControl, FormControlLabel, FormGroup, FormHelperText, FormLabel, Grid, InputLabel, LinearProgress, makeStyles, Paper, Select, Switch, TextField, Typography, Checkbox } from "@material-ui/core";
+import { Box, Button, Container, FormControl, FormControlLabel, FormGroup, FormHelperText, FormLabel, Grid, InputLabel, LinearProgress, makeStyles, Paper, Select, Switch, TextField, Typography, Checkbox, Tooltip } from "@material-ui/core";
 import { Fragment, useState } from "react";
 import { calculateAge, checkCpf, getAddress } from "./FunctionsUse";
 import CrudTable from "./DataGrid";
@@ -7,7 +7,7 @@ import { additionalFieldsRef, contractRef, coursesRef } from "../services/databa
 import $ from 'jquery';
 import ErrorDialog from '../shared/ErrorDialog'
 import { useSnackbar } from "notistack";
-import { PlusOneRounded } from "@material-ui/icons";
+import { PlusOneRounded, Launch } from "@material-ui/icons";
 import FullScreenDialog from "./FullscreenDialog";
 
 const useStyles = makeStyles((theme) => ({
@@ -122,6 +122,7 @@ function BasicDataFields({ shrink, handleOptionalSteps, setParentsRequired, setL
                 </FormGroup>
                 {!external && <FormHelperText>Escolha se será uma matrícula ou pré-matrícula.</FormHelperText>}
             </FormControl>}
+            {!external && <Tooltip title="Abrir tela para que o aluno faça sua própia pré-matrícula. Você pode compartilhar este link com o aluno ou o responsável. O link é aberto para o público pode ser compartilhado."><Button style={{float: 'right'}} startIcon={<Launch />} onClick={() => window.open('./estudante/matricula', '_blank')}>Auto-Matrícula</Button></Tooltip>}
               <Grid 
               justifyContent="center"   
               container
