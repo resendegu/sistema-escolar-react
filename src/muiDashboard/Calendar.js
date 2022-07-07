@@ -417,12 +417,12 @@ const CalendarComponent = ({sourceId, isFromClassCode=false,  handleFault}) => {
                         <Box m={2}>
                         
                             <InputLabel id="label">Exibir calendários:</InputLabel>
-                            {eventsSources && eventsSources.map((calendar, i) => (
+                            {/* {eventsSources && eventsSources.map((calendar, i) => (
                                 <FormControlLabel
                                     control={<Checkbox checked={viewSources.indexOf(calendar) !== -1} onChange={(e) => handleShowSources(calendar.id, e.target.checked)} name={calendar.id} />}
                                     label={calendar.id}
                                 />
-                            ))}
+                            ))} */} Em desenvolvimento
                             
                             <Tooltip title={'Ver todos os calendários'}>
                                 <IconButton variant='outlined' edge="end" color="inherit" ><Visibility /></IconButton>
