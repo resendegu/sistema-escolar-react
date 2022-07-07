@@ -607,7 +607,7 @@ const handleCloseFilesDialog = () => {
                           <Typography className={classes.pos} color="textSecondary">
                             Vencidos
                           </Typography>
-                          <Button size="small" variant='outlined' color="primary" fullWidth startIcon={<EventBusy />}>{billets.filter(billet => billet.status === 0).length === 1 ? new Date(billets.filter(billet => billet.status === 0)[0].vencimento.split('/').reverse().join('-')) : billets.filter(billet => billet.status === 0).map()}</Button>
+                          <Button size="small" variant='outlined' color="primary" fullWidth startIcon={<EventBusy />}>{billets.filter(billet => billet.status === 0 && new Date(billets.filter(billet => billet.status === 0)[0].vencimento.split('/').reverse().join('-')) > new Date()).length === 1 ? new Date(billets.filter(billet => billet.status === 0)[0].vencimento.split('/').reverse().join('-')) : billets.filter(billet => billet.status === 0).map((billet, i) => billet.vencimento)}</Button>
                           
                         </CardContent>
                         <CardActions>

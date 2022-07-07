@@ -34,19 +34,19 @@ export default function Deposits() {
     <React.Fragment>
       <Title>Dados rápidos</Title>
       <Typography component="p" variant="h6">
-        {data.students}
+        {data && data.students}
       </Typography>
       <Typography color="textSecondary" className={classes.depositContext}>
         alunos ativos
       </Typography>
       <Typography component="p" variant="h6">
-        {data.classes}
+        {data && data.classes}
       </Typography>
       <Typography color="textSecondary" className={classes.depositContext}>
         turmas criadas
       </Typography>
       <Typography component="p" variant="h6">
-        {data.disabledStudents}
+        {data && data.disabledStudents}
       </Typography>
       <Typography color="textSecondary" className={classes.depositContext}>
         alunos desativados

@@ -1311,7 +1311,7 @@ exports.systemUpdate = functions.pubsub.schedule('0 2 * * 0').timeZone('America/
     const now = new Date(context.timestamp)
 
     const emailContent = {
-        to: "gustavo.resende@grupoprox.com",
+        to: "gustavo@grupoprox.com",
         message: {
             subject: `Job de domingo realizado`,
             text: `Veja o log do job de domingo`,
@@ -1343,6 +1343,7 @@ exports.dailyUpdate = functions.pubsub.schedule('0 0 * * *').timeZone('America/S
     const ref = admin.database().ref("sistemaEscolar")
 
     const updates = async () => {
+        // update the aniversaries
         let aniversaries = []
         const studentsSnap = await ref.child('alunos').once('value')
         const allStudents = studentsSnap.val()
@@ -1360,7 +1361,18 @@ exports.dailyUpdate = functions.pubsub.schedule('0 0 * * *').timeZone('America/S
         const classes = (await ref.child('turmas').once('value')).numChildren();
         const disabledStudents = (await ref.child('alunosDesativados').once('value')).numChildren();
         const students = studentsSnap.numChildren();
+
+
+        // update the due date of the billets 
+        const dueDateToday = await ref.child('docsBoletos').orderByChild('vencimento').equalTo(now.toLocaleDateString('pt-BR')).once('value');
+        
+
+
         return {students: students, classes: classes, disabledStudents: disabledStudents, aniversaries: aniversaries};
+
+        
+        
+
     }
 
     
@@ -1369,7 +1381,7 @@ exports.dailyUpdate = functions.pubsub.schedule('0 0 * * *').timeZone('America/S
     updates().then(async (result) => {
         await ref.child('dadosRapidos').update(result)
         const emailContent = {
-            to: "gustavo.resende@grupoprox.com",
+            to: "gustavo@grupoprox.com",
             message: {
                 subject: `Job diário realizado`,
                 text: `Veja o log do job diário`,
@@ -1385,7 +1397,7 @@ exports.dailyUpdate = functions.pubsub.schedule('0 0 * * *').timeZone('America/S
         })
     }).catch((error) => {
         const emailContent = {
-            to: "gustavo.resende@grupoprox.com",
+            to: "gustavo@grupoprox.com",
             message: {
                 subject: `Job diário falhou`,
                 text: `Veja o log do job diário`,
@@ -1473,7 +1485,7 @@ exports.newYear = functions.pubsub.schedule('0 2 1 1 *').timeZone('America/Sao_P
     
     
         const emailContent = {
-            to: "gustavo.resende@grupoprox.com",
+            to: "gustavo@grupoprox.com",
             message: {
                 subject: `Job anual realizado`,
                 text: `Veja o log do job anual`,
