@@ -154,6 +154,9 @@ const StudentInfo = ({ studentInfo, teacherView=false }) => {
         let studentData = !disabledStudent ? (await studentsRef.child(studentId).once('value')).val() : (await disabledStudentsRef.child(studentId + '/dadosAluno').once('value')).val()
         const billetsSnap = await billetsDocsRef.orderByChild('matricula').equalTo(studentId).once('value')
         console.log(billetsSnap.val())
+        let now = new Date();
+        const dueDateTodaySnap = await billetsDocsRef.orderByChild('vencimento').equalTo(now.toLocaleDateString('pt-BR')).once('value');
+        console.log(dueDateTodaySnap.val())
         if (billetsSnap.exists()) {
           let billetsObj = billetsSnap.val()
           let billetsArray = []
@@ -607,7 +610,9 @@ const handleCloseFilesDialog = () => {
                           <Typography className={classes.pos} color="textSecondary">
                             Vencidos
                           </Typography>
-                          <Button size="small" variant='outlined' color="primary" fullWidth startIcon={<EventBusy />}>{billets.filter(billet => billet.status === 0 && new Date(billets.filter(billet => billet.status === 0)[0].vencimento.split('/').reverse().join('-')) > new Date()).length === 1 ? new Date(billets.filter(billet => billet.status === 0)[0].vencimento.split('/').reverse().join('-')) : billets.filter(billet => billet.status === 0).map((billet, i) => billet.vencimento)}</Button>
+                          <Button size="small" variant='outlined' color="primary" fullWidth startIcon={<EventBusy />}>
+                            {billets.length > 0 && billets[0].vencimento}
+                          </Button>
                           
                         </CardContent>
                         <CardActions>

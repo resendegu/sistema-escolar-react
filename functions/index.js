@@ -16,7 +16,7 @@ admin.initializeApp()
 
 const app = admin.app()
 
-exports.verificadorDeAcesso = functions.https.onCall((data, context) => {
+exports.verificadorDeAcesso = functions.region('southamerica-east1').https.onCall((data, context) => {
     try {
         if (context.auth.token.master == true) {
             return true
@@ -33,7 +33,7 @@ exports.verificadorDeAcesso = functions.https.onCall((data, context) => {
     
 })
 
-exports.liberaERemoveAcessos = functions.https.onCall((data, context) => {
+exports.liberaERemoveAcessos = functions.region('southamerica-east1').https.onCall((data, context) => {
     if (context.auth.token.master == true) {
         return admin.database().ref(`sistemaEscolar/listaDeUsuarios/${data.uid}/acessos/${data.acesso}`).set(data.checked).then(() => {
                 return admin.database().ref(`sistemaEscolar/listaDeUsuarios/${data.uid}/acessos/`).once('value').then((snapshot) => {
@@ -90,7 +90,7 @@ exports.liberaERemoveAcessos = functions.https.onCall((data, context) => {
 })
 
 
-exports.apagaContas = functions.https.onCall((data, context) => {
+exports.apagaContas = functions.region('southamerica-east1').https.onCall((data, context) => {
     if (context.auth.token.master == true) {
         return admin.auth().deleteUser(data.uid).then(function() {
             return admin.database().ref(`sistemaEscolar/registroGeral`).push({operacao: 'Conta deletada', timestamp: admin.firestore.Timestamp.now(), userCreator: context.auth.uid, dados: data}).then(() => {
@@ -108,7 +108,7 @@ exports.apagaContas = functions.https.onCall((data, context) => {
 })
 
 
-exports.deletaUsersAutomatico = functions.auth.user().onDelete((user) => {
+exports.deletaUsersAutomatico = functions.region('southamerica-east1').auth.user().onDelete((user) => {
     console.log(user)
     admin.database().ref(`sistemaEscolar/listaDeUsuarios/${user.uid}`).remove().then(() => {
         admin.database().ref(`sistemaEscolar/usuarios/${user.uid}`).remove().then(() => {
@@ -122,7 +122,7 @@ exports.deletaUsersAutomatico = functions.auth.user().onDelete((user) => {
     })
 })
 
-exports.criaContaAluno = functions.database.ref('sistemaEscolar/alunos/{registro}').onCreate((snapshot, context) => {
+exports.criaContaAluno = functions.region('southamerica-east1').database.ref('sistemaEscolar/alunos/{registro}').onCreate((snapshot, context) => {
     var aluno = snapshot.after.val()
     admin.auth().createUser({
         uid: aluno.matriculaAluno,
@@ -138,7 +138,7 @@ exports.criaContaAluno = functions.database.ref('sistemaEscolar/alunos/{registro
     })
 })
 
-exports.modificaSenhaContaAluno = functions.database.ref('sistemaEscolar/alunos/{matricula}/senhaAluno').onUpdate((snapshot, context) => {
+exports.modificaSenhaContaAluno = functions.region('southamerica-east1').database.ref('sistemaEscolar/alunos/{matricula}/senhaAluno').onUpdate((snapshot, context) => {
     async function start() {
         let senhaAluno = snapshot.after.val();
         let matricula = context.params.matricula;
@@ -176,7 +176,7 @@ exports.modificaSenhaContaAluno = functions.database.ref('sistemaEscolar/alunos/
       
 })
 
-exports.cadastroUser = functions.auth.user().onCreate((user) => {
+exports.cadastroUser = functions.region('southamerica-east1').auth.user().onCreate((user) => {
     console.log(user.displayName) 
     var dadosNoBanco = admin.database().ref(`sistemaEscolar/usuarios/${user.uid}/`)
     var listaDeUsers = admin.database().ref(`sistemaEscolar/listaDeUsuarios`)
@@ -281,7 +281,7 @@ exports.cadastroUser = functions.auth.user().onCreate((user) => {
     })
 })
 
-exports.cadastraTurma = functions.https.onCall(async (data, context) => {
+exports.cadastraTurma = functions.region('southamerica-east1').https.onCall(async (data, context) => {
     /**{codigoSala: codPadrao, professor: professor, diasDaSemana: diasDaSemana, livros: books, hora: horarioCurso} */
     console.log(data)
     if (context.auth.token.master == true || context.auth.token.secretaria == true) {
@@ -435,7 +435,7 @@ exports.cadastraTurma = functions.https.onCall(async (data, context) => {
     }
 })
 
-exports.cadastraAniversarios = functions.database.ref('sistemaEscolar/usuarios/{uid}/dataNascimento').onWrite((snapshot, context) => {
+exports.cadastraAniversarios = functions.region('southamerica-east1').database.ref('sistemaEscolar/usuarios/{uid}/dataNascimento').onWrite((snapshot, context) => {
     var data = snapshot.after.val()
     admin.auth().getUserByEmail(data.email).then((user) => {
         admin.database().ref('sistemaEscolar/aniversarios/' + (data.mes - 1)).push({
@@ -452,7 +452,7 @@ exports.cadastraAniversarios = functions.database.ref('sistemaEscolar/usuarios/{
     })
 })
 
-exports.addNovoProfTurma = functions.https.onCall((data, context) => {
+exports.addNovoProfTurma = functions.region('southamerica-east1').https.onCall((data, context) => {
     if (context.auth.token.master == true || context.auth.token.secretaria == true) {
         return admin.auth().getUserByEmail(data.emailProf).then(function(user) {
             return admin.database().ref(`sistemaEscolar/usuarios/${user.uid}/professor/turmas/${data.codSala}`).set(true).then(() => {
@@ -487,7 +487,7 @@ exports.addNovoProfTurma = functions.https.onCall((data, context) => {
 
 })
 
-exports.desconectaProf = functions.database.ref('sistemaEscolar/turmas/{codTurma}/professor/{iProf}').onDelete((snapshot, context) => {
+exports.desconectaProf = functions.region('southamerica-east1').database.ref('sistemaEscolar/turmas/{codTurma}/professor/{iProf}').onDelete((snapshot, context) => {
     // context.params = { codTurma: 'KIDS-SAT08', iProf: '1' }
     // context.timestamp = context.timestamp
     
@@ -524,7 +524,7 @@ exports.desconectaProf = functions.database.ref('sistemaEscolar/turmas/{codTurma
     
 }) 
 
-exports.cadastraAluno = functions.https.onCall(async (data, context) => {
+exports.cadastraAluno = functions.region('southamerica-east1').https.onCall(async (data, context) => {
     function formataNumMatricula(num) {
         let numero = num
         numero = "00000" + numero.replace(/\D/g, '');
@@ -664,12 +664,12 @@ exports.cadastraAluno = functions.https.onCall(async (data, context) => {
         }
     })
 
-exports.timestamp = functions.https.onCall((data, context) => {
+exports.timestamp = functions.region('southamerica-east1').https.onCall((data, context) => {
     return {timestamp: admin.firestore.Timestamp.now()}
     
 })
 
-exports.transfereAlunos = functions.https.onCall((data, context) => {
+exports.transfereAlunos = functions.region('southamerica-east1').https.onCall((data, context) => {
         function formataNumMatricula(num) {
             let numero = num
             numero = "00000" + numero.replace(/\D/g, '');
@@ -752,7 +752,7 @@ exports.transfereAlunos = functions.https.onCall((data, context) => {
     }
 })
 
-exports.excluiTurma = functions.https.onCall((data, context) => {
+exports.excluiTurma = functions.region('southamerica-east1').https.onCall((data, context) => {
     if (context.auth.token.master == true || context.auth.token.secretaria == true) {
         let turma = data.codTurma
         return admin.database().ref(`sistemaEscolar/turmas/${turma}/alunos`).once('value').then(students => {
@@ -788,7 +788,7 @@ exports.excluiTurma = functions.https.onCall((data, context) => {
     }
 })
 
-exports.ativaDesativaAlunos = functions.https.onCall((data, context) => {
+exports.ativaDesativaAlunos = functions.region('southamerica-east1').https.onCall((data, context) => {
     function formataNumMatricula(num) {
         let numero = num
         numero = "00000" + numero.replace(/\D/g, '');
@@ -912,7 +912,7 @@ exports.ativaDesativaAlunos = functions.https.onCall((data, context) => {
     }
 })
 
-exports.lancarNotas = functions.https.onCall((data, context) => {
+exports.lancarNotas = functions.region('southamerica-east1').https.onCall((data, context) => {
     // data: {alunos: {matricula: nomeAluno}, turma: codTurma, notas: {ativ1: 50, ativ2: 50}}
     if (context.auth.token.master == true || context.auth.token.professores == true) {
         function formataNumMatricula(num) {
@@ -955,7 +955,7 @@ exports.lancarNotas = functions.https.onCall((data, context) => {
 
 })
 
-exports.lancaDesempenhos = functions.database.ref('sistemaEscolar/turmas/{codTurma}/alunos/{matricula}/desempenho').onWrite((snapshot, context)=> {
+exports.lancaDesempenhos = functions.region('southamerica-east1').database.ref('sistemaEscolar/turmas/{codTurma}/alunos/{matricula}/desempenho').onWrite((snapshot, context)=> {
     // context.timestamp = context.timestamp
     // context.params = { codTurma: 'KIDS-SAT08', matricula: '00001' }
 
@@ -995,7 +995,7 @@ exports.lancaDesempenhos = functions.database.ref('sistemaEscolar/turmas/{codTur
     
 })
 
-exports.aberturaTurma = functions.database.ref('sistemaEscolar/turmas/{turma}/status/turma').onUpdate((snapshot, context) => {
+exports.aberturaTurma = functions.region('southamerica-east1').database.ref('sistemaEscolar/turmas/{turma}/status/turma').onUpdate((snapshot, context) => {
     // context.timestamp = context.timestamp
     // context.params = { turma: "cod da turma" }
     const classId = context.params.turma
@@ -1008,7 +1008,7 @@ exports.aberturaTurma = functions.database.ref('sistemaEscolar/turmas/{turma}/st
 
 })
 
-exports.fechaTurma = functions.https.onCall((data, context) => {
+exports.fechaTurma = functions.region('southamerica-east1').https.onCall((data, context) => {
     function formataNumMatricula(num) {
         let numero = num
         numero = "00000" + numero.replace(/\D/g, '');
@@ -1089,7 +1089,7 @@ exports.fechaTurma = functions.https.onCall((data, context) => {
     }
 })
 
-exports.aberturaChamados = functions.database.ref('sistemaEscolar/chamados/{key}').onCreate(async (snapshot, context) => {
+exports.aberturaChamados = functions.region('southamerica-east1').database.ref('sistemaEscolar/chamados/{key}').onCreate(async (snapshot, context) => {
 
     function convertTimestamp(timestamp) {
         let time = new Date(timestamp._seconds * 1000)
@@ -1159,7 +1159,7 @@ exports.aberturaChamados = functions.database.ref('sistemaEscolar/chamados/{key}
     console.log('Email queued for delivery.')
 })
 
-exports.montaCalendarioGeral = functions.database.ref('sistemaEscolar/turmas/{turma}/aulaEvento/').onWrite(async (snapshot, context) => {
+exports.montaCalendarioGeral = functions.region('southamerica-east1').database.ref('sistemaEscolar/turmas/{turma}/aulaEvento/').onWrite(async (snapshot, context) => {
     let turma = context.params.turma
     let aulaEvento = snapshot.after.val()
     let source = aulaEvento
@@ -1174,7 +1174,7 @@ exports.montaCalendarioGeral = functions.database.ref('sistemaEscolar/turmas/{tu
     
 })
 
-exports.removeCalendarios = functions.database.ref('sistemaEscolar/turmas/{turma}/aulaEvento/').onDelete(async (snapshot, context) => {
+exports.removeCalendarios = functions.region('southamerica-east1').database.ref('sistemaEscolar/turmas/{turma}/aulaEvento/').onDelete(async (snapshot, context) => {
     let turma = context.params.turma
     let aulaEvento = snapshot.val()
     let calendarioSnapshot = await admin.database().ref('sistemaEscolar/infoEscola/calendarioGeral').once('value')
@@ -1185,7 +1185,7 @@ exports.removeCalendarios = functions.database.ref('sistemaEscolar/turmas/{turma
     
 })
 
-exports.geraPix = functions.https.onCall((data, context) => {
+exports.geraPix = functions.region('southamerica-east1').https.onCall((data, context) => {
     class BrCode {
         constructor(key, amount, name, reference, key_type, city) {
           this.key = key;
@@ -1294,7 +1294,7 @@ exports.geraPix = functions.https.onCall((data, context) => {
       
 })
 
-exports.alteracaoDados = functions.database.ref('sistemaEscolar/alunos/{matricula}/{key}').onUpdate((snapshot, context) => {
+exports.alteracaoDados = functions.region('southamerica-east1').database.ref('sistemaEscolar/alunos/{matricula}/{key}').onUpdate((snapshot, context) => {
     
     functions.logger.log(context.params.key)
     functions.logger.log(context.params.matricula)
@@ -1302,7 +1302,7 @@ exports.alteracaoDados = functions.database.ref('sistemaEscolar/alunos/{matricul
     functions.logger.log(snapshot.after.val())
 })
 
-exports.systemUpdate = functions.pubsub.schedule('0 2 * * 0').timeZone('America/Sao_Paulo').onRun((context) => {
+exports.systemUpdate = functions.region('southamerica-east1').pubsub.schedule('0 2 * * 0').timeZone('America/Sao_Paulo').onRun((context) => {
     // let aniversariantesRef = admin.database().ref('sistemaEscolar/aniversariantes')
     // let alunosRef = admin.database().ref('sistemaEscolar/alunos')
     // let alunosRef = admin.database().ref('sistemaEscolar/alunos')
@@ -1332,7 +1332,7 @@ exports.systemUpdate = functions.pubsub.schedule('0 2 * * 0').timeZone('America/
     return null;
 });
 
-exports.dailyUpdate = functions.pubsub.schedule('0 0 * * *').timeZone('America/Sao_Paulo').onRun((context) => {
+exports.dailyUpdate = functions.region('southamerica-east1').pubsub.schedule('0 0 * * *').timeZone('America/Sao_Paulo').onRun((context) => {
     // let aniversariantesRef = admin.database().ref('sistemaEscolar/aniversariantes')
     // let alunosRef = admin.database().ref('sistemaEscolar/alunos')
     // let alunosRef = admin.database().ref('sistemaEscolar/alunos')
@@ -1418,7 +1418,7 @@ exports.dailyUpdate = functions.pubsub.schedule('0 0 * * *').timeZone('America/S
     return null;
 });
 
-exports.newYear = functions.pubsub.schedule('0 2 1 1 *').timeZone('America/Sao_Paulo').onRun((context) => {
+exports.newYear = functions.region('southamerica-east1').pubsub.schedule('0 2 1 1 *').timeZone('America/Sao_Paulo').onRun((context) => {
         const firestoreRef = admin.firestore().collection('mail');
 
         const calendarRef = admin.database().ref("sistemaEscolar/infoEscola/calendarioGeral");
@@ -1507,7 +1507,7 @@ exports.newYear = functions.pubsub.schedule('0 2 1 1 *').timeZone('America/Sao_P
 })
 
     
-exports.geraBoletos = functions.https.onCall((data, context) => {
+exports.geraBoletos = functions.region('southamerica-east1').https.onCall((data, context) => {
         const getDaysInMonth = (month, year) => {
             // Here January is 1 based
             //Day 0 is the last day in the previous month
@@ -1979,7 +1979,7 @@ exports.geraBoletos = functions.https.onCall((data, context) => {
         })
 })
 
-exports.escutaBoletos = functions.database.ref('sistemaEscolar/docsBoletos/{docKey}').onCreate((snapshot, context) => {
+exports.escutaBoletos = functions.region('southamerica-east1').database.ref('sistemaEscolar/docsBoletos/{docKey}').onCreate((snapshot, context) => {
     console.log(context.params)
     console.log(snapshot.after)
     console.log(context.timestamp)
@@ -1993,7 +1993,7 @@ exports.escutaBoletos = functions.database.ref('sistemaEscolar/docsBoletos/{docK
     
 })
 
-exports.escutaHistoricoBoletos = functions.database.ref('sistemaEscolar/docsBoletos/{docKey}/historico/{histKey}').onCreate((snapshot, context) => {
+exports.escutaHistoricoBoletos = functions.region('southamerica-east1').database.ref('sistemaEscolar/docsBoletos/{docKey}/historico/{histKey}').onCreate((snapshot, context) => {
     /**
      * For the WriteOff, 0 = Pending, 1 = Waiting approval, 2 = Written Off, 3 = Challenge, 4 = Canceled
      * 0 means that the billet has not been paid or has not received a write off. In other words, is pending a write off.
@@ -2047,7 +2047,7 @@ exports.escutaHistoricoBoletos = functions.database.ref('sistemaEscolar/docsBole
     start()
 })
 
-exports.escutaContratos = functions.database.ref('sistemaEscolar/infoEscola/contratos/{key}').onCreate((snapshot, context) => {
+exports.escutaContratos = functions.region('southamerica-east1').database.ref('sistemaEscolar/infoEscola/contratos/{key}').onCreate((snapshot, context) => {
     const setContract = async () => {
         const key = context.params.key
         const studentId = snapshot.child('matricula').val()
@@ -2081,7 +2081,7 @@ exports.escutaContratos = functions.database.ref('sistemaEscolar/infoEscola/cont
 
 })
 
-exports.lancaFaltas = functions.https.onCall((data, context) => {
+exports.lancaFaltas = functions.region('southamerica-east1').https.onCall((data, context) => {
     // const data = {dateStr: dateStr, classId: classId, studentsIds: studentsIds}
     const classId = data.classId
     const studentsIds = data.studentsIds
@@ -2122,7 +2122,7 @@ exports.lancaFaltas = functions.https.onCall((data, context) => {
 
 })
 
-exports.removeFaltas = functions.https.onCall((data, context) => {
+exports.removeFaltas = functions.region('southamerica-east1').https.onCall((data, context) => {
     // const data = {dateStr: dateStr, classId: classId, studentId: studentId}
     const classId = data.classId
     const studentId = data.studentId
@@ -2145,7 +2145,7 @@ exports.removeFaltas = functions.https.onCall((data, context) => {
 
 })
 
-exports.escutaFollowUp = functions.database.ref('sistemaEscolar/followUp/{id}').onCreate((snapshot, context) => {
+exports.escutaFollowUp = functions.region('southamerica-east1').database.ref('sistemaEscolar/followUp/{id}').onCreate((snapshot, context) => {
     const setContract = async () => {
         const key = context.params.id
         const studentId = snapshot.child('matricula').val()
