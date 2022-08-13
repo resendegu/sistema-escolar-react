@@ -11,11 +11,12 @@ import Typography from '@material-ui/core/Typography';
 import Box from '@material-ui/core/Box';
 import { AttachFile, AttachMoney, CallToAction, Gavel, Home, } from '@material-ui/icons';
 
-import Contracts from './contracts/Contracts';
+//import Contracts from './contracts/Contracts';
 
 import Dashboard from '../../muiDashboard/Dashboard';
-import Finances from './finances/Finances';
+//import Finances from './finances/Finances';
 import WriteOffBillets from '../../shared/WriteOffBillets';
+import StudentDashboard from './Dashboard';
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -85,13 +86,13 @@ export default function StudentTabs() {
         </Tabs>
       </AppBar>
       <TabPanel value={value} index={0}>
-        <Dashboard />
+        <StudentDashboard />
       </TabPanel>
       <TabPanel value={value} index={1}>
-        <Contracts />
+        
       </TabPanel>
       <TabPanel value={value} index={2}>
-        <Finances />
+        
       </TabPanel>
       <TabPanel value={value} index={3}>
         <WriteOffBillets />

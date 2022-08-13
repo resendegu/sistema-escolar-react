@@ -27,7 +27,7 @@ var app = firebase.initializeApp(firebaseConfig);
 const authNormal = firebase.auth;
 const auth = firebase.auth();
 const database = firebase.database();
-const functions = firebase.functions();
+const functions = firebase.app().functions('southamerica-east1');
 const storage = firebase.storage();
 let messaging
 try {

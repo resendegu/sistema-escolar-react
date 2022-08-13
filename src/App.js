@@ -19,6 +19,7 @@ import Administration from './adm/Administration';
 import ExternalEnroll from './estudante/matricula/ExternalEnroll';
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
 import './style.css';
+import Student from './estudante/Student';
 
 export const AuthContext = createContext({});
 
@@ -77,6 +78,7 @@ function App() {
                   <Route path="/secretaria" component={Secretaria} />
                   <Route path="/professores" component={Professores} />
                   <Route path="/adm" component={Administration}/>
+                  <Route path="/estudante" exact component={Student}/>
                   <Route path="/estudante/matricula" exact component={ExternalEnroll}/>
                 </Switch>
               </CSSTransition>

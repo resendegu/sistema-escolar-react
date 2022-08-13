@@ -23,7 +23,7 @@ import useStyles from '../hooks/useStyles';
 
 
 
-const CalendarComponent = ({sourceId, isFromClassCode=false,  handleFault}) => {
+const CalendarComponent = ({sourceId, isFromClassCode=false,  handleFault, isForStudent=false}) => {
     
 
     const classes = useStyles();
@@ -79,6 +79,8 @@ const CalendarComponent = ({sourceId, isFromClassCode=false,  handleFault}) => {
             }, (error) => {
                 enqueueSnackbar(error.message, {title: 'Error', variant: 'error', key:"0", action: <Button onClick={() => closeSnackbar('0')} color="inherit">Fechar</Button>})
             })
+        } else if (isForStudent && sourceId) {
+
         } else if (!isFromClassCode && sourceId) {
             
             calendarRef.orderByChild('id').equalTo(sourceId).on('value', (snapshot) => {
@@ -363,9 +365,9 @@ const CalendarComponent = ({sourceId, isFromClassCode=false,  handleFault}) => {
                 </Tooltip>
                 
                  
-                <Tooltip title={'Criar'}>
+                {!isForStudent && <Tooltip title={'Criar'}>
                     <IconButton variant='outlined' edge="end" color="inherit" onClick={(e) => setAnchorElCreate(e.currentTarget)}><Add /></IconButton>
-                </Tooltip>
+                </Tooltip>}
                 
                 <Menu
                     id="menu-appbar"
@@ -486,9 +488,9 @@ const CalendarComponent = ({sourceId, isFromClassCode=false,  handleFault}) => {
                         left: '',
                         center: 'title',
                         right: '',
-
+                        
                     }}
-                    
+                                     
                     locale={brLocale}
                     eventSources={viewSources}
                     eventClick={handleEventClick}

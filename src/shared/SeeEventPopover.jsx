@@ -1,4 +1,4 @@
-import { Avatar, DialogActions, DialogContent, DialogTitle, Fab, Grid, IconButton, List, ListItem, ListItemAvatar, ListItemSecondaryAction, ListItemText, Popover, Tooltip, Typography } from "@material-ui/core";
+import { Avatar, DialogActions, DialogContent, DialogTitle, Fab, Grid, IconButton, List, ListItem, ListItemAvatar, ListItemSecondaryAction, ListItemText, Popover, Tooltip, Typography, useMediaQuery, useTheme } from "@material-ui/core";
 import { Close, Delete, Edit, Event, PersonOutline } from "@material-ui/icons";
 import { useEffect, useState } from "react";
 import { Fragment } from "react";
@@ -13,6 +13,9 @@ const SeeEventPopover = ({ anchorElEventInfo, handleClose, event, api, isFromCla
     
 
     const confirm = useConfirmation();
+
+    const theme = useTheme();
+    const mobile = useMediaQuery(theme.breakpoints.down('sm'));
     
 
     const openEventInfo = Boolean(anchorElEventInfo);
@@ -116,7 +119,8 @@ const SeeEventPopover = ({ anchorElEventInfo, handleClose, event, api, isFromCla
                 vertical: 'top',
                 horizontal: 'right',
                 }}
-                style={{maxWidth: '70vw',}}
+                style={{maxWidth: mobile ? '100%' : '70vw',}}
+                
                 
             >
                 <DialogTitle>
@@ -180,7 +184,7 @@ const SeeEventPopover = ({ anchorElEventInfo, handleClose, event, api, isFromCla
                             
                             <Typography variant="label">{daysOfWeek[event.start.getDay()]}, {event.start.toLocaleDateString()}</Typography>
                             <Typography variant="span"> ⋅ </Typography>
-                            <Typography variant="label">{event.allDay ? 'O dia inteiro' : event.start.toLocaleTimeString() + ' - ' +  event.end.toLocaleTimeString()}</Typography>
+                            <Typography variant="label">{(console.log(event) && event) && (event.allDay ? 'O dia inteiro' : event.start.toLocaleTimeString() + ' - ' +  event.end.toLocaleTimeString())}</Typography>
                         </Typography>
                         
                         </>

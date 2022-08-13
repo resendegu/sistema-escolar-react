@@ -88,7 +88,7 @@ export default function BaseDocument({classCode, open, onClose}) {
   useEffect(() => {
       setTimeout(() => {
         getData()
-      }, 1000);
+      }, 2000);
       
   }, [])
 
