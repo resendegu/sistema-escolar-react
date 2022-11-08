@@ -1,4 +1,4 @@
-const functions = require('firebase-functions');
+const functionsFire = require('firebase-functions');
 const admin = require('firebase-admin');
 const path = require('path');
 const { auth } = require('firebase-admin');
@@ -11,6 +11,7 @@ const { Constants } = Merchant;
 const QRCode = require('qrcode');
 const axios = require('axios').default
 
+const functions = functionsFire.region('southamerica-east1')
 
 admin.initializeApp()
 
