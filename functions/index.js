@@ -5,7 +5,14 @@ const { auth } = require('firebase-admin');
 const { HttpsError } = require('firebase-functions/lib/providers/https');
 const { firebaseConfig } = require('firebase-functions');
 const { https } = require('firebase-functions');
-const { info } = require('firebase-functions/lib/logger');
+const {
+    log,
+    info,
+    debug,
+    warn,
+    error,
+    write,
+  } = require("firebase-functions/logger");
 const { Merchant } = require('steplix-emv-qrcps');
 const { Constants } = Merchant;
 const QRCode = require('qrcode');
@@ -185,7 +192,7 @@ exports.cadastroUser = functions.auth.user().onCreate((user) => {
     let firestoreRef = admin.firestore().collection('mail');
 
     admin.auth().generateEmailVerificationLink(user.email).then(value => {
-        functions.logger.log(value)
+        log(value)
         let emailContent = {
             to: user.email,
             message: {
@@ -207,7 +214,7 @@ exports.cadastroUser = functions.auth.user().onCreate((user) => {
             console.error(error)
         })
     }).catch(error => {
-        functions.logger.log(error)
+        log(error)
     })
 
     dadosNoBanco.set({
@@ -612,7 +619,7 @@ exports.cadastraAluno = functions.https.onCall(async (data, context) => {
                                         admin.database().ref('sistemaEscolar/preMatriculas').child(preMatriculaKey).remove().then(() => {
 
                                         }).catch((error) => {
-                                            functions.logger.log(error)
+                                            log(error)
                                         })
                                     }
                                     
@@ -1297,10 +1304,10 @@ exports.geraPix = functions.https.onCall((data, context) => {
 
 exports.alteracaoDados = functions.database.ref('sistemaEscolar/alunos/{matricula}/{key}').onUpdate((snapshot, context) => {
     
-    functions.logger.log(context.params.key)
-    functions.logger.log(context.params.matricula)
-    functions.logger.log(snapshot.before.val())
-    functions.logger.log(snapshot.after.val())
+    log(context.params.key)
+    log(context.params.matricula)
+    log(snapshot.before.val())
+    log(snapshot.after.val())
 })
 
 exports.systemUpdate = functions.pubsub.schedule('0 2 * * 0').timeZone('America/Sao_Paulo').onRun((context) => {
@@ -2155,26 +2162,26 @@ exports.escutaFollowUp = functions.database.ref('sistemaEscolar/followUp/{id}').
 //     const metageneration = object.metageneration; // Number of times metadata has been generated. New objects have a value of 1.
 //     const metadata = object.metadata; // File metadata.
 //     // Exit if this is triggered on a file that is not an image.
-//     functions.logger.log(fileBucket)
-//     functions.logger.log(filePath);
-//     functions.logger.log(path.dirname(filePath));
+//     log(fileBucket)
+//     log(filePath);
+//     log(path.dirname(filePath));
     
 //     if (!contentType.startsWith('image/') && filePath.indexOf('alunos') == -1) {
-//         return functions.logger.log('This is not an image.');
+//         return log('This is not an image.');
         
 //     }
 //     // Get the file name.
-//     functions.logger.log("URL: ", url);
+//     log("URL: ", url);
 //     const fileName = path.basename(filePath);
 //     const matricula = path.dirname(filePath).split('/')[2];
-//     functions.logger.log(matricula);
+//     log(matricula);
 //     return admin.database().ref(`sistemaEscolar/alunos/${matricula}/fotoAluno`).set(url).then(() => {
-//         functions.logger.log("Foto adicionada com sucesso!");
+//         log("Foto adicionada com sucesso!");
 //         return {
 //             answer: 'Foto adicionada com sucesso.'
 //         }
 //     }).catch(error => {
-//         functions.logger.log(error);
+//         log(error);
 //     })
 
     

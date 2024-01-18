@@ -23,9 +23,12 @@
   "storage": {
     "rules": "storage.rules"
   },
-  "functions": {
-    "source": "functions"
-  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default"
+    }
+  ],
   "remoteconfig": {
     "template": "remoteconfig.template.json"
   },

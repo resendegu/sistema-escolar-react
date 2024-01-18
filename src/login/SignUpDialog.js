@@ -28,6 +28,30 @@ const SignUpDialog = (props) => {
     const [ open, setOpen ] = useState(true);
     const [ status, setStatus ] = useState(null)
     const [ showSnack, setShowSnack ] = useState(false);
+    const errorCodes = {
+        "auth/wrong-password": (
+            <span>
+                Senha incorreta. Tente novamente ou clique em{" "}
+                <b>&quot;Esqueceu sua senha?&quot;</b> para redefini-la.
+            </span>
+        ),
+        "auth/email-already-in-use": (
+            <span>
+                E-mail já cadastrado. Tente novamente ou clique em{" "}
+                <b>&quot;Esqueceu sua senha?&quot;</b> para redefini-la.
+            </span>
+        ),
+        "auth/invalid-email": (
+            <span>
+                Digite um endereço de e-mail válido.
+            </span>
+        ),
+        "auth/internal-error": (
+            <span>
+                Ocorreu um erro interno. Tente novamente e se o erro persistir entre em contato com o administrador.
+            </span>
+        ),
+    }
 
     const { passwordRecover, createUserWithEmailAndPassword, signOut } = useAuth();
 
@@ -91,6 +115,7 @@ const SignUpDialog = (props) => {
     
     })
 
+
     
 
     return (
@@ -149,8 +174,7 @@ const SignUpDialog = (props) => {
                               }
                             }}
                             helperText={
-                              status === "auth/user-not-found" &&
-                              "Verifique o endereço de e-mail."
+                              status && errorCodes[status]
                             }
                             FormHelperTextProps={{ error: true }}
                         />
