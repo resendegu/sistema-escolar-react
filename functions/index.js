@@ -205,82 +205,82 @@ exports.cadastroUser = functions.auth.user().onCreate((user) => {
         }
         firestoreRef.add(emailContent).then((ref) => {
             console.log('Queued email for delivery to ' + user.email)
+
+            dadosNoBanco.set({
+                nome: user.displayName,
+                email: user.email,
+                
+                timestamp: admin.firestore.Timestamp.now()
+            }).then(() => {
+        
+            }).catch(error =>{
+                throw new functions.https.HttpsError('unknown', error.message)
+            })
+        
+            listaDeUsers.child(user.uid).set({
+                acessos: {
+                    master: false,
+                    adm: false,
+                    secretaria: false,
+                    professores: false,
+                    aluno: false
+                },
+                email: user.email
+            }).then(() => {
+        
+            }).catch(error => {
+                throw new functions.https.HttpsError('unknown', error.message)
+            })
+            
+            usuariosMaster.once('value', (snapshot) => {
+                var acessosObj = {
+                    acessos: {
+                        master: false,
+                        adm: false,
+                        secretaria: false,
+                        professores: false,
+                        aluno: false
+                    }
+                }
+                var lista = snapshot.val()
+                if (lista.indexOf(user.email) != -1) {
+                    listaDeUsers.child(user.uid + '/acessos/master').set(true).then(() => {
+        
+                    }).catch(error => {
+                        throw new functions.https.HttpsError('unknown', error.message)
+                    })
+                    acessosObj = {
+                        master: true,
+                        adm: false,
+                        secretria: false,
+                        professores: false,
+                        aluno: false
+                    }
+                } else if (user.uid.length == 5){
+                    listaDeUsers.child(user.uid + '/acessos/aluno').set(true).then(() => {
+        
+                    }).catch(error => {
+                        throw new functions.https.HttpsError('unknown', error.message)
+                    })
+                    acessosObj = {
+                        master: false,
+                        adm: false,
+                        secretria: false,
+                        professores: false,
+                        aluno: true,
+                    }
+                }
+                admin.auth().setCustomUserClaims(user.uid, acessosObj).then(() => {
+        
+                }).catch(error => {
+                    throw new functions.https.HttpsError('unknown', error.message)
+                })
+            })
         }).catch(error => {
             console.error(error)
         })
     }).catch(error => {
         log(error)
-    })
-
-    dadosNoBanco.set({
-        nome: user.displayName,
-        email: user.email,
-        
-        timestamp: admin.firestore.Timestamp.now()
-    }).then(() => {
-
-    }).catch(error =>{
-        throw new functions.https.HttpsError('unknown', error.message)
-    })
-
-    listaDeUsers.child(user.uid).set({
-        acessos: {
-            master: false,
-            adm: false,
-            secretaria: false,
-            professores: false,
-            aluno: false
-        },
-        email: user.email
-    }).then(() => {
-
-    }).catch(error => {
-        throw new functions.https.HttpsError('unknown', error.message)
-    })
-    
-    usuariosMaster.once('value', (snapshot) => {
-        var acessosObj = {
-            acessos: {
-                master: false,
-                adm: false,
-                secretaria: false,
-                professores: false,
-                aluno: false
-            }
-        }
-        var lista = snapshot.val()
-        if (lista.indexOf(user.email) != -1) {
-            listaDeUsers.child(user.uid + '/acessos/master').set(true).then(() => {
-
-            }).catch(error => {
-                throw new functions.https.HttpsError('unknown', error.message)
-            })
-            acessosObj = {
-                master: true,
-                adm: false,
-                secretria: false,
-                professores: false,
-                aluno: false
-            }
-        } else if (user.uid.length == 5){
-            listaDeUsers.child(user.uid + '/acessos/aluno').set(true).then(() => {
-
-            }).catch(error => {
-                throw new functions.https.HttpsError('unknown', error.message)
-            })
-            acessosObj = {
-                master: false,
-                adm: false,
-                secretria: false,
-                professores: false,
-                aluno: true,
-            }
-        }
-        admin.auth().setCustomUserClaims(user.uid, acessosObj).then(() => {
-
-        }).catch(error => {
-            throw new functions.https.HttpsError('unknown', error.message)
-        })
     })
 })
 
