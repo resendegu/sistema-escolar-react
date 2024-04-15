@@ -179,109 +179,111 @@ exports.modificaSenhaContaAluno = functions.database.ref('sistemaEscolar/alunos/
       
 })
 
-exports.cadastroUser = functions.auth.user().onCreate((user) => {
+exports.cadastroUser = functions.auth.user().onCreate(async (user) => {
     console.log(user.displayName) 
     var dadosNoBanco = admin.database().ref(`sistemaEscolar/usuarios/${user.uid}/`)
     var listaDeUsers = admin.database().ref(`sistemaEscolar/listaDeUsuarios`)
     var usuariosMaster = admin.database().ref('sistemaEscolar/usuariosMaster')
     let firestoreRef = app.firestore().collection('mail');
-
-    admin.auth().generateEmailVerificationLink(user.email).then(value => {
-        log(value)
-        let emailContent = {
-            to: user.email,
-            message: {
-                subject: `Verificação de segurança do Sistema Escolar`,
-                text: `Clique no link para verificar seu e-mail no sistema escolar`,
-                html: `
-                    <p>Olá, ${user.displayName || 'usuário'}</p>
-                    <p>Clique neste link para verificar seu endereço de e-mail.</p>
-                    <p><a href="${value}">${value}</a></p>
-                    <p>Se você não solicitou a verificação deste endereço, ignore este e-mail.</p>
-                    <p>Obrigado,</p>
-                    <p>Equipe do GrupoProX</p>
-                `
+    
+    await run();
+    
+    const run = () => {
+        admin.auth().generateEmailVerificationLink(user.email).then(value => {
+            log(value)
+            let emailContent = {
+                to: user.email,
+                message: {
+                    subject: `Verificação de segurança do Sistema Escolar`,
+                    text: `Clique no link para verificar seu e-mail no sistema escolar`,
+                    html: `
+                        <p>Olá, ${user.displayName || 'usuário'}</p>
+                        <p>Clique neste link para verificar seu endereço de e-mail.</p>
+                        <p><a href="${value}">${value}</a></p>
+                        <p>Se você não solicitou a verificação deste endereço, ignore este e-mail.</p>
+                        <p>Obrigado,</p>
+                        <p>Equipe do GrupoProX</p>
+                    `
+                }
             }
-        }
-        firestoreRef.add(emailContent).then((ref) => {
-            console.log('Queued email for delivery to ' + user.email)
-
-            dadosNoBanco.set({
-                nome: user.displayName,
-                email: user.email,
-                
-                timestamp: admin.firestore.Timestamp.now()
-            }).then(() => {
-        
-            }).catch(error =>{
-                throw new functions.https.HttpsError('unknown', error.message)
-            })
-        
-            listaDeUsers.child(user.uid).set({
-                acessos: {
-                    master: false,
-                    adm: false,
-                    secretaria: false,
-                    professores: false,
-                    aluno: false
-                },
-                email: user.email
-            }).then(() => {
-        
-            }).catch(error => {
-                throw new functions.https.HttpsError('unknown', error.message)
-            })
-            
-            usuariosMaster.once('value', (snapshot) => {
-                var acessosObj = {
-                    acessos: {
-                        master: false,
-                        adm: false,
-                        secretaria: false,
-                        professores: false,
-                        aluno: false
-                    }
-                }
-                var lista = snapshot.val()
-                if (lista.indexOf(user.email) != -1) {
-                    listaDeUsers.child(user.uid + '/acessos/master').set(true).then(() => {
-        
+            console.log('variavel de email setada')
+            firestoreRef.add(emailContent).then(() => {
+                console.log('Queued email for delivery to ' + user.email)
+    
+                dadosNoBanco.set({
+                    nome: user.displayName,
+                    email: user.email,
+                    
+                    timestamp: admin.firestore.Timestamp.now()
+                }).then(() => {
+                    listaDeUsers.child(user.uid).set({
+                        acessos: {
+                            master: false,
+                            adm: false,
+                            secretaria: false,
+                            professores: false,
+                            aluno: false
+                        },
+                        email: user.email
+                    }).then(() => {
+                        usuariosMaster.once('value', (snapshot) => {
+                            var acessosObj = {
+                                acessos: {
+                                    master: false,
+                                    adm: false,
+                                    secretaria: false,
+                                    professores: false,
+                                    aluno: false
+                                }
+                            }
+                            var lista = snapshot.val()
+                            if (lista.indexOf(user.email) != -1) {
+                                listaDeUsers.child(user.uid + '/acessos/master').set(true).then(() => {
+                    
+                                }).catch(error => {
+                                    throw new functions.https.HttpsError('unknown', error.message)
+                                })
+                                acessosObj = {
+                                    master: true,
+                                    adm: false,
+                                    secretria: false,
+                                    professores: false,
+                                    aluno: false
+                                }
+                            } else if (user.uid.length == 5){
+                                listaDeUsers.child(user.uid + '/acessos/aluno').set(true).then(() => {
+                    
+                                }).catch(error => {
+                                    throw new functions.https.HttpsError('unknown', error.message)
+                                })
+                                acessosObj = {
+                                    master: false,
+                                    adm: false,
+                                    secretria: false,
+                                    professores: false,
+                                    aluno: true,
+                                }
+                            }
+                            admin.auth().setCustomUserClaims(user.uid, acessosObj).then(() => {
+                                return;
+                            }).catch(error => {
+                                throw new functions.https.HttpsError('unknown', error.message)
+                            })
+                        })
                     }).catch(error => {
                         throw new functions.https.HttpsError('unknown', error.message)
                     })
-                    acessosObj = {
-                        master: true,
-                        adm: false,
-                        secretria: false,
-                        professores: false,
-                        aluno: false
-                    }
-                } else if (user.uid.length == 5){
-                    listaDeUsers.child(user.uid + '/acessos/aluno').set(true).then(() => {
-        
-                    }).catch(error => {
-                        throw new functions.https.HttpsError('unknown', error.message)
-                    })
-                    acessosObj = {
-                        master: false,
-                        adm: false,
-                        secretria: false,
-                        professores: false,
-                        aluno: true,
-                    }
-                }
-                admin.auth().setCustomUserClaims(user.uid, acessosObj).then(() => {
-        
-                }).catch(error => {
+                }).catch(error =>{
                     throw new functions.https.HttpsError('unknown', error.message)
                 })
+            }).catch(error => {
+                console.error(error)
             })
         }).catch(error => {
-            console.error(error)
+            log(error)
         })
-    }).catch(error => {
-        log(error)
-    })
+    }
+    
 })
 
 exports.cadastraTurma = functions.https.onCall(async (data, context) => {
