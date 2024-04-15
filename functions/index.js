@@ -1,10 +1,5 @@
 const functionsFire = require('firebase-functions');
 const admin = require('firebase-admin');
-const path = require('path');
-const { auth } = require('firebase-admin');
-const { HttpsError } = require('firebase-functions/lib/providers/https');
-const { firebaseConfig } = require('firebase-functions');
-const { https } = require('firebase-functions');
 const {
     log,
     info,
@@ -189,7 +184,7 @@ exports.cadastroUser = functions.auth.user().onCreate((user) => {
     var dadosNoBanco = admin.database().ref(`sistemaEscolar/usuarios/${user.uid}/`)
     var listaDeUsers = admin.database().ref(`sistemaEscolar/listaDeUsuarios`)
     var usuariosMaster = admin.database().ref('sistemaEscolar/usuariosMaster')
-    let firestoreRef = admin.firestore().collection('mail');
+    let firestoreRef = app.firestore().collection('mail');
 
     admin.auth().generateEmailVerificationLink(user.email).then(value => {
         log(value)
@@ -208,7 +203,7 @@ exports.cadastroUser = functions.auth.user().onCreate((user) => {
                 `
             }
         }
-        firestoreRef.add(emailContent).then(() => {
+        firestoreRef.add(emailContent).then((ref) => {
             console.log('Queued email for delivery to ' + user.email)
         }).catch(error => {
             console.error(error)
@@ -298,7 +293,7 @@ exports.cadastraTurma = functions.https.onCall(async (data, context) => {
             let turma = dados.codTurmaAtual
             return admin.database().ref(`sistemaEscolar/turmas/${turma}/professor/0`).once('value').then(snapshot => {
                 if (snapshot.val()) {
-                    throw new HttpsError('cancelled', 'Operação cancelada! Desconecte todos os professores desta turma antes de editar a turma', )
+                    throw new functions.https.HttpsError('cancelled', 'Operação cancelada! Desconecte todos os professores desta turma antes de editar a turma', )
                 }
                 return admin.database().ref(`sistemaEscolar/turmas/${turma}`).once('value').then(async (turmaFire) => {
                     let dadosTurmaAtual = turmaFire.val()
@@ -517,16 +512,16 @@ exports.desconectaProf = functions.database.ref('sistemaEscolar/turmas/{codTurma
                     return admin.database().ref(`sistemaEscolar/turmas/${turma}/professor`).set(teachersArray).then(() => {
                         return {answer: 'Professor desconectado.'}
                     }).catch(error => {
-                        throw new HttpsError('unknown', error)
+                        throw new functions.https.HttpsError('unknown', error)
                     })
                 }
                 
             })
         }).catch(error => {
-            throw new HttpsError('unknown', error)
+            throw new functions.https.HttpsError('unknown', error)
         })
     }).catch(error => {
-        throw new HttpsError('not-found', error.message, error)
+        throw new functions.https.HttpsError('not-found', error.message, error)
     })
 
     
@@ -765,11 +760,11 @@ exports.excluiTurma = functions.https.onCall((data, context) => {
         let turma = data.codTurma
         return admin.database().ref(`sistemaEscolar/turmas/${turma}/alunos`).once('value').then(students => {
             if (students.val()) {
-                throw new HttpsError('cancelled', 'Operação cancelada! Desative ou transfira os alunos.', )
+                throw new functions.https.HttpsError('cancelled', 'Operação cancelada! Desative ou transfira os alunos.', )
             }
             return admin.database().ref(`sistemaEscolar/turmas/${turma}/professor`).once('value').then(snapshot => {
                 if (snapshot.val()) {
-                    throw new HttpsError('cancelled', 'Operação cancelada! Desconecte todos os professores desta turma antes de excluir a turma', )
+                    throw new functions.https.HttpsError('cancelled', 'Operação cancelada! Desconecte todos os professores desta turma antes de excluir a turma', )
                 }
                 return admin.database().ref(`sistemaEscolar/turmas/${turma}`).remove().then(() => {
                     return admin.database().ref(`sistemaEscolar/registroGeral`).push({operacao: 'Exclusão de turma do sistema', timestamp: admin.firestore.Timestamp.now(), userCreator: context.auth.uid, dados: {codTurma: turma}}).then(() => {
