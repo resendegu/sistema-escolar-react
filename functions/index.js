@@ -186,8 +186,6 @@ exports.cadastroUser = functions.auth.user().onCreate(async (user) => {
     var usuariosMaster = admin.database().ref('sistemaEscolar/usuariosMaster')
     let firestoreRef = app.firestore().collection('mail');
     
-    await run();
-    
     const run = () => {
         admin.auth().generateEmailVerificationLink(user.email).then(value => {
             log(value)
@@ -283,6 +281,8 @@ exports.cadastroUser = functions.auth.user().onCreate(async (user) => {
             log(error)
         })
     }
+
+    await run();
     
 })
 
